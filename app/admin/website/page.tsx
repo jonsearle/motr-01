@@ -317,7 +317,7 @@ export default function WebsitePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">'About Us' description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{'\'About Us\' description'}</label>
             <textarea
               value={aboutText}
               onChange={(e) => setAboutText(e.target.value)}
