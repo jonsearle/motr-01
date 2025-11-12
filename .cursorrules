@@ -1,0 +1,98 @@
+# Spannr Drop-Off Prototype 02 - Project Rules
+
+## Source of Truth Documents
+- `/docs/prd.md` - Product Requirements Document (full requirements)
+- `/docs/plan.md` - Implementation Plan (phases, status, decisions)
+- `/docs/spanner-dropoff-notes.md` - Data Model Source of Truth (entity names, fields)
+
+Always reference these documents when implementing features.
+
+## Phase-Gate Process
+
+**CRITICAL:** Before starting any new phase from the plan, you MUST:
+
+1. **Review the Phase Requirements**
+   - Read the relevant section in `/docs/plan.md`
+   - Read the corresponding requirements in `/docs/prd.md`
+   - Understand what's already been built (check current codebase)
+
+2. **State Your Understanding**
+   - Define the requirements in plain English as you understand them
+   - Describe what needs to be built, how it should work, and what the user experience should be
+   - Keep this in plain English - no code discussion yet
+
+3. **Ask Numbered Clarifying Questions**
+   - Number each question (1, 2, 3, etc.) for easy reference
+   - Ask questions about ambiguous requirements
+   - Clarify user flows and edge cases
+   - Confirm technical implementation choices not specified
+   - Discuss UI/UX details not fully defined
+   - Keep questions in plain English - no code discussion yet
+
+4. **Confirm Understanding**
+   - After receiving answers, summarize the confirmed requirements in plain English
+   - Get user confirmation before proceeding
+   - Document any decisions made during clarification
+
+5. **Only Then: Create Implementation Plan**
+   - After requirements are clear and confirmed
+   - Break down into specific tasks
+   - Use Cursor's plan feature for detailed implementation steps
+
+**DO NOT** jump straight to implementation planning or coding without going through this phase-gate process.
+
+## Current State
+- Foundation complete: Database schema, TypeScript types, DB helpers, source of truth document
+- Admin page stubs exist but need implementation
+- Public booking site needs to be built
+- Project has an existing plan (from ChatGPT) that we'll reference and refine
+
+## Database & Types
+- **DO NOT recreate database helpers** - use existing functions from `/lib/db.ts`
+- All database interactions use Supabase client from `/lib/db.ts`
+- TypeScript types already exist in `/types/db.ts` - use them
+- Validate data at API boundaries
+- Always match source of truth document exactly
+
+## Technical Standards
+
+### Code Quality
+- Use TypeScript strictly - avoid `any` types
+- Follow Next.js 14 App Router conventions
+- Use Tailwind CSS for styling
+- Keep components focused and reusable
+- Add proper error handling and loading states
+
+### File Organization
+- `/app` - Next.js routes (App Router)
+- `/components` - Reusable UI components
+- `/lib` - Utilities and helpers (db.ts already exists)
+- `/types` - TypeScript type definitions (db.ts already exists)
+- `/docs` - Documentation and source of truth
+
+## Design Implementation
+- Designs are in Figma (user will provide links/references)
+- Match design specifications closely for layout, spacing, colors
+- Ask for clarification if design details are unclear
+- Implement responsive behavior as specified in designs
+
+## Communication & Workflow
+- Before implementing, confirm understanding of requirements
+- Flag potential issues or edge cases early
+- Suggest implementation approaches, but defer to user decisions
+- Break down complex changes into smaller, reviewable steps
+- Document any assumptions made during implementation
+- Reference existing code patterns when building new features
+
+## Iterative Refinement
+- Requirements and plan may be refined as we build
+- Document decisions as we make them
+- Update source of truth when data model changes
+- Keep PRD and plan aligned with implementation reality
+
+## Testing & Validation
+- Ensure features work as specified in requirements
+- Test user flows end-to-end
+- Validate data integrity and business rules
+- Check responsive behavior on different screen sizes
+
