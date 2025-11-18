@@ -113,21 +113,12 @@ export default function ReactiveHeader() {
   const phoneLink = phone.replace(/\s+/g, "").replace(/[^\d+]/g, "");
 
   return (
-    <div className="min-h-screen bg-gray-800">
-      {/* Header Image Section - Top ~40% */}
-      <div className="relative h-[40vh] w-full bg-gray-900">
-        {!imageError && (
-          <Image
-            src="/images/header-image.png"
-            alt={`${businessName} garage`}
-            fill
-            className="object-cover"
-            priority
-            onError={() => setImageError(true)}
-          />
-        )}
-        {/* Logo Overlay */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
+    <div className="min-h-screen bg-gray-800 flex flex-col md:flex-row">
+      {/* Content Section */}
+      {/* Mobile: Full width, top position | Desktop: 50% width, left position */}
+      <div className="w-full md:w-1/2 bg-gray-800 px-6 py-8 md:px-12 md:py-16 flex flex-col justify-start">
+        {/* Logo/Business Name - Always visible above text content */}
+        <div className="flex items-center gap-2 mb-6">
           <svg
             width="24"
             height="24"
@@ -144,28 +135,26 @@ export default function ReactiveHeader() {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="text-white font-bold text-xl">{businessName}</span>
+          <span className="text-white font-bold text-base md:text-lg">{businessName}</span>
         </div>
-      </div>
 
-      {/* Content Section - Bottom ~60% */}
-      <div className="bg-gray-800 px-6 py-8">
         {/* Tagline */}
         {tagline && (
-          <h1 className="text-white text-2xl font-bold mb-4 text-center">
+          <h1 className="text-white text-2xl md:text-4xl font-bold mb-4 md:mb-6 text-left">
             {tagline}
           </h1>
         )}
 
         {/* Location */}
         {location && (
-          <div className="flex items-center gap-2 mb-6 text-white">
+          <div className="flex items-center gap-2 mb-6 md:mb-8 text-white">
             <svg
               width="16"
               height="16"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="flex-shrink-0"
             >
               <path
                 d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z"
@@ -176,33 +165,55 @@ export default function ReactiveHeader() {
               />
               <circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth="2" />
             </svg>
-            <span className="text-sm">{location}</span>
+            <span className="text-sm md:text-base">{location}</span>
           </div>
         )}
 
-        {/* Divider */}
-        <div className="border-t border-gray-600 my-6"></div>
+        {/* Divider - Hidden on mobile, hidden on desktop when open (open state has its own dividers) */}
+        <div className={`hidden md:block border-t border-gray-600 my-6 md:my-8 ${isOpen ? 'md:hidden' : ''}`}></div>
 
         {/* Status Message */}
-        <div className="mb-6">
+        <div className="mb-6 md:mb-8">
           {isOpen ? (
             <>
-              <p className="text-white text-lg font-semibold mb-2">
-                We&apos;re open now.
-              </p>
+              {/* Desktop Open: Two divider lines with text and phone number */}
+              <div className="hidden md:block">
+                {/* First Divider */}
+                <div className="border-t border-gray-600 my-6"></div>
+                {/* Text between dividers */}
+                <p className="text-white text-base mb-4">
+                  Call us now or book online anytime.
+                </p>
+                {/* Phone Number - Large text, no icon, not a button */}
+                {phone && (
+                  <div className="flex justify-start text-white mb-4">
+                    <span className="text-xl font-bold">{phone}</span>
+                  </div>
+                )}
+                {/* Second Divider */}
+                <div className="border-t border-gray-600 mb-6"></div>
+              </div>
             </>
           ) : (
             <>
-              <p className="text-white text-lg font-semibold mb-2">
+              <p className="text-white text-lg md:text-xl font-semibold mb-2">
                 Sorry, we&apos;re closed right now.
               </p>
               {nextOpening && (
-                <p className="text-gray-300 text-sm mb-4">
+                <p className="text-gray-300 text-sm md:text-base mb-4">
                   {nextOpening.day
                     ? `Call from ${nextOpening.time} on ${nextOpening.day} or book online anytime.`
                     : `Call from ${nextOpening.time} tomorrow or book online anytime.`}
                 </p>
               )}
+              {/* Phone Number - Between divider lines, left-aligned, vertically centered */}
+              {phone && (
+                <div className="flex justify-start text-white py-4">
+                  <span className="text-base">{phone}</span>
+                </div>
+              )}
+              {/* Second Divider - After phone number */}
+              <div className="border-t border-gray-600 mb-6"></div>
             </>
           )}
         </div>
@@ -210,67 +221,44 @@ export default function ReactiveHeader() {
         {/* CTAs */}
         {isOpen ? (
           <>
-            {/* Primary CTA: Call Us */}
+            {/* Mobile: Call Us Button */}
             <a
               href={`tel:${phoneLink}`}
-              className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg mb-3 flex items-center justify-center gap-2 transition-colors"
+              className="flex md:hidden w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg mb-3 items-center justify-center transition-colors text-base"
               style={{ backgroundColor: '#FF6B35' }}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
               {phone}
             </a>
-            {/* Secondary CTA: Book Online */}
-            <button className="block w-full bg-gray-700 border-2 border-white text-white font-bold py-4 px-6 rounded-lg hover:bg-gray-600 transition-colors">
+            {/* Book Online Button - Smaller on desktop */}
+            <button className="block w-full bg-gray-800 border border-white text-white font-bold py-4 md:py-3 px-6 rounded-lg transition-colors text-base">
               Book online
             </button>
           </>
         ) : (
           <>
-            {/* Primary CTA: Book Online */}
+            {/* Primary CTA: Book Online - Big button */}
             <button 
-              className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg mb-3 transition-colors"
+              className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 md:py-4 px-6 rounded-lg transition-colors text-base md:text-lg"
               style={{ backgroundColor: '#FF6B35' }}
             >
               Book online
             </button>
-            {/* Phone Number (not in button) */}
-            {phone && (
-              <div className="flex items-center justify-center gap-2 text-white">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.09181 3.27543 9.22792 3.68377L10.7257 8.17721C10.8831 8.64932 10.6694 9.16531 10.2243 9.38787L7.96701 10.5165C9.06925 12.9612 11.0388 14.9308 13.4835 16.033L14.6121 13.7757C14.8347 13.3306 15.3507 13.1169 15.8228 13.2743L20.3162 14.7721C20.7246 14.9082 21 15.2903 21 15.7208V19C21 20.1046 20.1046 21 19 21H18C9.71573 21 3 14.2843 3 6V5Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <a href={`tel:${phoneLink}`} className="text-sm hover:underline">
-                  {phone}
-                </a>
-              </div>
-            )}
           </>
+        )}
+      </div>
+
+      {/* Header Image Section */}
+      {/* Mobile: Full width, below content | Desktop: 50% width, right position */}
+      <div className="relative w-full md:w-1/2 h-[50vh] md:h-screen bg-gray-900">
+        {!imageError && (
+          <Image
+            src="/images/header-image.png"
+            alt={`${businessName} garage`}
+            fill
+            className="object-cover"
+            priority
+            onError={() => setImageError(true)}
+          />
         )}
       </div>
     </div>
