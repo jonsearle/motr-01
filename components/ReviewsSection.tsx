@@ -29,7 +29,7 @@ function StarRating({ rating }: { rating: number }) {
 // Individual review card component
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <div className="flex-shrink-0 w-[85vw] md:w-auto md:flex-1 px-4 md:px-0">
+    <div className="flex-shrink-0 w-[calc(100vw-1.5rem-0.5rem)] md:w-auto md:flex-1">
       <div className="h-full">
         <h3 className="text-white font-bold text-lg mb-2">{review.customer_name}</h3>
         <div className="mb-3">
@@ -84,7 +84,7 @@ export default function ReviewsSection() {
 
         {/* Reviews Container - Horizontal scroll on mobile, grid on desktop */}
         <div className="overflow-x-auto scroll-smooth -mx-6 md:mx-0 pb-4 md:pb-0 md:overflow-visible">
-          <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 px-6 md:px-0">
+          <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 pl-6 pr-2 md:px-0">
             {reviews.map((review, index) => (
               <ReviewCard key={index} review={review} />
             ))}
