@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getGarageSiteContent, getBookingSettings, getBookingsByDateRange } from "@/lib/db";
 import type { GarageSiteContent, BookingSettings, OpeningDay, Booking } from "@/types/db";
 
@@ -44,6 +44,7 @@ function DateTimePageContent() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
@@ -466,6 +467,35 @@ function DateTimePageContent() {
     setSelectedDate(date);
   };
 
+  const handleContinue = () => {
+    if (!selectedDate) return;
+
+    // Build URL with all booking data
+    const params = new URLSearchParams();
+    
+    // Get existing params from previous steps
+    const appointmentType = searchParams.get("appointment_type");
+    const problem = searchParams.get("problem");
+    const description = searchParams.get("description");
+
+    if (appointmentType) {
+      params.set("appointment_type", appointmentType);
+    }
+    if (problem) {
+      params.set("problem", problem);
+    }
+    if (description) {
+      params.set("description", description);
+    }
+
+    // Add selected date (format as YYYY-MM-DD)
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    params.set("date", dateStr);
+
+    // Navigate to mobile/details page
+    router.push(`/book/mobile?${params.toString()}`);
+  };
+
   // Generate calendar days
   const daysInMonth = getDaysInMonth(currentMonth, currentYear);
   const firstDayIndex = getFirstDayOfMonth(currentMonth, currentYear);
@@ -779,7 +809,8 @@ function DateTimePageContent() {
 
         {/* Continue button */}
         <button
-          disabled
+          onClick={handleContinue}
+          disabled={!selectedDate}
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: '#FF6B35' }}
           type="button"
