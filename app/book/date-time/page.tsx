@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getGarageSiteContent } from "@/lib/db";
-import type { GarageSiteContent } from "@/types/db";
+import { getGarageSiteContent, getBookingSettings } from "@/lib/db";
+import type { GarageSiteContent, BookingSettings, OpeningDay } from "@/types/db";
 
 // Map problem options to shortened display text
 const PROBLEM_DISPLAY_MAP: Record<string, string> = {
@@ -37,6 +37,7 @@ function DateTimePageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<GarageSiteContent | null>(null);
+  const [bookingSettings, setBookingSettings] = useState<BookingSettings | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -45,21 +46,25 @@ function DateTimePageContent() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadGarageName() {
+    async function loadData() {
       try {
         setError(null);
-        console.log("Loading garage content...");
+        console.log("Loading garage content and booking settings...");
 
-        const contentData = await getGarageSiteContent();
+        const [contentData, settingsData] = await Promise.all([
+          getGarageSiteContent(),
+          getBookingSettings(),
+        ]);
 
         if (!isMounted) return;
 
         setContent(contentData);
+        setBookingSettings(settingsData);
       } catch (error) {
         if (!isMounted) return;
         const errorMessage = error instanceof Error ? error.message : "Failed to load garage information";
         setError(errorMessage);
-        console.error("Error loading garage content:", error);
+        console.error("Error loading garage data:", error);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -67,7 +72,7 @@ function DateTimePageContent() {
       }
     }
 
-    loadGarageName();
+    loadData();
     return () => {
       isMounted = false;
     };
@@ -96,6 +101,143 @@ function DateTimePageContent() {
 
   const previousChoice = getPreviousChoice();
 
+  // Get current date in garage timezone
+  const getCurrentDateInTimezone = (timezone: string = 'Europe/London'): Date => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const parts = formatter.formatToParts(now);
+    const year = parseInt(parts.find(p => p.type === 'year')!.value);
+    const month = parseInt(parts.find(p => p.type === 'month')!.value) - 1; // 0-indexed
+    const day = parseInt(parts.find(p => p.type === 'day')!.value);
+    return new Date(year, month, day);
+  };
+
+  // Get day of week name from a date in garage timezone
+  const getDayOfWeekName = (date: Date, timezone: string = 'Europe/London'): OpeningDay['day_of_week'] => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'long',
+    });
+    const dayName = formatter.format(date).toLowerCase();
+    return dayName as OpeningDay['day_of_week'];
+  };
+
+  // Check if a date is in the past (in garage timezone)
+  const isDateInPast = (date: Date, timezone: string = 'Europe/London'): boolean => {
+    const today = getCurrentDateInTimezone(timezone);
+    const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const compareToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return compareDate < compareToday;
+  };
+
+  // Check if garage is closed on a specific date
+  const isGarageClosed = (date: Date, settings: BookingSettings | null): boolean => {
+    if (!settings) return false;
+    const dayOfWeek = getDayOfWeekName(date, settings.timezone);
+    const openingDay = settings.opening_days.find(day => day.day_of_week === dayOfWeek);
+    return !openingDay || !openingDay.is_open;
+  };
+
+  // Count working days from today to a given date (in garage timezone)
+  // Today counts as day 0, tomorrow is day 1, etc.
+  // Only counts days when the garage is open
+  const countWorkingDaysToDate = (date: Date, settings: BookingSettings | null): number => {
+    if (!settings) return 0;
+    
+    const today = getCurrentDateInTimezone(settings.timezone);
+    const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // If target is today or in the past, return 0
+    if (targetDate <= startDate) return 0;
+    
+    let workingDays = 0;
+    let currentDate = new Date(startDate);
+    
+    // Start from tomorrow (day 1) and count up to and including the target date
+    currentDate.setDate(currentDate.getDate() + 1);
+    
+    // Count working days until we reach and include the target date
+    while (currentDate <= targetDate) {
+      if (!isGarageClosed(currentDate, settings)) {
+        workingDays++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return workingDays;
+  };
+
+  // Check if a date is within the lead time window (too soon to book)
+  const isWithinLeadTime = (date: Date, settings: BookingSettings | null): boolean => {
+    if (!settings || settings.lead_time_days === 0) return false;
+    
+    const workingDays = countWorkingDaysToDate(date, settings);
+    return workingDays < settings.lead_time_days;
+  };
+
+  // Determine day state for calendar display
+  type DayState = 'past-open' | 'past-closed' | 'leadtime-open' | 'leadtime-closed' | 'future-closed' | 'open' | 'selected';
+  const getDayState = (day: number, month: number, year: number): DayState => {
+    if (!bookingSettings) return 'open';
+    
+    const date = new Date(year, month, day);
+    const isPast = isDateInPast(date, bookingSettings.timezone);
+    const isClosed = isGarageClosed(date, bookingSettings);
+    const isWithinLeadTimeWindow = isWithinLeadTime(date, bookingSettings);
+    const isSelected =
+      selectedDate &&
+      selectedDate.getDate() === day &&
+      selectedDate.getMonth() === month &&
+      selectedDate.getFullYear() === year;
+
+    // Selected state takes priority (only if selectable)
+    if (isSelected && !isPast && !isClosed && !isWithinLeadTimeWindow) {
+      return 'selected';
+    }
+    
+    // Past days
+    if (isPast && isClosed) {
+      return 'past-closed';
+    }
+    if (isPast && !isClosed) {
+      return 'past-open';
+    }
+    
+    // Future days within lead time window
+    if (!isPast && isWithinLeadTimeWindow && !isClosed) {
+      return 'leadtime-open';
+    }
+    if (!isPast && isWithinLeadTimeWindow && isClosed) {
+      return 'leadtime-closed';
+    }
+    
+    // Future days past lead time
+    if (!isPast && !isWithinLeadTimeWindow && isClosed) {
+      return 'future-closed';
+    }
+    if (!isPast && !isWithinLeadTimeWindow && !isClosed) {
+      return 'open';
+    }
+    
+    return 'open';
+  };
+
+  // Check if date is selectable
+  const isDateSelectable = (day: number, month: number, year: number): boolean => {
+    if (!bookingSettings) return false;
+    const date = new Date(year, month, day);
+    const isPast = isDateInPast(date, bookingSettings.timezone);
+    const isClosed = isGarageClosed(date, bookingSettings);
+    const isWithinLeadTimeWindow = isWithinLeadTime(date, bookingSettings);
+    return !isPast && !isClosed && !isWithinLeadTimeWindow;
+  };
+
   // Calendar helpers
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -105,6 +247,13 @@ function DateTimePageContent() {
     const firstDay = new Date(year, month, 1).getDay();
     // Convert Sunday (0) to 7, then shift Monday to 0
     return firstDay === 0 ? 6 : firstDay - 1;
+  };
+
+  // Check if current month is the current month (in garage timezone)
+  const isCurrentMonth = (): boolean => {
+    if (!bookingSettings) return false;
+    const today = getCurrentDateInTimezone(bookingSettings.timezone);
+    return currentMonth === today.getMonth() && currentYear === today.getFullYear();
   };
 
   const handlePrevMonth = () => {
@@ -126,6 +275,9 @@ function DateTimePageContent() {
   };
 
   const handleDateClick = (day: number) => {
+    if (!isDateSelectable(day, currentMonth, currentYear)) {
+      return;
+    }
     const date = new Date(currentYear, currentMonth, day);
     setSelectedDate(date);
   };
@@ -157,6 +309,22 @@ function DateTimePageContent() {
     const day = date.getDate();
     const monthName = MONTH_NAMES[date.getMonth()];
     return `${dayName} ${day} ${monthName}`;
+  };
+
+  // Get drop-off times for a selected date
+  const getDropoffTimes = (date: Date): { from: string; to: string } | null => {
+    if (!bookingSettings) return null;
+    
+    const dayOfWeek = getDayOfWeekName(date, bookingSettings.timezone);
+    const openingDay = bookingSettings.opening_days.find(day => day.day_of_week === dayOfWeek);
+    
+    if (!openingDay || !openingDay.is_open) return null;
+    if (!openingDay.dropoff_from_time || !openingDay.dropoff_to_time) return null;
+    
+    return {
+      from: openingDay.dropoff_from_time,
+      to: openingDay.dropoff_to_time,
+    };
   };
 
   if (loading) {
@@ -248,27 +416,29 @@ function DateTimePageContent() {
         <div className="mb-6">
           {/* Month navigation */}
           <div className="flex items-center justify-end gap-2 mb-4">
-            <button
-              onClick={handlePrevMonth}
-              className="text-white hover:text-gray-300 transition-colors"
-              type="button"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+            {!isCurrentMonth() && (
+              <button
+                onClick={handlePrevMonth}
+                className="text-white hover:text-gray-300 transition-colors"
+                type="button"
               >
-                <path
-                  d="M15 18l-6-6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 18l-6-6 6-6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
             <span className="text-white font-semibold text-base">
               {MONTH_NAMES[currentMonth]}
             </span>
@@ -319,21 +489,66 @@ function DateTimePageContent() {
                 );
               }
 
-              const isSelected =
-                selectedDate &&
-                selectedDate.getDate() === day &&
-                selectedDate.getMonth() === currentMonth &&
-                selectedDate.getFullYear() === currentYear;
+              const dayState = getDayState(day, currentMonth, currentYear);
+              const isSelectable = isDateSelectable(day, currentMonth, currentYear);
+
+              // Determine styling based on day state
+              let dayClasses = "aspect-square rounded flex items-center justify-center text-sm transition-colors border";
+              let dayStyle: React.CSSProperties = {};
+
+              switch (dayState) {
+                case 'selected':
+                  dayClasses += " bg-white text-gray-800 font-semibold border-white";
+                  break;
+                case 'open':
+                  dayClasses += " text-white border-white hover:bg-gray-700";
+                  break;
+                case 'future-closed':
+                  dayClasses += " text-gray-400 border-gray-600 cursor-not-allowed";
+                  // Diagonal striped background
+                  dayStyle = {
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(156, 163, 175, 0.3) 4px, rgba(156, 163, 175, 0.3) 8px)',
+                    backgroundColor: 'rgb(75, 85, 99)', // gray-600
+                  };
+                  break;
+                case 'leadtime-open':
+                  dayClasses += " text-gray-600 border-gray-700 cursor-not-allowed";
+                  // Very dark gray (same as past-open)
+                  dayStyle = {
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+                case 'leadtime-closed':
+                  dayClasses += " text-gray-700 border-gray-800 cursor-not-allowed";
+                  // Very dark gray with diagonal stripes (same as past-closed)
+                  dayStyle = {
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(55, 65, 81, 0.4) 4px, rgba(55, 65, 81, 0.4) 8px)',
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+                case 'past-open':
+                  dayClasses += " text-gray-600 border-gray-700 cursor-not-allowed";
+                  dayStyle = {
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+                case 'past-closed':
+                  dayClasses += " text-gray-700 border-gray-800 cursor-not-allowed";
+                  // Diagonal striped background with very dark base
+                  dayStyle = {
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(55, 65, 81, 0.4) 4px, rgba(55, 65, 81, 0.4) 8px)',
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+              }
 
               return (
                 <button
                   key={day}
                   onClick={() => handleDateClick(day)}
-                  className={`aspect-square rounded flex items-center justify-center text-sm transition-colors border border-white ${
-                    isSelected
-                      ? "bg-white text-gray-800 font-semibold"
-                      : "text-white hover:bg-gray-700"
-                  }`}
+                  disabled={!isSelectable}
+                  className={dayClasses}
+                  style={dayStyle}
                   type="button"
                 >
                   {day}
@@ -346,9 +561,20 @@ function DateTimePageContent() {
         {/* Selected date display */}
         {selectedDate && (
           <div className="mb-6">
-            <p className="text-white font-bold text-base">
+            <p className="text-white font-bold text-base mb-2">
               {formatSelectedDate(selectedDate)}
             </p>
+            {(() => {
+              const dropoffTimes = getDropoffTimes(selectedDate);
+              if (dropoffTimes) {
+                return (
+                  <p className="text-white text-base">
+                    Drop your car off between {dropoffTimes.from} and {dropoffTimes.to}
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 
