@@ -84,6 +84,25 @@ export async function getBookingsByMonth(
   return data || []
 }
 
+export async function getBookingsByDateRange(
+  startDate: string,
+  endDate: string
+): Promise<Booking[]> {
+  // Format dates as YYYY-MM-DD strings for PostgreSQL date comparison
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return data || []
+}
+
 // Garage Site Content helpers
 export async function getGarageSiteContent(): Promise<GarageSiteContent | null> {
   const { data, error } = await supabase

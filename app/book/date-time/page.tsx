@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getGarageSiteContent, getBookingSettings } from "@/lib/db";
-import type { GarageSiteContent, BookingSettings, OpeningDay } from "@/types/db";
+import { getGarageSiteContent, getBookingSettings, getBookingsByDateRange } from "@/lib/db";
+import type { GarageSiteContent, BookingSettings, OpeningDay, Booking } from "@/types/db";
 
 // Map problem options to shortened display text
 const PROBLEM_DISPLAY_MAP: Record<string, string> = {
@@ -38,9 +38,11 @@ function DateTimePageContent() {
   const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<GarageSiteContent | null>(null);
   const [bookingSettings, setBookingSettings] = useState<BookingSettings | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -77,6 +79,90 @@ function DateTimePageContent() {
       isMounted = false;
     };
   }, []);
+
+  // Load bookings for the current visible month
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBookings() {
+      if (!bookingSettings) return;
+
+      try {
+        // Calculate first and last day of the visible month
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+        // Format dates as YYYY-MM-DD strings
+        const startDate = firstDay.toISOString().split('T')[0];
+        const endDate = lastDay.toISOString().split('T')[0];
+
+        const bookingsData = await getBookingsByDateRange(startDate, endDate);
+
+        if (!isMounted) return;
+
+        setBookings(bookingsData);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error loading bookings:", error);
+        // Don't set error state for bookings - just log it
+      }
+    }
+
+    loadBookings();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentMonth, currentYear, bookingSettings]);
+
+  // Auto-select next available date when page loads
+  useEffect(() => {
+    let isMounted = true;
+
+    async function autoSelectNextAvailable() {
+      // Only run once, and only if we have settings loaded and not currently loading
+      if (hasAutoSelected || !bookingSettings || loading) {
+        return;
+      }
+
+      try {
+        const today = getCurrentDateInTimezone(bookingSettings.timezone);
+        const currentMonthStart = new Date(currentYear, currentMonth, 1);
+        
+        // Start searching from today (will start from tomorrow in the function)
+        const startDate = today < currentMonthStart ? currentMonthStart : today;
+        
+        // Use current bookings (may be empty, that's fine - function will load more if needed)
+        const result = await findNextAvailableDate(startDate, bookingSettings, bookings);
+        
+        if (!isMounted) return;
+        
+        if (result) {
+          // Navigate to the correct month if needed
+          if (result.month !== currentMonth || result.year !== currentYear) {
+            setCurrentMonth(result.month);
+            setCurrentYear(result.year);
+          }
+          
+          // Select the date
+          setSelectedDate(result.date);
+          setHasAutoSelected(true);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error auto-selecting next available date:", error);
+      }
+    }
+
+    // Run auto-selection after a short delay to ensure bookings have loaded
+    const timer = setTimeout(() => {
+      autoSelectNextAvailable();
+    }, 200);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [bookingSettings, bookings, currentMonth, currentYear, loading, hasAutoSelected]);
 
   // Get previous choice from URL parameters
   const getPreviousChoice = (): string | null => {
@@ -181,8 +267,21 @@ function DateTimePageContent() {
     return workingDays < settings.lead_time_days;
   };
 
+  // Check if a date has reached its daily booking limit
+  const isFullyBooked = (date: Date, settings: BookingSettings | null): boolean => {
+    if (!settings || settings.daily_booking_limit === 0) return false;
+    
+    // Format date as YYYY-MM-DD string
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Count bookings for this date
+    const bookingsForDate = bookings.filter(booking => booking.date === dateStr);
+    
+    return bookingsForDate.length >= settings.daily_booking_limit;
+  };
+
   // Determine day state for calendar display
-  type DayState = 'past-open' | 'past-closed' | 'leadtime-open' | 'leadtime-closed' | 'future-closed' | 'open' | 'selected';
+  type DayState = 'past-open' | 'past-closed' | 'leadtime-open' | 'leadtime-closed' | 'fullybooked-open' | 'fullybooked-closed' | 'future-closed' | 'open' | 'selected';
   const getDayState = (day: number, month: number, year: number): DayState => {
     if (!bookingSettings) return 'open';
     
@@ -190,6 +289,7 @@ function DateTimePageContent() {
     const isPast = isDateInPast(date, bookingSettings.timezone);
     const isClosed = isGarageClosed(date, bookingSettings);
     const isWithinLeadTimeWindow = isWithinLeadTime(date, bookingSettings);
+    const isFullyBookedDate = isFullyBooked(date, bookingSettings);
     const isSelected =
       selectedDate &&
       selectedDate.getDate() === day &&
@@ -197,7 +297,7 @@ function DateTimePageContent() {
       selectedDate.getFullYear() === year;
 
     // Selected state takes priority (only if selectable)
-    if (isSelected && !isPast && !isClosed && !isWithinLeadTimeWindow) {
+    if (isSelected && !isPast && !isClosed && !isWithinLeadTimeWindow && !isFullyBookedDate) {
       return 'selected';
     }
     
@@ -217,11 +317,19 @@ function DateTimePageContent() {
       return 'leadtime-closed';
     }
     
-    // Future days past lead time
-    if (!isPast && !isWithinLeadTimeWindow && isClosed) {
+    // Future days that are fully booked
+    if (!isPast && !isWithinLeadTimeWindow && isFullyBookedDate && !isClosed) {
+      return 'fullybooked-open';
+    }
+    if (!isPast && !isWithinLeadTimeWindow && isFullyBookedDate && isClosed) {
+      return 'fullybooked-closed';
+    }
+    
+    // Future days past lead time and not fully booked
+    if (!isPast && !isWithinLeadTimeWindow && !isFullyBookedDate && isClosed) {
       return 'future-closed';
     }
-    if (!isPast && !isWithinLeadTimeWindow && !isClosed) {
+    if (!isPast && !isWithinLeadTimeWindow && !isFullyBookedDate && !isClosed) {
       return 'open';
     }
     
@@ -235,7 +343,83 @@ function DateTimePageContent() {
     const isPast = isDateInPast(date, bookingSettings.timezone);
     const isClosed = isGarageClosed(date, bookingSettings);
     const isWithinLeadTimeWindow = isWithinLeadTime(date, bookingSettings);
-    return !isPast && !isClosed && !isWithinLeadTimeWindow;
+    const isFullyBookedDate = isFullyBooked(date, bookingSettings);
+    return !isPast && !isClosed && !isWithinLeadTimeWindow && !isFullyBookedDate;
+  };
+
+  // Check if a date is available (selectable) - used for finding next available date
+  const isDateAvailable = (date: Date, settings: BookingSettings | null, bookingsList: Booking[]): boolean => {
+    if (!settings) return false;
+    
+    const isPast = isDateInPast(date, settings.timezone);
+    const isClosed = isGarageClosed(date, settings);
+    const isWithinLeadTimeWindow = isWithinLeadTime(date, settings);
+    
+    // Check if fully booked using the provided bookings list
+    const dateStr = date.toISOString().split('T')[0];
+    const bookingsForDate = bookingsList.filter(booking => booking.date === dateStr);
+    const isFullyBookedDate = bookingsForDate.length >= settings.daily_booking_limit;
+    
+    return !isPast && !isClosed && !isWithinLeadTimeWindow && !isFullyBookedDate;
+  };
+
+  // Find the next available date starting from a given date
+  const findNextAvailableDate = async (
+    startDate: Date,
+    settings: BookingSettings | null,
+    currentBookings: Booking[]
+  ): Promise<{ date: Date; month: number; year: number } | null> => {
+    if (!settings) return null;
+
+    const today = getCurrentDateInTimezone(settings.timezone);
+    let searchDate = new Date(startDate);
+    
+    // Start from tomorrow (today is never selectable due to lead time)
+    searchDate.setDate(searchDate.getDate() + 1);
+    
+    // Search up to 6 months ahead
+    const maxMonthsToSearch = 6;
+    let monthsSearched = 0;
+    
+    while (monthsSearched < maxMonthsToSearch) {
+      const month = searchDate.getMonth();
+      const year = searchDate.getFullYear();
+      const daysInMonth = getDaysInMonth(month, year);
+      
+      // Load bookings for this month if we don't have them
+      let monthBookings = currentBookings;
+      if (month !== currentMonth || year !== currentYear) {
+        try {
+          const firstDay = new Date(year, month, 1);
+          const lastDay = new Date(year, month + 1, 0);
+          const startDateStr = firstDay.toISOString().split('T')[0];
+          const endDateStr = lastDay.toISOString().split('T')[0];
+          monthBookings = await getBookingsByDateRange(startDateStr, endDateStr);
+        } catch (error) {
+          console.error("Error loading bookings for month:", error);
+          // Continue with current bookings if we can't load
+        }
+      }
+      
+      // Search through days in this month
+      for (let day = searchDate.getDate(); day <= daysInMonth; day++) {
+        const checkDate = new Date(year, month, day);
+        
+        if (isDateAvailable(checkDate, settings, monthBookings)) {
+          return {
+            date: checkDate,
+            month: month,
+            year: year,
+          };
+        }
+      }
+      
+      // Move to first day of next month
+      monthsSearched++;
+      searchDate = new Date(year, month + 1, 1);
+    }
+    
+    return null;
   };
 
   // Calendar helpers
@@ -521,6 +705,21 @@ function DateTimePageContent() {
                 case 'leadtime-closed':
                   dayClasses += " text-gray-700 border-gray-800 cursor-not-allowed";
                   // Very dark gray with diagonal stripes (same as past-closed)
+                  dayStyle = {
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(55, 65, 81, 0.4) 4px, rgba(55, 65, 81, 0.4) 8px)',
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+                case 'fullybooked-open':
+                  dayClasses += " text-gray-600 border-gray-700 cursor-not-allowed";
+                  // Very dark gray (same as leadtime-open and past-open)
+                  dayStyle = {
+                    backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
+                  };
+                  break;
+                case 'fullybooked-closed':
+                  dayClasses += " text-gray-700 border-gray-800 cursor-not-allowed";
+                  // Very dark gray with diagonal stripes (same as leadtime-closed and past-closed)
                   dayStyle = {
                     backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(55, 65, 81, 0.4) 4px, rgba(55, 65, 81, 0.4) 8px)',
                     backgroundColor: 'rgb(31, 41, 55)', // gray-800 (same as background)
