@@ -163,6 +163,7 @@ function DateTimePageContent() {
       isMounted = false;
       clearTimeout(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingSettings, bookings, currentMonth, currentYear, loading, hasAutoSelected]);
 
   // Get previous choice from URL parameters
