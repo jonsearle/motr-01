@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { getBookingSettings, getGarageSiteContent } from "@/lib/db";
 import { isCurrentlyOpen, getNextOpeningTime } from "@/lib/business-hours";
 import type { BookingSettings, GarageSiteContent } from "@/types/db";
@@ -230,19 +231,23 @@ export default function ReactiveHeader() {
               {phone}
             </a>
             {/* Book Online Button - Smaller on desktop */}
-            <button className="block w-full bg-gray-800 border border-white text-white font-bold py-4 md:py-3 px-6 rounded-lg transition-colors text-base">
+            <Link 
+              href="/book"
+              className="block w-full bg-gray-800 border border-white text-white font-bold py-4 md:py-3 px-6 rounded-lg transition-colors text-base hover:bg-gray-700"
+            >
               Book online
-            </button>
+            </Link>
           </>
         ) : (
           <>
             {/* Primary CTA: Book Online - Big button */}
-            <button 
-              className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 md:py-4 px-6 rounded-lg transition-colors text-base md:text-lg"
+            <Link 
+              href="/book"
+              className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 md:py-4 px-6 rounded-lg transition-colors text-base md:text-lg text-center"
               style={{ backgroundColor: '#FF6B35' }}
             >
               Book online
-            </button>
+            </Link>
           </>
         )}
       </div>
