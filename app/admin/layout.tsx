@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 
 export default function AdminLayout({
   children,
@@ -57,6 +58,7 @@ export default function AdminLayout({
         {/* Main Content Area */}
         <main className="flex-1 bg-white p-8">{children}</main>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }

@@ -194,3 +194,50 @@ export function getNextOpeningTime(
   };
 }
 
+/**
+ * Gets the day of week name from a Date object
+ * Returns: day_of_week string (e.g., "monday", "tuesday")
+ */
+export function getDayOfWeekFromDate(date: Date, timezone: string = 'Europe/London'): OpeningDay['day_of_week'] {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'long',
+  });
+  const dayName = formatter.format(date).toLowerCase();
+  
+  // Map to our day_of_week type
+  const dayMap: Record<string, OpeningDay['day_of_week']> = {
+    sunday: 'sunday',
+    monday: 'monday',
+    tuesday: 'tuesday',
+    wednesday: 'wednesday',
+    thursday: 'thursday',
+    friday: 'friday',
+    saturday: 'saturday',
+  };
+  
+  return dayMap[dayName] ?? 'monday'; // Default to Monday if unknown
+}
+
+/**
+ * Checks if a specific date is closed based on booking settings
+ */
+export function isDayClosed(date: Date, settings: BookingSettings, timezone: string = 'Europe/London'): boolean {
+  const dayOfWeek = getDayOfWeekFromDate(date, timezone);
+  const dayConfig = settings.opening_days.find(day => day.day_of_week === dayOfWeek);
+  return !dayConfig || !dayConfig.is_open;
+}
+
+/**
+ * Formats a date for display as "Mon 01 January"
+ */
+export function formatDateForDisplay(date: Date, timezone: string = 'Europe/London'): string {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+  });
+  return formatter.format(date);
+}
+

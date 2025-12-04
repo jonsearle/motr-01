@@ -103,6 +103,68 @@ export async function getBookingsByDateRange(
   return data || []
 }
 
+export async function getBookingsByDate(date: string): Promise<Booking[]> {
+  // Format date as YYYY-MM-DD string for PostgreSQL date comparison
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('date', date)
+    .order('time', { ascending: true, nullsFirst: false })
+
+  if (error) {
+    throw error
+  }
+
+  return data || []
+}
+
+export async function getBookingById(id: string): Promise<Booking | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    // If no rows found, return null instead of throwing
+    if (error.code === 'PGRST116') {
+      return null
+    }
+    throw error
+  }
+
+  return data
+}
+
+export async function updateBooking(
+  id: string,
+  data: Partial<Omit<Booking, 'id' | 'created_at'>>
+): Promise<Booking> {
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return booking
+}
+
+export async function deleteBooking(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    throw error
+  }
+}
+
 // Garage Site Content helpers
 export async function getGarageSiteContent(): Promise<GarageSiteContent | null> {
   const { data, error } = await supabase
