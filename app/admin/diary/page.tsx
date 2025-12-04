@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBookingsByMonth, getBookingSettings } from "@/lib/db";
 import { isDayClosed, formatDateForDisplay } from "@/lib/business-hours";
 import type { Booking, BookingSettings } from "@/types/db";
 import DiaryDayPanel from "@/components/DiaryDayPanel";
 
-export default function DiaryPage() {
+function DiaryPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -322,5 +322,17 @@ export default function DiaryPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function DiaryPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <DiaryPageContent />
+    </Suspense>
   );
 }

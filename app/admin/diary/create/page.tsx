@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBooking } from "@/lib/db";
 import toast from "react-hot-toast";
@@ -12,7 +12,7 @@ const APPOINTMENT_TYPES = [
   "Request a Specific Job",
 ];
 
-export default function CreateBookingPage() {
+function CreateBookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -245,6 +245,18 @@ export default function CreateBookingPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function CreateBookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <CreateBookingPageContent />
+    </Suspense>
   );
 }
 
