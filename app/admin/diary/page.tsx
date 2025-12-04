@@ -184,14 +184,14 @@ export default function DiaryPage() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-2xl font-semibold">Your Diary</h1>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
           <button
             onClick={handleCreateBooking}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors w-full sm:w-auto"
           >
             Create booking
           </button>

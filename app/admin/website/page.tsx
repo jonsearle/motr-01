@@ -268,13 +268,13 @@ export default function WebsitePage() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full max-w-6xl">
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold">Edit your website</h1>
         <button
           type="button"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
         >
           View website
         </button>
@@ -409,8 +409,8 @@ export default function WebsitePage() {
       {/* Services Section */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-2">Services you want to promote:</h2>
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Service Name</th>
@@ -471,8 +471,8 @@ export default function WebsitePage() {
       {/* Customer Reviews Section */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-2">Your Customer Reviews:</h2>
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Customer Name</th>

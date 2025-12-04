@@ -113,7 +113,7 @@ export default function CreateBookingPage() {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full max-w-4xl">
       <h1 className="text-2xl font-semibold mb-6">Create Booking</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,7 +147,7 @@ export default function CreateBookingPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
               Date

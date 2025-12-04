@@ -267,7 +267,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full max-w-6xl">
       <h1 className="text-2xl font-semibold mb-6">Settings</h1>
 
       {/* Error/Success Messages */}
@@ -326,8 +326,8 @@ export default function SettingsPage() {
       {/* Business Hours Section */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-4">Business Hours</h2>
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Days</th>
@@ -486,8 +486,8 @@ export default function SettingsPage() {
           <p className="text-sm text-gray-600 mb-4">
             Ask customers to drop off their vehicles between these times when booking online:
           </p>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <table className="w-full">
+          <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Days</th>
