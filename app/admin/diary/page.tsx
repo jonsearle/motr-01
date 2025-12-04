@@ -14,22 +14,20 @@ function DiaryPageContent() {
   const [settings, setSettings] = useState<BookingSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    // Initialize from URL params or use current month
-    const monthParam = searchParams.get("month");
-    if (monthParam) {
-      const [year, month] = monthParam.split("-").map(Number);
-      return new Date(year, month - 1, 1);
-    }
-    return new Date();
-  });
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [today] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
 
-  // Initialize selected date from URL if present
+  // Initialize current month and selected date from URL params
   useEffect(() => {
+    const monthParam = searchParams.get("month");
+    if (monthParam) {
+      const [year, month] = monthParam.split("-").map(Number);
+      setCurrentMonth(new Date(year, month - 1, 1));
+    }
+
     const selectedDateParam = searchParams.get("selectedDate");
     if (selectedDateParam) {
       const date = new Date(selectedDateParam);
