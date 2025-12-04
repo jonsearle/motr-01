@@ -25,20 +25,27 @@ export default function AdminLayout({
     setIsMenuOpen(false);
   }, [pathname]);
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside (desktop only - mobile menu is full screen)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      // Only handle click-outside for desktop menu
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
+        // Check if we're on desktop (menuRef only exists for desktop menu)
+        const isDesktop = window.innerWidth >= 768;
+        if (isDesktop) {
+          setIsMenuOpen(false);
+        }
       }
     };
 
     if (isMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isMenuOpen]);
 
@@ -90,8 +97,13 @@ export default function AdminLayout({
 
       {/* Mobile Menu - Full Screen Overlay */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-white z-50">
-          <div className="flex flex-col h-full">
+        <div className="md:hidden fixed inset-0 bg-white z-50" onClick={(e) => {
+          // Close menu if clicking on the overlay background (not on menu content)
+          if (e.target === e.currentTarget) {
+            setIsMenuOpen(false);
+          }
+        }}>
+          <div className="flex flex-col h-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-800">Menu</h2>
               <button
@@ -112,11 +124,14 @@ export default function AdminLayout({
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={handleNavClick}
-                    className={`flex items-center gap-3 px-4 py-4 rounded-lg transition-colors ${
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavClick();
+                    }}
+                    className={`flex items-center gap-3 px-4 py-4 rounded-lg transition-colors touch-manipulation ${
                       isActive
                         ? "bg-gray-100 text-blue-600 font-semibold"
-                        : "text-gray-700 hover:bg-gray-50"
+                        : "text-gray-700 hover:bg-gray-50 active:bg-gray-100"
                     }`}
                   >
                     <span className="text-2xl">{item.icon}</span>
