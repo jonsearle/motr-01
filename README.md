@@ -28,12 +28,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Environment Variables
 
-Create a `.env.local` file in the root directory with your Supabase credentials:
+Create a `.env.local` file in the root directory with your Supabase credentials and Resend configuration:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=your_from_email_address
 ```
+
+**Note:** For production (Netlify), you'll need to add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to your Netlify environment variables as well.
 
 ## Learn More
 
