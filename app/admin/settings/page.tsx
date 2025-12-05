@@ -146,11 +146,6 @@ export default function SettingsPage() {
   const validateForm = (): boolean => {
     setEmailError(null);
     
-    if (!notificationName.trim()) {
-      setError('Notification name is required');
-      return false;
-    }
-    
     if (!notificationEmail.trim()) {
       setError('Notification email is required');
       return false;
@@ -287,16 +282,6 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold mb-2">Booking alerts</h2>
         <p className="text-sm text-gray-600 mb-4">Who should we alert if you get an online booking?</p>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input
-              type="text"
-              value={notificationName}
-              onChange={(e) => setNotificationName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter name"
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
