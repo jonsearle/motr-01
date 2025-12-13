@@ -103,6 +103,53 @@ export async function getBookingsByDateRange(
   return data || []
 }
 
+export async function getBookingById(id: string): Promise<Booking | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    // If no rows found, return null instead of throwing
+    if (error.code === 'PGRST116') {
+      return null
+    }
+    throw error
+  }
+
+  return data
+}
+
+export async function updateBooking(
+  id: string,
+  updates: Partial<Booking>
+): Promise<Booking> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
+export async function deleteBooking(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    throw error
+  }
+}
+
 // Garage Site Content helpers
 export async function getGarageSiteContent(): Promise<GarageSiteContent | null> {
   const { data, error } = await supabase
