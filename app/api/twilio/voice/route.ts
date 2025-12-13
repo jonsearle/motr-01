@@ -43,7 +43,8 @@ export async function POST(request: Request) {
     if (callerPhoneNumber) {
       try {
         await client.messages.create({
-          body: 'Sorry we missed your call. You can book online here: https://BOOKING_LINK_PLACEHOLDER',
+            body: "Jon's Garage: Hello - sorry we missed your call. If you'd like to book your car in, you can do that here: https://spannr-dropoff-prototype-02.netlify.app/book . Or give us a ring when we're open.",
+
           from: fromNumber,
           to: callerPhoneNumber,
         });
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     // This plays a text-to-speech message and then hangs up
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say>Sorry we missed your call. We've just sent you a text with a link to book online.</Say>
+  <Say>Hello, this is Jon's Garage. Sorry we missed your call. We've sent you a text with a link to book online if you want to. Or you can just call us back when we're open and we'll help you then.</Say>
   <Hangup />
 </Response>`;
     
