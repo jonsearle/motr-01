@@ -74,7 +74,7 @@ export default function NotSurePage() {
 
   const handleProblemClick = (problem: string) => {
     if (problem === "Something else") {
-      return `/book/custom-job?from_unsure=1`;
+      return `/book/custom-job`;
     }
     return `/book/date-time?problem=${encodeURIComponent(problem)}`;
   };
