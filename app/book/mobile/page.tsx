@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getGarageSiteContent, getBookingSettings, createBooking } from "@/lib/db";
 import type { GarageSiteContent, BookingSettings } from "@/types/db";
 import { sendBookingNotificationEmail } from "@/lib/send-booking-notification-email";
@@ -286,28 +287,19 @@ function MobilePageContent() {
         {/* Powered by Spannr footer */}
         <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
           <a
-            href="https://bbc.co.uk"
+            href="https://motex-home.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
-            >
-              <path
-                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>Powered by Spannr</span>
+            <Image
+              src="/images/spannr-icon-white.png"
+              alt="Spannr"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span>Powered by Motr</span>
           </a>
         </div>
       </div>

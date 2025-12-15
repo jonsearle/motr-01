@@ -233,7 +233,7 @@ export default function ReactiveHeader() {
             {/* Book Online Button - Smaller on desktop */}
             <Link 
               href="/book"
-              className="block w-full bg-gray-800 border border-white text-white font-bold py-4 md:py-3 px-6 rounded-lg transition-colors text-base hover:bg-gray-700"
+              className="block w-full bg-gray-800 border border-white text-white font-bold py-4 md:py-3 px-6 rounded-lg transition-colors text-base hover:bg-gray-700 text-center"
             >
               Book online
             </Link>

@@ -10,11 +10,11 @@ export default function Footer() {
         <Image
           src="/images/spannr-icon-white.png"
           alt="Spannr"
-          width={16}
-          height={16}
+          width={32}
+          height={32}
           className="object-contain"
         />
-        <span className="text-white text-xs">Built by Spannr</span>
+        <span className="text-white text-xs">Powered by Motr</span>
       </div>
     </footer>
   );
