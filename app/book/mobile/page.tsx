@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getGarageSiteContent, getBookingSettings, createBooking } from "@/lib/db";
 import type { GarageSiteContent, BookingSettings } from "@/types/db";
+import { sendBookingNotificationEmail } from "@/lib/send-booking-notification-email";
 
 function MobilePageContent() {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ function MobilePageContent() {
   const appointmentType = searchParams.get("appointment_type");
   const problem = searchParams.get("problem");
   const description = searchParams.get("description");
+  const fromUnsure = searchParams.get("from_unsure") === "1";
   const dateParam = searchParams.get("date");
 
   const canSubmit = customerName.trim().length > 0 && mobile.trim().length > 0;
@@ -94,8 +96,15 @@ function MobilePageContent() {
       if (problem) {
         finalAppointmentType = problem;
       } else if (description) {
-        finalAppointmentType = "Custom job";
-        issueDescription = description;
+        // If this came from "Something else" option (from_unsure=1), set as "Customer is unsure"
+        if (fromUnsure) {
+          finalAppointmentType = "Customer is unsure";
+          issueDescription = description;
+        } else {
+          // Regular custom job description
+          finalAppointmentType = "Custom job";
+          issueDescription = description;
+        }
       }
 
       // Create booking
@@ -109,7 +118,21 @@ function MobilePageContent() {
         vehicle_reg: vehicleReg.trim() || undefined,
       };
 
-      await createBooking(bookingData);
+      const createdBooking = await createBooking(bookingData);
+      console.log("[Client] Booking created successfully:", createdBooking.id);
+
+      // Send email notification asynchronously (fire-and-forget)
+      // Don't await - booking flow continues regardless of email result
+      console.log("[Client] Triggering email notification for booking:", createdBooking.id);
+      
+      // Call the server action and handle the promise
+      const emailPromise = sendBookingNotificationEmail(createdBooking.id);
+      emailPromise.then(() => {
+        console.log("[Client] Email notification promise resolved");
+      }).catch((error) => {
+        // Error is already logged in the server action, but catch here to prevent unhandled promise rejection
+        console.error("[Client] Email sending promise rejected:", error);
+      });
 
       // Navigate to confirmation page
       router.push(`/book/confirmation?date=${dateParam}`);

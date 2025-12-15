@@ -1,25 +1,32 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getGarageSiteContent } from "@/lib/db";
 import type { GarageSiteContent } from "@/types/db";
 
-export default function CustomJobPage() {
+function CustomJobPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<GarageSiteContent | null>(null);
   const [description, setDescription] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const hasDescription = description.trim().length > 0;
+  const fromUnsure = searchParams.get("from_unsure") === "1";
 
   const handleContinue = () => {
     if (hasDescription) {
       const encodedDescription = encodeURIComponent(description.trim());
-      router.push(`/book/date-time?description=${encodedDescription}`);
+      const params = new URLSearchParams();
+      params.set("description", encodedDescription);
+      if (fromUnsure) {
+        params.set("from_unsure", "1");
+      }
+      router.push(`/book/date-time?${params.toString()}`);
     }
   };
 
@@ -182,6 +189,18 @@ export default function CustomJobPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomJobPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <CustomJobPageContent />
+    </Suspense>
   );
 }
 
