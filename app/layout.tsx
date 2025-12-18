@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Spannr Drop-Off Prototype 02",
   description: "Admin Portal and Booking Site MVP",
   icons: {
-    icon: "/icon.svg",
+    icon: "/images/motr-grey.png",
   },
 };
 
