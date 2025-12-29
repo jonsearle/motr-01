@@ -251,7 +251,7 @@ function DiaryPageContent() {
             <div className="flex items-start bg-gray-50 rounded border border-gray-200 divide-x divide-gray-300">
               {/* Online Booking Notice Control */}
               <div className="px-4 py-2">
-                <div className="text-sm text-gray-600 mb-1">Online bookings notice</div>
+                <div className="text-sm text-gray-600 mb-1">Online booking lead time</div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleLeadTimeChange(-1)}
@@ -317,7 +317,7 @@ function DiaryPageContent() {
           {settings && (
             <div className="flex items-start gap-3">
               <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 flex-1">
-                <div className="text-xs text-gray-600 mb-1">Online bookings notice</div>
+                <div className="text-xs text-gray-600 mb-1">Online booking lead time</div>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleLeadTimeChange(-1)}
