@@ -1,4 +1,4 @@
-import type { BookingSettings, OpeningDay } from '@/types/db';
+import type { BookingSettings, OpeningDay, Booking } from '@/types/db';
 
 /**
  * Converts 24-hour time string (HH:MM) to 12-hour format with am/pm
@@ -239,5 +239,159 @@ export function formatDateForDisplay(date: Date, timezone: string = 'Europe/Lond
     month: 'long',
   });
   return formatter.format(date);
+}
+
+/**
+ * Formats a date for display as "Friday 5 January" (full weekday name)
+ */
+export function formatDateForDisplayFull(date: Date, timezone: string = 'Europe/London'): string {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return formatter.format(date);
+}
+
+/**
+ * Gets current date in the specified timezone (date only, no time)
+ */
+function getCurrentDateInTimezone(timezone: string = 'Europe/London'): Date {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parseInt(parts.find(p => p.type === 'year')!.value);
+  const month = parseInt(parts.find(p => p.type === 'month')!.value) - 1; // 0-indexed
+  const day = parseInt(parts.find(p => p.type === 'day')!.value);
+  return new Date(year, month, day);
+}
+
+/**
+ * Counts working days from today to a given date (in garage timezone)
+ * Today counts as day 0, tomorrow is day 1, etc.
+ * Only counts days when the garage is open
+ */
+function countWorkingDaysToDate(date: Date, settings: BookingSettings): number {
+  const today = getCurrentDateInTimezone(settings.timezone);
+  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  // If target is today or in the past, return 0
+  if (targetDate <= startDate) return 0;
+  
+  let workingDays = 0;
+  let currentDate = new Date(startDate);
+  
+  // Start from tomorrow (day 1) and count up to and including the target date
+  currentDate.setDate(currentDate.getDate() + 1);
+  
+  // Count working days until we reach and include the target date
+  while (currentDate <= targetDate) {
+    if (!isDayClosed(currentDate, settings, settings.timezone)) {
+      workingDays++;
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return workingDays;
+}
+
+/**
+ * Checks if a date is within the lead time window (too soon to book)
+ */
+function isWithinLeadTime(date: Date, settings: BookingSettings): boolean {
+  if (settings.lead_time_days === 0) return false;
+  
+  const workingDays = countWorkingDaysToDate(date, settings);
+  return workingDays < settings.lead_time_days;
+}
+
+/**
+ * Checks if a date has reached its daily booking limit
+ */
+function isFullyBooked(date: Date, settings: BookingSettings, bookings: Booking[]): boolean {
+  if (settings.daily_booking_limit === 0) return false;
+  
+  // Format date as YYYY-MM-DD string
+  const dateStr = date.toISOString().split('T')[0];
+  
+  // Count bookings for this date
+  const bookingsForDate = bookings.filter(booking => booking.date === dateStr);
+  
+  return bookingsForDate.length >= settings.daily_booking_limit;
+}
+
+/**
+ * Checks if a date is in the past (in garage timezone)
+ */
+function isDateInPast(date: Date, timezone: string = 'Europe/London'): boolean {
+  const today = getCurrentDateInTimezone(timezone);
+  const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const compareToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return compareDate < compareToday;
+}
+
+/**
+ * Checks if a date is available for booking (not past, not closed, not within lead time, not fully booked)
+ */
+function isDateAvailable(date: Date, settings: BookingSettings, bookings: Booking[]): boolean {
+  const isPast = isDateInPast(date, settings.timezone);
+  const isClosed = isDayClosed(date, settings, settings.timezone);
+  const isWithinLeadTimeWindow = isWithinLeadTime(date, settings);
+  const isFullyBookedDate = isFullyBooked(date, settings, bookings);
+  
+  return !isPast && !isClosed && !isWithinLeadTimeWindow && !isFullyBookedDate;
+}
+
+/**
+ * Calculates the next available online booking date
+ * Takes into account lead_time_days (working days) and fully booked dates
+ * Returns the formatted date string like "Friday 5 January"
+ * Note: This function uses the provided bookings array. For accurate results,
+ * ensure bookings includes at least a few months of future bookings.
+ */
+export function getNextAvailableOnlineBookingDate(
+  settings: BookingSettings,
+  bookings: Booking[]
+): string | null {
+  if (!settings) return null;
+
+  const today = getCurrentDateInTimezone(settings.timezone);
+  let searchDate = new Date(today);
+  
+  // Start from tomorrow (today is day 0, so we start from day 1)
+  // If lead_time_days is 0, today would be available, but typically we want at least tomorrow
+  // The isDateAvailable function will check if the date is within lead time
+  if (settings.lead_time_days === 0) {
+    // Start from today if lead_time_days is 0
+    searchDate = new Date(today);
+  } else {
+    // Start from tomorrow (day 1)
+    searchDate.setDate(today.getDate() + 1);
+  }
+  
+  // Search for the next available date
+  // isDateAvailable will check: not past, not closed, not within lead time, not fully booked
+  const maxDaysToSearch = 365; // Search up to 1 year ahead
+  let daysSearched = 0;
+  
+  while (daysSearched < maxDaysToSearch) {
+    if (isDateAvailable(searchDate, settings, bookings)) {
+      return formatDateForDisplayFull(searchDate, settings.timezone);
+    }
+    
+    // Move to next day and continue searching
+    searchDate.setDate(searchDate.getDate() + 1);
+    daysSearched++;
+  }
+  
+  // If we couldn't find an available date within 1 year, return null
+  return null;
 }
 

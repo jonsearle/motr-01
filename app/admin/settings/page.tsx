@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   
   const [openingDays, setOpeningDays] = useState<OpeningDay[]>([]);
-  const [leadTimeDays, setLeadTimeDays] = useState(0);
+  const [leadTimeDays, setLeadTimeDays] = useState(1);
   const [dailyBookingLimit, setDailyBookingLimit] = useState(3);
   const [settingsId, setSettingsId] = useState<string | null>(null);
 
@@ -110,7 +110,7 @@ export default function SettingsPage() {
         setSettingsId(settings.id);
         setNotificationName(settings.notification_name || '');
         setNotificationEmail(settings.notification_email || '');
-        setLeadTimeDays(settings.lead_time_days || 0);
+        setLeadTimeDays(Math.max(1, settings.lead_time_days || 1));
         setDailyBookingLimit(settings.daily_booking_limit || 3);
         
         // Ensure we have all 7 days
@@ -411,22 +411,16 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setLeadTimeDays(Math.max(0, leadTimeDays - 1))}
-            className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 font-medium"
+            onClick={() => setLeadTimeDays(Math.max(1, leadTimeDays - 1))}
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-50 font-medium text-lg leading-none"
           >
             −
           </button>
-          <input
-            type="number"
-            value={leadTimeDays}
-            onChange={(e) => setLeadTimeDays(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-20 px-3 py-1.5 border border-gray-300 rounded text-center"
-            min="0"
-          />
+          <span className="text-lg font-medium min-w-[3rem] text-center">{leadTimeDays}</span>
           <button
             type="button"
             onClick={() => setLeadTimeDays(leadTimeDays + 1)}
-            className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 font-medium"
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-50 font-medium text-lg leading-none"
           >
             +
           </button>
@@ -442,21 +436,15 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setDailyBookingLimit(Math.max(1, dailyBookingLimit - 1))}
-            className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 font-medium"
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-50 font-medium text-lg leading-none"
           >
             −
           </button>
-          <input
-            type="number"
-            value={dailyBookingLimit}
-            onChange={(e) => setDailyBookingLimit(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-20 px-3 py-1.5 border border-gray-300 rounded text-center"
-            min="1"
-          />
+          <span className="text-lg font-medium min-w-[3rem] text-center">{dailyBookingLimit}</span>
           <button
             type="button"
             onClick={() => setDailyBookingLimit(dailyBookingLimit + 1)}
-            className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 font-medium"
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-50 font-medium text-lg leading-none"
           >
             +
           </button>
