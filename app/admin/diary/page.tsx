@@ -260,7 +260,9 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-base font-medium min-w-[2rem] text-center">{settings.lead_time_days}</span>
+                  <span className="text-base font-medium min-w-[4rem] text-center">
+                    {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
+                  </span>
                   <button
                     onClick={() => handleLeadTimeChange(1)}
                     disabled={savingLeadTime}
@@ -326,7 +328,9 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-sm font-medium min-w-[1.5rem] text-center">{settings.lead_time_days}</span>
+                  <span className="text-sm font-medium min-w-[3.5rem] text-center">
+                    {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
+                  </span>
                   <button
                     onClick={() => handleLeadTimeChange(1)}
                     disabled={savingLeadTime}
