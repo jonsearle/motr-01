@@ -229,9 +229,9 @@ function DiaryPageContent() {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] flex flex-col">
       {/* Header */}
-      <div className="mb-6 space-y-3">
+      <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
         {/* Desktop: Top row layout */}
         <div className="hidden lg:flex lg:items-start lg:justify-between lg:gap-4">
           {/* Left side: Title and Add booking button */}
@@ -366,12 +366,11 @@ function DiaryPageContent() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="w-full mb-4" style={{ height: 'calc(100vh - 250px)', minHeight: '600px' }}>
+      <div className="w-full flex-1 min-h-0 flex flex-col">
         <div 
-          className="grid grid-cols-7 gap-1 sm:gap-2 h-full"
+          className="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0"
           style={{ 
             gridTemplateRows: `auto repeat(${numberOfRows}, 1fr)`,
-            height: '100%'
           }}
         >
           {/* Day headers */}
