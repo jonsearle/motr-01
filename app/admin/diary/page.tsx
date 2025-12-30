@@ -386,11 +386,7 @@ function DiaryPageContent() {
               }
             }
 
-            if (dayIsToday) {
-              dayClasses += "border-2 border-gray-800 ";
-            } else {
-              dayClasses += "border-gray-200 ";
-            }
+            dayClasses += "border-gray-200 ";
 
             return (
               <div
