@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import { useState, useEffect, useRef } from "react";
-import { getGarageSiteContent } from "@/lib/db";
 
 export default function AdminLayout({
   children,
@@ -13,9 +12,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [businessName, setBusinessName] = useState<string>("");
 
   const navItems = [
     { href: "/admin/diary", label: "Your Diary", icon: "/images/diary-icon.png" },
@@ -23,20 +22,32 @@ export default function AdminLayout({
     { href: "/admin/settings", label: "Settings", icon: "/images/settings-icon.png" },
   ];
 
-  // Fetch business name on mount
-  useEffect(() => {
-    const loadBusinessName = async () => {
-      try {
-        const content = await getGarageSiteContent();
-        if (content?.business_name) {
-          setBusinessName(content.business_name);
-        }
-      } catch (error) {
-        console.error("Error loading business name:", error);
-      }
-    };
-    loadBusinessName();
-  }, []);
+  // Get page title based on pathname
+  const getPageTitle = (pathname: string | null): string => {
+    if (!pathname) return '';
+    if (pathname === '/admin/diary' || pathname.startsWith('/admin/diary/')) {
+      return 'Your Diary';
+    }
+    if (pathname === '/admin/website') {
+      return 'Your Website';
+    }
+    if (pathname === '/admin/settings') {
+      return 'Settings';
+    }
+    return '';
+  };
+
+  const pageTitle = getPageTitle(pathname);
+  const isDiaryPage = pathname === '/admin/diary';
+  const isCreateOrEditPage = pathname?.includes('/admin/diary/create') || pathname?.includes('/admin/diary/edit');
+
+  // Handle create booking navigation
+  const handleCreateBooking = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    router.push(`/admin/diary/create?month=${year}-${month}`);
+  };
 
   // Close menu when pathname changes (navigation)
   useEffect(() => {
@@ -76,9 +87,10 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F9FAFB]">
       {/* Top Bar - Full Width */}
-      <div className="w-full bg-white h-16 flex items-center justify-between px-4 relative">
+      {!isCreateOrEditPage && (
+      <div className="w-full bg-[#F9FAFB] h-16 flex items-center justify-between px-4 relative">
         <div className="flex items-center gap-3">
           {/* Hamburger Menu Button */}
           <button
@@ -105,32 +117,28 @@ export default function AdminLayout({
             </div>
           </button>
 
-          {/* Business Name */}
-          {businessName && (
+          {/* Page Title */}
+          {pageTitle && (
             <div className="text-gray-800 font-semibold text-lg">
-              {businessName}
+              {pageTitle}
             </div>
           )}
         </div>
         
-        {/* Motr Logo */}
-        <div className="flex items-center">
-          <a
-            href="https://motex-home.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition-opacity"
-          >
-            <Image
-              src="/images/motr-grey.png"
-              alt="Motr"
-              width={40}
-              height={16}
-              className="h-4 w-auto"
-            />
-          </a>
-        </div>
+        {/* Add Booking Button (Diary page only) */}
+        {isDiaryPage && (
+          <div className="flex items-center">
+            <button
+              onClick={handleCreateBooking}
+              className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xl leading-none"
+              aria-label="Add booking"
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
+      )}
 
       {/* Mobile Menu - Full Screen Overlay */}
       {isMenuOpen && (
@@ -191,7 +199,7 @@ export default function AdminLayout({
       {isMenuOpen && (
         <div
           ref={menuRef}
-          className="hidden md:block fixed top-16 left-4 bg-white border border-gray-200 rounded-lg shadow-lg z-40 min-w-[200px]"
+          className={`hidden md:block fixed ${isCreateOrEditPage ? 'top-4' : 'top-16'} left-4 bg-white border border-gray-200 rounded-lg shadow-lg z-40 min-w-[200px]`}
         >
           <nav className="flex flex-col py-2">
             {navItems.map((item) => {
@@ -223,7 +231,7 @@ export default function AdminLayout({
       )}
 
       {/* Main Content Area - Full Width */}
-      <main className="w-full bg-white p-4 md:p-8">{children}</main>
+      <main className={`w-full bg-[#F9FAFB] ${isCreateOrEditPage ? 'p-4 md:p-6 pt-4 md:pt-6' : 'p-4 md:p-8'}`}>{children}</main>
       <Toaster position="top-right" />
     </div>
   );

@@ -157,7 +157,7 @@ export default function EditBookingPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-semibold mb-6">Edit Booking</h1>
+      <h1 className="text-2xl font-semibold mb-4">Edit Booking</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

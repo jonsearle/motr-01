@@ -270,8 +270,7 @@ export default function WebsitePage() {
   return (
     <div className="w-full max-w-6xl">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-semibold">Edit your website</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-4 mb-6">
         <button
           type="button"
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"

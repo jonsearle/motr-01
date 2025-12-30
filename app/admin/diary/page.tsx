@@ -119,11 +119,6 @@ function DiaryPageContent() {
     router.push(`/admin/diary?month=${year}-${month}&selectedDate=${dateStr}`);
   };
 
-  const handleCreateBooking = () => {
-    const year = currentMonth.getFullYear();
-    const month = String(currentMonth.getMonth() + 1).padStart(2, "0");
-    router.push(`/admin/diary/create?month=${year}-${month}`);
-  };
 
   const handleBookingDeleted = () => {
     // Reload bookings
@@ -233,20 +228,8 @@ function DiaryPageContent() {
       {/* Header */}
       <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
         {/* Desktop: Top row layout */}
-        <div className="hidden lg:flex lg:items-start lg:justify-between lg:gap-4">
-          {/* Left side: Title and Add booking button */}
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold">Your Diary</h1>
-            <button
-              onClick={handleCreateBooking}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <span className="text-lg leading-none">+</span>
-              <span>Add booking</span>
-            </button>
-          </div>
-          
-          {/* Right side: Combined Info Panel */}
+        <div className="hidden lg:flex lg:items-start lg:justify-end lg:gap-4">
+          {/* Combined Info Panel */}
           {settings && (
             <div className="flex items-start bg-gray-50 rounded border border-gray-200 divide-x divide-gray-300">
               {/* Online Booking Notice Control */}
@@ -301,21 +284,9 @@ function DiaryPageContent() {
           </button>
         </div>
 
-        {/* Tablet/Mobile: Two row layout */}
+        {/* Tablet/Mobile: Layout */}
         <div className="lg:hidden space-y-3">
-          {/* Row 1: Title and Create Booking Button */}
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold">Your Diary</h1>
-            <button
-              onClick={handleCreateBooking}
-              className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xl leading-none"
-              aria-label="Add booking"
-            >
-              +
-            </button>
-          </div>
-          
-          {/* Row 2: Online Booking Notice and Next Available */}
+          {/* Online Booking Notice and Next Available */}
           {settings && (
             <div className="flex items-start gap-3">
               <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 flex-1">

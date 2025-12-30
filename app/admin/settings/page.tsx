@@ -263,8 +263,6 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full max-w-6xl">
-      <h1 className="text-2xl font-semibold mb-6">Settings</h1>
-
       {/* Error/Success Messages */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
