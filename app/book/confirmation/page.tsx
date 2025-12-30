@@ -211,14 +211,14 @@ function ConfirmationPageContent() {
         {/* Booking details */}
         {dropoffTimes ? (
           <p className="text-white text-base mb-6">
-            We&apos;ve sent you a confirmation text and will see between{" "}
+            We&apos;ll see you between{" "}
             <span className="font-bold">{dropoffTimes.from}</span> and{" "}
             <span className="font-bold">{dropoffTimes.to}</span> on{" "}
             <span className="font-bold">{formattedDate}</span>.
           </p>
         ) : (
           <p className="text-white text-base mb-6">
-            We&apos;ve sent you a confirmation text and will see you on{" "}
+            We&apos;ll see you on{" "}
             <span className="font-bold">{formattedDate}</span>.
           </p>
         )}
