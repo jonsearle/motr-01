@@ -65,8 +65,8 @@ export default function BookPage() {
   const businessName = content?.business_name || "Garage";
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-20 md:pb-24">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-32 md:pb-36">
+      <div className="w-full max-w-md flex flex-col">
         {/* Header with garage name */}
         <Link 
           href="/"
@@ -148,7 +148,7 @@ export default function BookPage() {
         </div>
 
         {/* Powered by Spannr footer */}
-        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
+        <div className="pt-8 pb-4 flex justify-end">
           <a
             href="https://motex-home.netlify.app/"
             target="_blank"
