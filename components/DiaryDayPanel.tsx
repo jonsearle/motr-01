@@ -34,7 +34,7 @@ export default function DiaryDayPanel({
     return new Intl.DateTimeFormat("en-GB", {
       weekday: "short",
       day: "2-digit",
-      month: "long",
+      month: "short",
     }).format(date);
   };
 

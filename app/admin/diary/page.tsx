@@ -234,7 +234,7 @@ function DiaryPageContent() {
             <div className="flex items-start bg-gray-50 rounded border border-gray-200 divide-x divide-gray-300">
               {/* Online Booking Notice Control */}
               <div className="px-4 py-2">
-                <div className="text-sm text-gray-600 mb-1">Advance booking</div>
+                <div className="text-sm text-gray-600 mb-1">Online booking opens in</div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleLeadTimeChange(-1)}
@@ -243,7 +243,7 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-base font-medium min-w-[4rem] text-center">
+                  <span className="text-lg font-medium min-w-[4rem] text-center">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
                   </span>
                   <button
@@ -260,7 +260,7 @@ function DiaryPageContent() {
               {nextAvailableDate && (
                 <div className="px-4 py-2">
                   <div className="text-sm text-gray-600 mb-1">Next available</div>
-                  <div className="text-base font-medium">{nextAvailableDate}</div>
+                  <div className="text-lg font-medium">{nextAvailableDate}</div>
                 </div>
               )}
             </div>
@@ -288,9 +288,9 @@ function DiaryPageContent() {
         <div className="lg:hidden space-y-3">
           {/* Online Booking Notice and Next Available */}
           {settings && (
-            <div className="flex items-start gap-3">
-              <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 flex-1">
-                <div className="text-xs text-gray-600 mb-1">Advance booking</div>
+            <div className="flex items-start bg-white rounded divide-x divide-gray-200">
+              <div className="px-3 py-2 flex-1">
+                <div className="text-xs text-gray-600 mb-1">Online booking opens in</div>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleLeadTimeChange(-1)}
@@ -299,7 +299,7 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-sm font-medium min-w-[3.5rem] text-center">
+                  <span className="text-lg font-medium min-w-[3.5rem] text-center">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
                   </span>
                   <button
@@ -313,9 +313,9 @@ function DiaryPageContent() {
               </div>
               
               {nextAvailableDate && (
-                <div className="px-3 py-2 bg-gray-50 rounded border border-gray-200 flex-1">
+                <div className="px-3 py-2 flex-1">
                   <div className="text-xs text-gray-600 mb-1">Next available</div>
-                  <div className="text-sm font-medium">{nextAvailableDate}</div>
+                  <div className="text-lg font-medium">{nextAvailableDate}</div>
                 </div>
               )}
             </div>

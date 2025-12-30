@@ -229,16 +229,17 @@ export function isDayClosed(date: Date, settings: BookingSettings, timezone: str
 }
 
 /**
- * Formats a date for display as "Mon 01 January"
+ * Formats a date for display as "Mon 01 Jan"
  */
 export function formatDateForDisplay(date: Date, timezone: string = 'Europe/London'): string {
   const formatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     weekday: 'short',
     day: '2-digit',
-    month: 'long',
+    month: 'short',
   });
-  return formatter.format(date);
+  // Remove any commas that might be added by the formatter
+  return formatter.format(date).replace(/,/g, '');
 }
 
 /**
@@ -383,7 +384,24 @@ export function getNextAvailableOnlineBookingDate(
   
   while (daysSearched < maxDaysToSearch) {
     if (isDateAvailable(searchDate, settings, bookings)) {
-      return formatDateForDisplayFull(searchDate, settings.timezone);
+      // Check if the found date is tomorrow
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Normalize dates to compare only year, month, day
+      const foundYear = searchDate.getFullYear();
+      const foundMonth = searchDate.getMonth();
+      const foundDay = searchDate.getDate();
+      
+      const tomorrowYear = tomorrow.getFullYear();
+      const tomorrowMonth = tomorrow.getMonth();
+      const tomorrowDay = tomorrow.getDate();
+      
+      if (foundYear === tomorrowYear && foundMonth === tomorrowMonth && foundDay === tomorrowDay) {
+        return 'Tomorrow';
+      }
+      
+      return formatDateForDisplay(searchDate, settings.timezone);
     }
     
     // Move to next day and continue searching
