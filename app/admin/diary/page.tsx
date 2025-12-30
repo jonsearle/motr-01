@@ -243,7 +243,7 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-lg font-medium min-w-[4rem] text-center">
+                  <span className="text-lg font-semibold min-w-[4rem] text-center">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
                   </span>
                   <button
@@ -260,7 +260,7 @@ function DiaryPageContent() {
               {nextAvailableDate && (
                 <div className="px-4 py-2">
                   <div className="text-sm text-gray-600 mb-1">Next available</div>
-                  <div className="text-lg font-medium">{nextAvailableDate}</div>
+                  <div className="text-lg font-semibold">{nextAvailableDate}</div>
                 </div>
               )}
             </div>
@@ -268,17 +268,17 @@ function DiaryPageContent() {
         </div>
         
         {/* Desktop: Month Navigation (separate row) */}
-        <div className="hidden lg:flex lg:items-center lg:justify-end gap-2">
+        <div className="hidden lg:flex lg:items-center lg:justify-end gap-1">
           <button
             onClick={() => handleMonthChange("prev")}
-            className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
           >
             ‹
           </button>
-          <h2 className="text-lg font-medium">{monthName}</h2>
+          <h2 className="text-xs sm:text-sm font-bold text-gray-600 flex items-center">{monthName}</h2>
           <button
             onClick={() => handleMonthChange("next")}
-            className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
           >
             ›
           </button>
@@ -299,7 +299,7 @@ function DiaryPageContent() {
                   >
                     −
                   </button>
-                  <span className="text-lg font-medium min-w-[3.5rem] text-center">
+                  <span className="text-lg font-semibold min-w-[3.5rem] text-center">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
                   </span>
                   <button
@@ -315,24 +315,24 @@ function DiaryPageContent() {
               {nextAvailableDate && (
                 <div className="px-3 py-2 flex-1">
                   <div className="text-xs text-gray-600 mb-1">Next available</div>
-                  <div className="text-lg font-medium">{nextAvailableDate}</div>
+                  <div className="text-lg font-semibold">{nextAvailableDate}</div>
                 </div>
               )}
             </div>
           )}
           
           {/* Month Navigation */}
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-1">
             <button
               onClick={() => handleMonthChange("prev")}
-              className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
             >
               ‹
             </button>
-            <h2 className="text-lg font-medium">{monthName}</h2>
+            <h2 className="text-xs sm:text-sm font-bold text-gray-600 flex items-center">{monthName}</h2>
             <button
               onClick={() => handleMonthChange("next")}
-              className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
             >
               ›
             </button>
@@ -349,8 +349,8 @@ function DiaryPageContent() {
           }}
         >
           {/* Day headers */}
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <div key={day} className="text-center text-xs sm:text-sm font-medium text-gray-600 py-1 sm:py-2 flex items-center justify-center">
+          {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
+            <div key={`${day}-${index}`} className="text-xs sm:text-sm font-bold text-gray-600 py-1 sm:py-2 pl-1 sm:pl-2 flex items-center">
               {day}
             </div>
           ))}
