@@ -69,7 +69,7 @@ function CreateBookingPageContent() {
       }
 
       // Create booking
-      await createBooking({
+      const booking = await createBooking({
         customer_name: formData.customer_name.trim(),
         customer_mobile: formData.customer_mobile.trim(),
         date: formData.date,
@@ -77,6 +77,18 @@ function CreateBookingPageContent() {
         vehicle_reg: formData.vehicle_reg.trim() || undefined,
         issue_description: formData.issue_description.trim() || undefined,
         appointment_type: formData.appointment_type,
+      });
+
+      // Send email notification (fire-and-forget, don't block on errors)
+      fetch('/api/bookings/send-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId: booking.id }),
+      }).catch((error) => {
+        console.error("Failed to send booking notification email:", error);
+        // Don't show error to user - email failure shouldn't block booking
       });
 
       toast.success("Booking created");

@@ -109,7 +109,19 @@ function MobilePageContent() {
         vehicle_reg: vehicleReg.trim() || undefined,
       };
 
-      await createBooking(bookingData);
+      const booking = await createBooking(bookingData);
+
+      // Send email notification (fire-and-forget, don't block on errors)
+      fetch('/api/bookings/send-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId: booking.id }),
+      }).catch((error) => {
+        console.error("Failed to send booking notification email:", error);
+        // Don't show error to user - email failure shouldn't block booking
+      });
 
       // Navigate to confirmation page
       router.push(`/book/confirmation?date=${dateParam}`);
