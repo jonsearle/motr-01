@@ -220,7 +220,7 @@ function DiaryPageContent() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                    Minimum booking notice
+                    Minimum notice
                   </div>
                   <div className="text-sm font-semibold leading-[18px] text-gray-900">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
@@ -237,7 +237,7 @@ function DiaryPageContent() {
                 {nextAvailableDate && (
                   <div>
                     <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                      Next bookable date
+                      Next bookable
                     </div>
                     <div className="text-sm font-semibold leading-[18px] text-gray-900">
                       {nextAvailableDate}
@@ -250,7 +250,7 @@ function DiaryPageContent() {
             {/* Values Section - Desktop (1 row) */}
             <div className="hidden lg:flex lg:items-center lg:justify-between lg:px-4 lg:py-3 lg:gap-6">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-normal leading-[18px] text-gray-600">Minimum booking notice</span>
+                <span className="text-sm font-normal leading-[18px] text-gray-600">Minimum notice</span>
                 <span className="text-sm font-semibold leading-[18px] text-gray-900">
                   {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
                 </span>
@@ -263,7 +263,7 @@ function DiaryPageContent() {
               </div>
               {nextAvailableDate && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable date</span>
+                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable</span>
                   <span className="text-sm font-semibold leading-[18px] text-gray-900">
                     {nextAvailableDate}
                   </span>
