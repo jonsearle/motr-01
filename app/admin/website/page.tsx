@@ -271,12 +271,14 @@ export default function WebsitePage() {
     <div className="w-full max-w-6xl">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-4 mb-6">
-        <button
-          type="button"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+        <a
+          href={process.env.NEXT_PUBLIC_PUBLIC_SITE_URL || 'https://spannr-dropoff-prototype-02.netlify.app'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto text-center"
         >
           View website
-        </button>
+        </a>
       </div>
 
       {/* Error/Success Messages */}
