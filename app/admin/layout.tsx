@@ -17,22 +17,22 @@ export default function AdminLayout({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { href: "/admin/diary", label: "Your Diary", icon: "/images/diary-icon.png" },
-    { href: "/admin/website", label: "Your Website", icon: "/images/website-icon.png" },
-    { href: "/admin/settings", label: "Settings", icon: "/images/settings-icon.png" },
+    { href: "/admin/diary", label: "Bookings", icon: "/images/diary-icon.png" },
+    { href: "/admin/website", label: "Website", icon: "/images/website-icon.png" },
+    { href: "/admin/settings", label: "Opening Hours", icon: "/images/settings-icon.png" },
   ];
 
   // Get page title based on pathname
   const getPageTitle = (pathname: string | null): string => {
     if (!pathname) return '';
     if (pathname === '/admin/diary' || pathname.startsWith('/admin/diary/')) {
-      return 'Your Diary';
+      return 'Bookings';
     }
     if (pathname === '/admin/website') {
-      return 'Your Website';
+      return 'Website';
     }
     if (pathname === '/admin/settings') {
-      return 'Settings';
+      return 'Opening Hours';
     }
     return '';
   };

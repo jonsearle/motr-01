@@ -3,10 +3,8 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { getGarageSiteContent, getBookingSettings, createBooking } from "@/lib/db";
 import type { GarageSiteContent, BookingSettings } from "@/types/db";
-import { sendBookingNotificationEmail } from "@/lib/send-booking-notification-email";
 
 function MobilePageContent() {
   const [loading, setLoading] = useState(true);
@@ -25,7 +23,6 @@ function MobilePageContent() {
   const appointmentType = searchParams.get("appointment_type");
   const problem = searchParams.get("problem");
   const description = searchParams.get("description");
-  const fromUnsure = searchParams.get("from_unsure") === "1";
   const dateParam = searchParams.get("date");
 
   const canSubmit = customerName.trim().length > 0 && mobile.trim().length > 0;
@@ -97,15 +94,8 @@ function MobilePageContent() {
       if (problem) {
         finalAppointmentType = problem;
       } else if (description) {
-        // If this came from "Something else" option (from_unsure=1), set as "Customer is unsure"
-        if (fromUnsure) {
-          finalAppointmentType = "Customer is unsure";
-          issueDescription = description;
-        } else {
-          // Regular custom job description
-          finalAppointmentType = "Custom job";
-          issueDescription = description;
-        }
+        finalAppointmentType = "Custom job";
+        issueDescription = description;
       }
 
       // Create booking
@@ -119,21 +109,7 @@ function MobilePageContent() {
         vehicle_reg: vehicleReg.trim() || undefined,
       };
 
-      const createdBooking = await createBooking(bookingData);
-      console.log("[Client] Booking created successfully:", createdBooking.id);
-
-      // Send email notification asynchronously (fire-and-forget)
-      // Don't await - booking flow continues regardless of email result
-      console.log("[Client] Triggering email notification for booking:", createdBooking.id);
-      
-      // Call the server action and handle the promise
-      const emailPromise = sendBookingNotificationEmail(createdBooking.id);
-      emailPromise.then(() => {
-        console.log("[Client] Email notification promise resolved");
-      }).catch((error) => {
-        // Error is already logged in the server action, but catch here to prevent unhandled promise rejection
-        console.error("[Client] Email sending promise rejected:", error);
-      });
+      await createBooking(bookingData);
 
       // Navigate to confirmation page
       router.push(`/book/confirmation?date=${dateParam}`);
@@ -192,8 +168,8 @@ function MobilePageContent() {
   const businessName = content?.business_name || "Garage";
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-32 md:pb-36">
-      <div className="w-full max-w-md flex flex-col">
+    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-20 md:pb-24">
+      <div className="w-full max-w-md">
         {/* Header with garage name */}
         <Link 
           href="/"
@@ -285,21 +261,30 @@ function MobilePageContent() {
         </button>
 
         {/* Powered by Spannr footer */}
-        <div className="pt-8 pb-4 flex justify-end">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
           <a
-            href="https://motex-home.netlify.app/"
+            href="https://bbc.co.uk"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
           >
-            <Image
-              src="/images/spannr-icon-white.png"
-              alt="Spannr"
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-            <span>Powered by Motr</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Powered by Spannr</span>
           </a>
         </div>
       </div>

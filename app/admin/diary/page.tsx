@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getBookingsByMonth, getBookingSettings, upsertBookingSettings, getBookingsByDateRange } from "@/lib/db";
+import { getBookingsByMonth, getBookingSettings, getBookingsByDateRange } from "@/lib/db";
 import { isDayClosed, formatDateForDisplay, getNextAvailableOnlineBookingDate } from "@/lib/business-hours";
 import type { Booking, BookingSettings } from "@/types/db";
 import DiaryDayPanel from "@/components/DiaryDayPanel";
@@ -17,7 +17,6 @@ function DiaryPageContent() {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
   const [futureBookings, setFutureBookings] = useState<Booking[]>([]);
-  const [savingLeadTime, setSavingLeadTime] = useState(false);
   const [today] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -125,31 +124,6 @@ function DiaryPageContent() {
     loadData();
   };
 
-  const handleLeadTimeChange = async (delta: number) => {
-    if (!settings) return;
-    
-    const newLeadTimeDays = Math.max(1, settings.lead_time_days + delta);
-    if (newLeadTimeDays === settings.lead_time_days) return;
-
-    try {
-      setSavingLeadTime(true);
-      const updatedSettings: BookingSettings = {
-        ...settings,
-        lead_time_days: newLeadTimeDays,
-      };
-      const savedSettings = await upsertBookingSettings(updatedSettings);
-      setSettings(savedSettings);
-      
-      // Recalculate next available date
-      const nextDate = getNextAvailableOnlineBookingDate(savedSettings, futureBookings);
-      setNextAvailableDate(nextDate);
-    } catch (error) {
-      console.error("Error updating lead time:", error);
-    } finally {
-      setSavingLeadTime(false);
-    }
-  };
-
   // Get bookings for a specific date
   const getBookingsForDate = (date: Date): Booking[] => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -227,48 +201,80 @@ function DiaryPageContent() {
     <div className="relative w-full h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] flex flex-col">
       {/* Header */}
       <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
-        {/* Desktop: Top row layout */}
-        <div className="hidden lg:flex lg:items-start lg:justify-end lg:gap-4">
-          {/* Combined Info Panel */}
-          {settings && (
-            <div className="flex items-start bg-gray-50 rounded border border-gray-200 divide-x divide-gray-300">
-              {/* Online Booking Notice Control */}
-              <div className="px-4 py-2">
-                <div className="text-sm text-gray-600 mb-1">Allow online booking in</div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleLeadTimeChange(-1)}
-                    disabled={savingLeadTime || settings.lead_time_days <= 1}
-                    className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 font-medium text-base leading-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="text-lg font-semibold min-w-[4rem] text-center">
+        {/* Online Booking Rules Panel */}
+        {settings && (
+          <div className="bg-white rounded border border-gray-200">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <h3 className="text-base font-semibold leading-[22px]">Online booking rules</h3>
+              <button
+                onClick={() => {}}
+                className="text-sm font-semibold text-[#02788D] no-underline"
+              >
+                Edit
+              </button>
+            </div>
+            
+            {/* Values Section - Mobile (single row, 3 columns) */}
+            <div className="lg:hidden px-4 py-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
+                    Minimum booking notice
+                  </div>
+                  <div className="text-sm font-semibold leading-[18px] text-gray-900">
                     {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
-                  </span>
-                  <button
-                    onClick={() => handleLeadTimeChange(1)}
-                    disabled={savingLeadTime}
-                    className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 font-medium text-base leading-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
+                  </div>
                 </div>
+                <div>
+                  <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
+                    Daily limit
+                  </div>
+                  <div className="text-sm font-semibold leading-[18px] text-gray-900">
+                    {settings.daily_booking_limit === 1 ? '1 per day' : `${settings.daily_booking_limit} per day`}
+                  </div>
+                </div>
+                {nextAvailableDate && (
+                  <div>
+                    <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
+                      Next bookable
+                    </div>
+                    <div className="text-sm font-semibold leading-[18px] text-gray-900">
+                      {nextAvailableDate}
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              {/* Next Available Online Booking */}
+            </div>
+            
+            {/* Values Section - Desktop (1 row) */}
+            <div className="hidden lg:flex lg:items-center lg:justify-between lg:px-4 lg:py-3 lg:gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-normal leading-[18px] text-gray-600">Minimum booking notice</span>
+                <span className="text-sm font-semibold leading-[18px] text-gray-900">
+                  {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-normal leading-[18px] text-gray-600">Daily limit</span>
+                <span className="text-sm font-semibold leading-[18px] text-gray-900">
+                  {settings.daily_booking_limit === 1 ? '1 per day' : `${settings.daily_booking_limit} per day`}
+                </span>
+              </div>
               {nextAvailableDate && (
-                <div className="px-4 py-2">
-                  <div className="text-sm text-gray-600 mb-1">Next available</div>
-                  <div className="text-lg font-semibold">{nextAvailableDate}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable</span>
+                  <span className="text-sm font-semibold leading-[18px] text-gray-900">
+                    {nextAvailableDate}
+                  </span>
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
         
-        {/* Desktop: Month Navigation (separate row) */}
-        <div className="hidden lg:flex lg:items-center lg:justify-end gap-1">
+        {/* Month Navigation */}
+        <div className="flex items-center justify-end gap-1">
           <button
             onClick={() => handleMonthChange("prev")}
             className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
@@ -282,61 +288,6 @@ function DiaryPageContent() {
           >
             ›
           </button>
-        </div>
-
-        {/* Tablet/Mobile: Layout */}
-        <div className="lg:hidden space-y-3">
-          {/* Online Booking Notice and Next Available */}
-          {settings && (
-            <div className="flex items-start bg-white rounded divide-x divide-gray-200">
-              <div className="px-3 py-2 flex-1">
-                <div className="text-xs text-gray-600 mb-1">Allow online booking in</div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleLeadTimeChange(-1)}
-                    disabled={savingLeadTime || settings.lead_time_days <= 1}
-                    className="w-6 h-6 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 font-medium text-xs leading-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="text-lg font-semibold min-w-[3.5rem] text-center">
-                    {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
-                  </span>
-                  <button
-                    onClick={() => handleLeadTimeChange(1)}
-                    disabled={savingLeadTime}
-                    className="w-6 h-6 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 font-medium text-xs leading-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              
-              {nextAvailableDate && (
-                <div className="px-3 py-2 flex-1">
-                  <div className="text-xs text-gray-600 mb-1">Next available</div>
-                  <div className="text-lg font-semibold">{nextAvailableDate}</div>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Month Navigation */}
-          <div className="flex items-center justify-end gap-1">
-            <button
-              onClick={() => handleMonthChange("prev")}
-              className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
-            >
-              ‹
-            </button>
-            <h2 className="text-xs sm:text-sm font-bold text-gray-600 flex items-center">{monthName}</h2>
-            <button
-              onClick={() => handleMonthChange("next")}
-              className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
-            >
-              ›
-            </button>
-          </div>
         </div>
       </div>
 

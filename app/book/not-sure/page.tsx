@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { getGarageSiteContent } from "@/lib/db";
 import type { GarageSiteContent } from "@/types/db";
 
@@ -75,14 +74,14 @@ export default function NotSurePage() {
 
   const handleProblemClick = (problem: string) => {
     if (problem === "Something else") {
-      return `/book/custom-job?from_unsure=1`;
+      return `/book/custom-job`;
     }
     return `/book/date-time?problem=${encodeURIComponent(problem)}`;
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-32 md:pb-36">
-      <div className="w-full max-w-md flex flex-col">
+    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-20 md:pb-24">
+      <div className="w-full max-w-md">
         {/* Header with garage name */}
         <Link 
           href="/"
@@ -129,21 +128,30 @@ export default function NotSurePage() {
         </div>
 
         {/* Powered by Spannr footer */}
-        <div className="pt-8 pb-4 flex justify-end">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
           <a
-            href="https://motex-home.netlify.app/"
+            href="https://bbc.co.uk"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
           >
-            <Image
-              src="/images/spannr-icon-white.png"
-              alt="Spannr"
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-            <span>Powered by Motr</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Powered by Spannr</span>
           </a>
         </div>
       </div>
