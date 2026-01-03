@@ -208,7 +208,7 @@ function DiaryPageContent() {
             <div className="flex items-center justify-between px-4 py-3">
               <h3 className="text-base font-semibold leading-[22px]">Online booking rules</h3>
               <button
-                onClick={() => {}}
+                onClick={() => router.push('/admin/diary/rules')}
                 className="text-sm font-semibold text-[#02788D] no-underline"
               >
                 Edit
@@ -237,7 +237,7 @@ function DiaryPageContent() {
                 {nextAvailableDate && (
                   <div>
                     <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                      Next bookable
+                      Next bookable date
                     </div>
                     <div className="text-sm font-semibold leading-[18px] text-gray-900">
                       {nextAvailableDate}
@@ -263,7 +263,7 @@ function DiaryPageContent() {
               </div>
               {nextAvailableDate && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable</span>
+                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable date</span>
                   <span className="text-sm font-semibold leading-[18px] text-gray-900">
                     {nextAvailableDate}
                   </span>

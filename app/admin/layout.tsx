@@ -40,6 +40,7 @@ export default function AdminLayout({
   const pageTitle = getPageTitle(pathname);
   const isDiaryPage = pathname === '/admin/diary';
   const isCreateOrEditPage = pathname?.includes('/admin/diary/create') || pathname?.includes('/admin/diary/edit');
+  const isRulesPage = pathname === '/admin/diary/rules';
 
   // Handle create booking navigation
   const handleCreateBooking = () => {
@@ -89,7 +90,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       {/* Top Bar - Full Width */}
-      {!isCreateOrEditPage && (
+      {!isCreateOrEditPage && !isRulesPage && (
       <div className="w-full bg-[#F9FAFB] h-16 flex items-center justify-between px-4 relative">
         <div className="flex items-center gap-3">
           {/* Hamburger Menu Button */}
@@ -231,7 +232,7 @@ export default function AdminLayout({
       )}
 
       {/* Main Content Area - Full Width */}
-      <main className={`w-full bg-[#F9FAFB] ${isCreateOrEditPage ? 'p-4 md:p-6 pt-4 md:pt-6' : 'p-4 md:p-8'}`}>{children}</main>
+      <main className={`w-full ${isCreateOrEditPage || isRulesPage ? (isRulesPage ? 'bg-white' : 'bg-[#F9FAFB] p-4 md:p-6 pt-4 md:pt-6') : 'bg-[#F9FAFB] p-4 md:p-8'}`}>{children}</main>
       <Toaster position="top-right" />
     </div>
   );
