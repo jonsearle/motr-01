@@ -270,6 +270,11 @@ function DiaryPageContent() {
                 </div>
               )}
             </div>
+            
+            {/* Note at bottom */}
+            <div className="px-4 pb-3">
+              <p className="text-xs text-gray-500">These settings only apply to online bookings.</p>
+            </div>
           </div>
         )}
         
