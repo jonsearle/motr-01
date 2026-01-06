@@ -202,7 +202,7 @@ function ConfirmationPageContent() {
         </div>
 
         {/* Main heading */}
-        <h1 className="text-white text-2xl font-bold mb-2">Booking confirmed</h1>
+        <h1 className="text-white text-[28px] font-semibold tracking-[-0.02em] mb-2">Booking confirmed</h1>
 
         {/* Thanks message */}
         <p className="text-white text-base mb-6">Thanks for booking.</p>

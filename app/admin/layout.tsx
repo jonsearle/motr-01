@@ -101,17 +101,17 @@ export default function AdminLayout({
           >
             <div className="w-6 h-6 flex flex-col justify-center gap-1.5">
               <span
-                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
                   isMenuOpen ? "rotate-45 translate-y-2" : ""
                 }`}
               />
               <span
-                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
                   isMenuOpen ? "opacity-0" : ""
                 }`}
               />
               <span
-                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
                   isMenuOpen ? "-rotate-45 -translate-y-2" : ""
                 }`}
               />
@@ -120,7 +120,7 @@ export default function AdminLayout({
 
           {/* Page Title */}
           {pageTitle && (
-            <div className="text-gray-800 font-semibold text-lg">
+            <div className="text-gray-800 font-semibold text-[28px] tracking-[-0.02em]">
               {pageTitle}
             </div>
           )}
@@ -131,10 +131,12 @@ export default function AdminLayout({
           <div className="flex items-center">
             <button
               onClick={handleCreateBooking}
-              className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xl leading-none"
+              className="h-10 flex items-center justify-center gap-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors px-3 md:px-4 text-sm md:text-base font-medium"
               aria-label="Add booking"
             >
-              +
+              <span className="text-xl leading-none">+</span>
+              <span className="md:hidden">Add</span>
+              <span className="hidden md:inline">Add Booking</span>
             </button>
           </div>
         )}

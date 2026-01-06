@@ -126,7 +126,7 @@ function CreateBookingPageContent() {
 
   return (
     <div className="w-full max-w-4xl">
-      <h1 className="text-2xl font-semibold mb-4">Create Booking</h1>
+      <h1 className="text-[28px] font-semibold tracking-[-0.02em] mb-4">Create Booking</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

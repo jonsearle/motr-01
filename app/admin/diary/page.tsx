@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBookingsByMonth, getBookingSettings, getBookingsByDateRange } from "@/lib/db";
-import { isDayClosed, formatDateForDisplay, getNextAvailableOnlineBookingDate } from "@/lib/business-hours";
+import { isDayClosed, formatDateForDisplay, getNextAvailableOnlineBookingDate, formatDateForDisplayFull, getNextAvailableOnlineBookingDateObject } from "@/lib/business-hours";
 import type { Booking, BookingSettings } from "@/types/db";
 import DiaryDayPanel from "@/components/DiaryDayPanel";
 
@@ -16,6 +16,7 @@ function DiaryPageContent() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
+  const [nextAvailableDateObject, setNextAvailableDateObject] = useState<Date | null>(null);
   const [futureBookings, setFutureBookings] = useState<Booking[]>([]);
   const [today] = useState(() => {
     const now = new Date();
@@ -67,7 +68,9 @@ function DiaryPageContent() {
           
           // Calculate next available date
           const nextDate = getNextAvailableOnlineBookingDate(settingsData, futureBookingsData);
+          const nextDateObject = getNextAvailableOnlineBookingDateObject(settingsData, futureBookingsData);
           setNextAvailableDate(nextDate);
+          setNextAvailableDateObject(nextDateObject);
         } catch (error) {
           console.error("Error loading future bookings:", error);
         }
@@ -133,6 +136,29 @@ function DiaryPageContent() {
   // Get booking count for a date
   const getBookingCount = (date: Date): number => {
     return getBookingsForDate(date).length;
+  };
+
+  // Get booking indicator text and color based on count vs daily limit
+  const getBookingIndicator = (count: number, dailyLimit: number | null): { text: string; bgColor: string } | null => {
+    if (count === 0) {
+      return null; // Don't show anything for zero bookings
+    }
+
+    if (!dailyLimit || dailyLimit === 0) {
+      // No limit set, just show count
+      return { text: `${count}`, bgColor: '#0278BD' };
+    }
+
+    if (count < dailyLimit) {
+      // Below limit: "x of y" in blue
+      return { text: `${count} of ${dailyLimit}`, bgColor: '#0278BD' };
+    } else if (count === dailyLimit) {
+      // At limit: "y of y" in orange
+      return { text: `${dailyLimit} of ${dailyLimit}`, bgColor: '#FF5E00' };
+    } else {
+      // Over limit: "x" only in red
+      return { text: `${count}`, bgColor: '#BD1E02' };
+    }
   };
 
   // Check if date is today
@@ -202,78 +228,27 @@ function DiaryPageContent() {
       {/* Header */}
       <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
         {/* Online Booking Rules Panel */}
-        {settings && (
-          <div className="bg-white rounded border border-gray-200">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <h3 className="text-base font-semibold leading-[22px]">Online booking rules</h3>
+        {settings && nextAvailableDate && (
+          <div className="bg-white rounded">
+            <div className="flex items-start justify-between px-4 py-3">
+              <div className="flex-1">
+                <div className="text-sm font-normal tracking-[-0.02em] text-[#1F2933] mb-0">
+                  Customers can book online from
+                </div>
+                <div className="text-lg font-semibold tracking-[-0.02em] text-[#1F2933]">
+                  {nextAvailableDate === 'Tomorrow' 
+                    ? 'Tomorrow' 
+                    : nextAvailableDateObject 
+                      ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
+                      : nextAvailableDate}
+                </div>
+              </div>
               <button
                 onClick={() => router.push('/admin/diary/rules')}
-                className="text-sm font-semibold text-[#02788D] no-underline"
+                className="text-sm font-semibold tracking-[-0.02em] text-[#0278BD] no-underline ml-4"
               >
                 Edit
               </button>
-            </div>
-            
-            {/* Values Section - Mobile (single row, 3 columns) */}
-            <div className="lg:hidden px-4 py-3">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                    Minimum notice
-                  </div>
-                  <div className="text-sm font-semibold leading-[18px] text-gray-900">
-                    {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                    Daily limit
-                  </div>
-                  <div className="text-sm font-semibold leading-[18px] text-gray-900">
-                    {settings.daily_booking_limit === 1 ? '1 per day' : `${settings.daily_booking_limit} per day`}
-                  </div>
-                </div>
-                {nextAvailableDate && (
-                  <div>
-                    <div className="text-xs font-normal leading-[18px] text-gray-600 mb-1">
-                      Next bookable
-                    </div>
-                    <div className="text-sm font-semibold leading-[18px] text-gray-900">
-                      {nextAvailableDate}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Values Section - Desktop (1 row) */}
-            <div className="hidden lg:flex lg:items-center lg:justify-between lg:px-4 lg:py-3 lg:gap-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-normal leading-[18px] text-gray-600">Minimum notice</span>
-                <span className="text-sm font-semibold leading-[18px] text-gray-900">
-                  {settings.lead_time_days === 1 ? '1 day' : `${settings.lead_time_days} days`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-normal leading-[18px] text-gray-600">Daily limit</span>
-                <span className="text-sm font-semibold leading-[18px] text-gray-900">
-                  {settings.daily_booking_limit === 1 ? '1 per day' : `${settings.daily_booking_limit} per day`}
-                </span>
-              </div>
-              {nextAvailableDate && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-normal leading-[18px] text-gray-600">Next bookable</span>
-                  <span className="text-sm font-semibold leading-[18px] text-gray-900">
-                    {nextAvailableDate}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            {/* Note at bottom */}
-            <div className="px-4 pb-3">
-              <p className="text-xs text-gray-500">These settings only apply to online bookings.</p>
             </div>
           </div>
         )}
@@ -286,7 +261,7 @@ function DiaryPageContent() {
           >
             ‹
           </button>
-          <h2 className="text-xs sm:text-sm font-bold text-gray-600 flex items-center">{monthName}</h2>
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-[#1F2933] flex items-center">{monthName}</h2>
           <button
             onClick={() => handleMonthChange("next")}
             className="px-2 py-1 text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center"
@@ -306,7 +281,7 @@ function DiaryPageContent() {
         >
           {/* Day headers */}
           {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
-            <div key={`${day}-${index}`} className="text-xs sm:text-sm font-bold text-gray-600 py-1 sm:py-2 pl-1 sm:pl-2 flex items-center">
+            <div key={`${day}-${index}`} className="text-[13px] font-normal tracking-[-0.02em] text-[#1F2933] py-1 sm:py-2 flex items-center justify-center">
               {day}
             </div>
           ))}
@@ -328,7 +303,7 @@ function DiaryPageContent() {
               date.getDate() === selectedDate.getDate();
 
             // Determine styling classes
-            let dayClasses = "border rounded p-1 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between overflow-hidden ";
+            let dayClasses = "rounded p-1 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between items-center overflow-hidden ";
             
             if (dayIsClosed) {
               dayClasses += "bg-gray-100 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.05)_10px,rgba(0,0,0,0.05)_20px)] ";
@@ -342,29 +317,40 @@ function DiaryPageContent() {
               }
             }
 
-            dayClasses += "border-gray-200 ";
-
             return (
               <div
                 key={date.toISOString()}
                 onClick={() => handleDayClick(date)}
                 className={dayClasses}
               >
-                <div className="flex items-center gap-1">
-                  <div className="text-xs sm:text-sm font-medium">{date.getDate()}</div>
-                  {dayIsToday && (
-                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gray-800 rounded-full flex-shrink-0" />
+                <div className="flex items-center justify-center gap-1">
+                  {dayIsToday ? (
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#344058] flex items-center justify-center">
+                      <div className="text-[13px] font-semibold tracking-[-0.02em] text-[#FFFFFF]">
+                        {date.getDate()}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`text-[13px] font-semibold text-[#1F2933] ${dayIsPast ? 'opacity-50' : ''}`}>
+                      {date.getDate()}
+                    </div>
                   )}
                 </div>
-                {count > 0 && (
-                  <div className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded whitespace-nowrap mt-1 w-fit ${
-                    dayIsClosed || dayIsPast
-                      ? "bg-gray-300 text-gray-600"
-                      : "bg-gray-700 text-white"
-                  }`}>
-                    {count}
-                  </div>
-                )}
+                {(() => {
+                  const indicator = settings ? getBookingIndicator(count, settings.daily_booking_limit) : null;
+                  if (!indicator) return null;
+
+                  return (
+                    <div 
+                      className={`text-[13px] font-semibold tracking-[-0.05em] text-[#FFFFFF] px-2 py-0.5 rounded whitespace-nowrap mt-1 mx-auto ${
+                        dayIsPast ? 'opacity-70' : ''
+                      }`}
+                      style={{ backgroundColor: indicator.bgColor }}
+                    >
+                      {indicator.text}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

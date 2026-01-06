@@ -164,7 +164,7 @@ export default function EditRulesPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-[20px] font-semibold leading-[26px] text-gray-900 mb-2">
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-gray-900 mb-2">
             Edit online booking rules
           </h1>
           <p className="text-sm font-normal leading-5 text-gray-600">

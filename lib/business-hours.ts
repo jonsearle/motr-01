@@ -413,3 +413,46 @@ export function getNextAvailableOnlineBookingDate(
   return null;
 }
 
+/**
+ * Gets the next available online booking date as a Date object
+ * Returns null if no available date is found
+ */
+export function getNextAvailableOnlineBookingDateObject(
+  settings: BookingSettings,
+  bookings: Booking[]
+): Date | null {
+  if (!settings) return null;
+
+  const today = getCurrentDateInTimezone(settings.timezone);
+  let searchDate = new Date(today);
+  
+  // Start from tomorrow (today is day 0, so we start from day 1)
+  // If lead_time_days is 0, today would be available, but typically we want at least tomorrow
+  // The isDateAvailable function will check if the date is within lead time
+  if (settings.lead_time_days === 0) {
+    // Start from today if lead_time_days is 0
+    searchDate = new Date(today);
+  } else {
+    // Start from tomorrow (day 1)
+    searchDate.setDate(today.getDate() + 1);
+  }
+  
+  // Search for the next available date
+  // isDateAvailable will check: not past, not closed, not within lead time, not fully booked
+  const maxDaysToSearch = 365; // Search up to 1 year ahead
+  let daysSearched = 0;
+  
+  while (daysSearched < maxDaysToSearch) {
+    if (isDateAvailable(searchDate, settings, bookings)) {
+      return new Date(searchDate);
+    }
+    
+    // Move to next day and continue searching
+    searchDate.setDate(searchDate.getDate() + 1);
+    daysSearched++;
+  }
+  
+  // If we couldn't find an available date within 1 year, return null
+  return null;
+}
+

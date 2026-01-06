@@ -593,7 +593,7 @@ function DateTimePageContent() {
         </Link>
 
         {/* Title */}
-        <h1 className="text-white text-2xl font-bold mb-2">Book an appointment</h1>
+        <h1 className="text-white text-[28px] font-semibold tracking-[-0.02em] mb-2">Book an appointment</h1>
 
         {/* Subtitle */}
         <p className="text-white text-base mb-6">When would you like to come in?</p>
