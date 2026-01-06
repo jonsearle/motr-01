@@ -230,13 +230,13 @@ function DiaryPageContent() {
       <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
         {/* Online Booking Rules Panel */}
         {settings && nextAvailableDate && (
-          <div className="bg-white rounded">
-            <div className="flex items-start justify-between px-4 py-3">
+          <div className="border-t border-gray-200">
+            <div className="py-4 flex items-start justify-between">
               <div className="flex-1">
-                <div className="text-sm font-normal tracking-[-0.02em] text-[#1F2933] mb-0">
+                <div className="text-sm font-normal text-gray-600 -mb-0.5">
                   Customers can book online from
                 </div>
-                <div className="text-lg font-semibold tracking-[-0.02em] text-[#1F2933]">
+                <div className="text-lg font-semibold text-gray-900">
                   {nextAvailableDate === 'Tomorrow' 
                     ? 'Tomorrow' 
                     : nextAvailableDateObject 
@@ -246,11 +246,12 @@ function DiaryPageContent() {
               </div>
               <button
                 onClick={() => router.push('/admin/diary/rules')}
-                className="text-sm font-semibold tracking-[-0.02em] text-[#0278BD] no-underline ml-4"
+                className="text-sm font-semibold text-[#0278BD] no-underline ml-4"
               >
                 Edit
               </button>
             </div>
+            <div className="border-t border-gray-200"></div>
           </div>
         )}
         
