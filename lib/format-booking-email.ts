@@ -243,11 +243,9 @@ export function formatBookingEmail(booking: Booking, settings: BookingSettings):
   textLines.push('')
   textLines.push(`Date: ${dateDisplay}`)
   textLines.push(`Expected drop-off: ${dropOffWindowDisplay}`)
-  textLines.push('')
   textLines.push(`Customer name: ${customerName}`)
-  textLines.push(`Mobile number: ${customerMobileDisplay} (tap to call on mobile)`)
+  textLines.push(`Mobile number: ${customerMobileDisplay}`)
   textLines.push(`Car registration: ${carRegistration}`)
-  textLines.push('')
   textLines.push(`Service type: ${serviceTypeDisplay}`)
   textLines.push(`Details: ${detailsText}`)
 
