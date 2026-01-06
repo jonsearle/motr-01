@@ -38,7 +38,11 @@ export async function sendBookingNotificationEmail(bookingId: string): Promise<v
     }
 
     // Format email
-    const { subject, body } = formatBookingEmail(booking, settings)
+    const { subject, htmlBody, textBody } = formatBookingEmail(booking, settings)
+    console.log('[Email] Using NEW email template format')
+    console.log('[Email] Subject:', subject)
+    console.log('[Email] HTML body length:', htmlBody.length)
+    console.log('[Email] Text body length:', textBody.length)
 
     // Get from email address from environment
     const fromEmail = process.env.RESEND_FROM_EMAIL
@@ -57,12 +61,13 @@ export async function sendBookingNotificationEmail(bookingId: string): Promise<v
     // Initialize Resend client (inside function to ensure env vars are loaded)
     const resend = new Resend(apiKey)
 
-    // Send email via Resend
+    // Send email via Resend (with both HTML and text versions)
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: settings.notification_email.trim(),
       subject: subject,
-      text: body,
+      html: htmlBody,
+      text: textBody,
     })
 
     if (error) {

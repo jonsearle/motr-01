@@ -1,32 +1,5 @@
 import type { Booking, BookingSettings, OpeningDay } from '@/types/db'
 
-// Day abbreviations for email subject/body
-const DAY_ABBREVIATIONS: Record<string, string> = {
-  monday: 'Mon',
-  tuesday: 'Tue',
-  wednesday: 'Wed',
-  thursday: 'Thu',
-  friday: 'Fri',
-  saturday: 'Sat',
-  sunday: 'Sun',
-}
-
-// Full month names
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
-
 // Predefined problem options from the booking form
 const PREDEFINED_PROBLEMS = [
   "Car won't start",
@@ -61,15 +34,24 @@ function getDayOfWeekName(date: Date, timezone: string): OpeningDay['day_of_week
 }
 
 /**
- * Formats a date to "DayAbbrev DayOfMonth MonthName" format
- * Example: "Tue 9 December"
+ * Formats a date to "DayName DD MonthName" format
+ * Example: "Thursday 08 January"
  */
 function formatBookingDate(date: Date, timezone: string): string {
-  const dayOfWeekName = getDayOfWeekName(date, timezone)
-  const dayAbbrev = DAY_ABBREVIATIONS[dayOfWeekName] || dayOfWeekName.slice(0, 3)
-  const dayOfMonth = date.getDate()
-  const monthName = MONTH_NAMES[date.getMonth()]
-  return `${dayAbbrev} ${dayOfMonth} ${monthName}`
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  })
+  
+  // Format the date parts
+  const parts = formatter.formatToParts(date)
+  const dayName = parts.find(p => p.type === 'weekday')?.value || ''
+  const dayOfMonth = parts.find(p => p.type === 'day')?.value || ''
+  const monthName = parts.find(p => p.type === 'month')?.value || ''
+  
+  return `${dayName} ${dayOfMonth} ${monthName}`
 }
 
 /**
@@ -157,9 +139,43 @@ function formatDetails(appointmentType: string, issueDescription?: string): stri
   return issueDescription || serviceType
 }
 
+/**
+ * Sanitizes a mobile number for use in tel: links
+ * Removes spaces and keeps only digits and + sign
+ */
+function sanitizeMobileForTel(mobile: string): string {
+  // Keep only digits, +, and remove spaces
+  return mobile.replace(/[^\d+]/g, '')
+}
+
+/**
+ * Formats drop-off window display string
+ * Example: "7:00 am–9:00 am"
+ */
+function formatDropOffWindow(from: string, to: string): string {
+  const from12 = formatTime12Hour(from)
+  const to12 = formatTime12Hour(to)
+  return `${from12}–${to12}`
+}
+
+/**
+ * Escapes HTML special characters to prevent XSS
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  }
+  return text.replace(/[&<>"']/g, (m) => map[m])
+}
+
 export interface FormattedEmail {
   subject: string
-  body: string
+  htmlBody: string
+  textBody: string
 }
 
 /**
@@ -173,16 +189,19 @@ export function formatBookingEmail(booking: Booking, settings: BookingSettings):
   // Create date in UTC, then format using the target timezone
   const bookingDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
 
-  // Format subject: "New booking – {DayAbbrev} {DayOfMonth} {MonthName}"
-  const formattedDate = formatBookingDate(bookingDate, settings.timezone)
-  const subject = `New booking – ${formattedDate}`
+  // Format date as "Thursday 08 January"
+  const dateDisplay = formatBookingDate(bookingDate, settings.timezone)
+  console.log('[Email] Formatted date:', dateDisplay)
+
+  // Subject: "NEW BOOKING: Thursday 08 January"
+  const subject = `NEW BOOKING: ${dateDisplay}`
+  console.log('[Email] Subject:', subject)
 
   // Get drop-off window
   const dropOffWindow = getDropOffWindow(bookingDate, settings)
-  const dropOffFrom = dropOffWindow
-    ? formatTime12Hour(dropOffWindow.from)
+  const dropOffWindowDisplay = dropOffWindow
+    ? formatDropOffWindow(dropOffWindow.from, dropOffWindow.to)
     : 'N/A'
-  const dropOffTo = dropOffWindow ? formatTime12Hour(dropOffWindow.to) : 'N/A'
 
   // Map service type for display
   const serviceTypeDisplay = mapServiceTypeForEmail(booking.appointment_type)
@@ -190,45 +209,51 @@ export function formatBookingEmail(booking: Booking, settings: BookingSettings):
   // Format details
   const detailsText = formatDetails(booking.appointment_type, booking.issue_description)
 
-  // Build email body
-  const lines: string[] = []
-
-  // Greeting
-  lines.push('Hello,')
-  lines.push('')
-
-  // Intro line
-  lines.push(`You have a new booking for ${formattedDate}.`)
-  lines.push(`Expected drop-off between ${dropOffFrom} and ${dropOffTo}.`)
-  lines.push('')
-
   // Customer details
-  lines.push(`Customer name: ${booking.customer_name}`)
-  lines.push(`Mobile number: ${booking.customer_mobile}`)
+  const customerName = booking.customer_name
+  const customerMobileDisplay = booking.customer_mobile
+  const customerMobileTel = sanitizeMobileForTel(booking.customer_mobile)
+  const carRegistration = booking.vehicle_reg?.trim() || '(not provided)'
 
-  // Car registration
-  if (booking.vehicle_reg && booking.vehicle_reg.trim()) {
-    lines.push(`Car registration: ${booking.vehicle_reg}`)
-  } else {
-    lines.push('Car registration: (not provided)')
-  }
+  // Build HTML email body
+  const htmlLines: string[] = []
+  htmlLines.push('<p>Hello,</p>')
+  htmlLines.push('')
+  htmlLines.push('<p>You have a new booking:</p>')
+  htmlLines.push('')
+  htmlLines.push(`<p>Date: <strong>${escapeHtml(dateDisplay)}</strong></p>`)
+  htmlLines.push(`<p>Expected drop-off: <strong>${escapeHtml(dropOffWindowDisplay)}</strong></p>`)
+  htmlLines.push('')
+  htmlLines.push(`<p>Customer name: <strong>${escapeHtml(customerName)}</strong></p>`)
+  htmlLines.push(
+    `<p>Mobile number: <strong><a href="tel:${escapeHtml(customerMobileTel)}">${escapeHtml(customerMobileDisplay)}</a></strong> (tap to call on mobile)</p>`
+  )
+  htmlLines.push(`<p>Car registration: <strong>${escapeHtml(carRegistration)}</strong></p>`)
+  htmlLines.push('')
+  htmlLines.push(`<p>Service type: <strong>${escapeHtml(serviceTypeDisplay)}</strong></p>`)
+  htmlLines.push(`<p>Details: <strong>${escapeHtml(detailsText)}</strong></p>`)
 
-  lines.push('')
+  const htmlBody = htmlLines.join('\n')
 
-  // Booking date and drop-off window
-  lines.push(`Booking date: ${formattedDate}`)
-  lines.push(`Drop-off window: ${dropOffFrom} – ${dropOffTo}`)
-  lines.push('')
+  // Build plain text email body (same content, no HTML)
+  const textLines: string[] = []
+  textLines.push('Hello,')
+  textLines.push('')
+  textLines.push('You have a new booking:')
+  textLines.push('')
+  textLines.push(`Date: ${dateDisplay}`)
+  textLines.push(`Expected drop-off: ${dropOffWindowDisplay}`)
+  textLines.push('')
+  textLines.push(`Customer name: ${customerName}`)
+  textLines.push(`Mobile number: ${customerMobileDisplay} (tap to call on mobile)`)
+  textLines.push(`Car registration: ${carRegistration}`)
+  textLines.push('')
+  textLines.push(`Service type: ${serviceTypeDisplay}`)
+  textLines.push(`Details: ${detailsText}`)
 
-  // Service/issue type
-  lines.push(`Service / issue: ${serviceTypeDisplay}`)
+  const textBody = textLines.join('\n')
 
-  // Details
-  lines.push(`Details: ${detailsText}`)
-
-  const body = lines.join('\n')
-
-  return { subject, body }
+  return { subject, htmlBody, textBody }
 }
 
 
