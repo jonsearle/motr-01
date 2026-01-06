@@ -8,7 +8,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Spannr Drop-Off Prototype 02",
+  title: "Motr",
   description: "Admin Portal and Booking Site MVP",
   icons: {
     icon: "/images/favicon.jpg",
