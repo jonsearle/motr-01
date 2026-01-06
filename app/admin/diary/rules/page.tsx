@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getBookingSettings, upsertBookingSettings, getBookingsByDateRange } from "@/lib/db";
-import { getNextAvailableOnlineBookingDate } from "@/lib/business-hours";
+import { getNextAvailableOnlineBookingDate, getNextAvailableOnlineBookingDateObject, formatDateForDisplayFull } from "@/lib/business-hours";
 import type { BookingSettings } from "@/types/db";
 import toast from "react-hot-toast";
 
@@ -13,11 +13,13 @@ function Stepper({
   onChange,
   min = 0,
   max = 999,
+  label,
 }: {
   value: number;
   onChange: (newValue: number) => void;
   min?: number;
   max?: number;
+  label?: string;
 }) {
   const handleDecrement = () => {
     if (value > min) {
@@ -37,22 +39,22 @@ function Stepper({
         type="button"
         onClick={handleDecrement}
         disabled={value <= min}
-        className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-10 h-10 flex items-center justify-center border border-[#0278BD] rounded bg-transparent hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         aria-label="Decrease"
       >
-        <span className="text-lg font-normal text-gray-700">−</span>
+        <span className="text-base font-semibold text-[#0278BD]">−</span>
       </button>
-      <span className="text-base font-semibold text-gray-900 min-w-[3rem] text-center">
-        {value}
+      <span className="text-base font-semibold text-gray-900 min-w-[5rem] text-center">
+        {value}{label ? ` ${label}` : ''}
       </span>
       <button
         type="button"
         onClick={handleIncrement}
         disabled={value >= max}
-        className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-10 h-10 flex items-center justify-center border border-[#0278BD] rounded bg-transparent hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         aria-label="Increase"
       >
-        <span className="text-lg font-normal text-gray-700">+</span>
+        <span className="text-base font-semibold text-[#0278BD]">+</span>
       </button>
     </div>
   );
@@ -66,6 +68,7 @@ export default function EditRulesPage() {
   const [leadTimeDays, setLeadTimeDays] = useState(0);
   const [dailyBookingLimit, setDailyBookingLimit] = useState(0);
   const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
+  const [nextAvailableDateObject, setNextAvailableDateObject] = useState<Date | null>(null);
   const [futureBookings, setFutureBookings] = useState<any[]>([]);
 
   // Load settings and calculate next available date
@@ -117,7 +120,9 @@ export default function EditRulesPage() {
         daily_booking_limit: dailyBookingLimit,
       };
       const nextDate = getNextAvailableOnlineBookingDate(updatedSettings, futureBookings);
+      const nextDateObject = getNextAvailableOnlineBookingDateObject(updatedSettings, futureBookings);
       setNextAvailableDate(nextDate);
+      setNextAvailableDateObject(nextDateObject);
     }
   }, [leadTimeDays, dailyBookingLimit, settings, futureBookings]);
 
@@ -160,7 +165,7 @@ export default function EditRulesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -170,70 +175,75 @@ export default function EditRulesPage() {
           <p className="text-sm font-normal leading-5 text-gray-600">
             These rules control when customers can book online.
             <br />
-            You can always add bookings manually.
+            You can still add bookings manually at any time.
           </p>
         </div>
 
         {/* Content */}
         <div className="space-y-8 mb-12">
           {/* Rule 1 - Minimum booking notice */}
-          <div className="space-y-3">
+          <div>
             <label className="block text-base font-semibold text-gray-900">
               Minimum booking notice
             </label>
-            <p className="text-sm font-normal leading-5 text-gray-600">
-              Customers must book at least this far in advance.
+            <p className="text-sm font-normal leading-5 text-gray-600 mt-1">
+              Customers must book this many days in advance.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="mt-3">
               <Stepper
                 value={leadTimeDays}
                 onChange={setLeadTimeDays}
                 min={1}
                 max={365}
+                label={leadTimeDays === 1 ? "day" : "days"}
               />
-              <span className="text-base font-semibold text-gray-900">
-                {leadTimeDays === 1 ? "day" : "days"}
-              </span>
             </div>
           </div>
 
           {/* Rule 2 - Daily booking limit */}
-          <div className="space-y-3">
+          <div className="pb-4">
             <label className="block text-base font-semibold text-gray-900">
               Daily booking limit
             </label>
-            <p className="text-sm font-normal leading-5 text-gray-600">
-              Online bookings pause once this number is reached for the day.
+            <p className="text-sm font-normal leading-5 text-gray-600 mt-1">
+              Once a day reaches this number of bookings, it will no longer be available for online booking.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-3">
               <Stepper
                 value={dailyBookingLimit}
                 onChange={setDailyBookingLimit}
                 min={1}
                 max={999}
               />
-              <span className="text-base font-semibold text-gray-900">
-                {dailyBookingLimit === 1 ? "booking per day" : "bookings per day"}
-              </span>
             </div>
           </div>
 
-          {/* Derived information - Next bookable date */}
-          <div className="pt-6 border-t border-gray-200 space-y-2">
-            <div className="text-sm font-normal text-gray-600">
-              Next bookable date
+          {/* Derived information - Customers can book online from */}
+          <div className="border-t border-gray-200">
+            <div className="py-4 flex flex-col items-start">
+              <div className="text-sm font-normal text-gray-600 -mb-0.5">
+                Customers can book online from
+              </div>
+              <div className="text-lg font-semibold text-gray-900">
+                {nextAvailableDate && settings
+                  ? (nextAvailableDate === 'Tomorrow' 
+                      ? 'Tomorrow' 
+                      : nextAvailableDateObject 
+                        ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
+                        : nextAvailableDate)
+                  : "Calculating..."}
+              </div>
             </div>
-            <div className="text-base font-semibold text-gray-900">
-              {nextAvailableDate || "Calculating..."}
+            <div className="border-t border-gray-200 pt-2">
+              <p className="text-xs font-normal italic text-gray-500">
+                This date updates automatically using your rules and bookings.
+              </p>
             </div>
-            <p className="text-[13px] font-normal text-gray-500">
-              Updates automatically based on your rules and availability.
-            </p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-6 border-t border-gray-200">
+        <div className="flex gap-3">
           <button
             onClick={handleSave}
             disabled={saving}
