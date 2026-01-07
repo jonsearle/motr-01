@@ -173,22 +173,24 @@ export default function DiaryDayPanel({
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-                      <button
-                        onClick={() => handleEdit(booking)}
-                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        aria-label="Edit booking"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(booking)}
-                        className="flex-1 px-3 py-1.5 border border-red-300 rounded text-sm text-red-700 hover:bg-red-50 transition-colors"
-                        aria-label="Delete booking"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {!dateIsPast && (
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                        <button
+                          onClick={() => handleEdit(booking)}
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          aria-label="Edit booking"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(booking)}
+                          className="flex-1 px-3 py-1.5 border border-red-300 rounded text-sm text-red-700 hover:bg-red-50 transition-colors"
+                          aria-label="Delete booking"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

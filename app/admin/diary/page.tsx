@@ -6,6 +6,7 @@ import { getBookingsByMonth, getBookingSettings, getBookingsByDateRange } from "
 import { isDayClosed, formatDateForDisplay, getNextAvailableOnlineBookingDate, formatDateForDisplayFull, getNextAvailableOnlineBookingDateObject } from "@/lib/business-hours";
 import type { Booking, BookingSettings } from "@/types/db";
 import DiaryDayPanel from "@/components/DiaryDayPanel";
+import { useBookingInfo } from "@/app/contexts/BookingInfoContext";
 
 function DiaryPageContent() {
   const router = useRouter();
@@ -18,6 +19,7 @@ function DiaryPageContent() {
   const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
   const [nextAvailableDateObject, setNextAvailableDateObject] = useState<Date | null>(null);
   const [futureBookings, setFutureBookings] = useState<Booking[]>([]);
+  const { setBookingInfo } = useBookingInfo();
   const [today] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -55,6 +57,15 @@ function DiaryPageContent() {
       setBookings(bookingsData);
       setSettings(settingsData);
 
+      // Update context (clear if no settings)
+      if (!settingsData) {
+        setBookingInfo({
+          settings: null,
+          nextAvailableDate: null,
+          nextAvailableDateObject: null,
+        });
+      }
+
       // Load future bookings for next available date calculation
       if (settingsData) {
         const today = new Date();
@@ -71,6 +82,13 @@ function DiaryPageContent() {
           const nextDateObject = getNextAvailableOnlineBookingDateObject(settingsData, futureBookingsData);
           setNextAvailableDate(nextDate);
           setNextAvailableDateObject(nextDateObject);
+          
+          // Update context for layout to use
+          setBookingInfo({
+            settings: settingsData,
+            nextAvailableDate: nextDate,
+            nextAvailableDateObject: nextDateObject,
+          });
         } catch (error) {
           console.error("Error loading future bookings:", error);
         }
@@ -226,34 +244,34 @@ function DiaryPageContent() {
 
   return (
     <div className="relative w-full h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] flex flex-col">
-      {/* Header */}
-      <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
-        {/* Online Booking Rules Panel */}
-        {settings && nextAvailableDate && (
-          <div className="border-t border-gray-200">
-            <div className="py-4 flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-normal text-gray-600 -mb-0.5">
-                  Customers can book online from
+        {/* Header */}
+        <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
+          {/* Online Booking Rules Panel - Mobile only */}
+          {settings && nextAvailableDate && (
+            <div className="border-t border-gray-200 md:hidden">
+              <div className="py-4 flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="text-sm font-normal text-gray-600 -mb-0.5">
+                    Customers can book online from
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {nextAvailableDate === 'Tomorrow' 
+                      ? 'Tomorrow' 
+                      : nextAvailableDateObject 
+                        ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
+                        : nextAvailableDate}
+                  </div>
                 </div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {nextAvailableDate === 'Tomorrow' 
-                    ? 'Tomorrow' 
-                    : nextAvailableDateObject 
-                      ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
-                      : nextAvailableDate}
-                </div>
+                <button
+                  onClick={() => router.push('/admin/diary/rules')}
+                  className="text-sm font-semibold text-[#0278BD] no-underline ml-4"
+                >
+                  Edit
+                </button>
               </div>
-              <button
-                onClick={() => router.push('/admin/diary/rules')}
-                className="text-sm font-semibold text-[#0278BD] no-underline ml-4"
-              >
-                Edit
-              </button>
+              <div className="border-t border-gray-200"></div>
             </div>
-            <div className="border-t border-gray-200"></div>
-          </div>
-        )}
+          )}
         
         {/* Month Navigation */}
         <div className="flex items-center justify-end gap-1">

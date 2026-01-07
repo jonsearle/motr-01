@@ -90,6 +90,7 @@ function mapServiceTypeForEmail(appointmentType: string): string {
     case 'Full Service':
       return 'Full service'
     case 'Custom job':
+    case 'Specific job':
       return 'Specific job'
     case 'Customer is unsure':
       return 'Customer is unsure'

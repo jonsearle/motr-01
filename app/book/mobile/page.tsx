@@ -95,13 +95,13 @@ function MobilePageContent() {
       }
 
       // Determine appointment type and issue description
-      let finalAppointmentType = appointmentType || "Custom job";
+      let finalAppointmentType = appointmentType || "Specific job";
       let issueDescription: string | undefined = undefined;
 
       if (problem) {
         finalAppointmentType = problem;
       } else if (description) {
-        finalAppointmentType = "Custom job";
+        finalAppointmentType = "Specific job";
         issueDescription = description;
       }
 
