@@ -2,9 +2,7 @@ import { formatBookingEmail } from '../lib/format-booking-email'
 import { getBookingSettings } from '../lib/db'
 import type { Booking } from '../types/db'
 
-// Load environment variables
-import { config } from 'dotenv'
-config()
+// Note: Environment variables are loaded from .env.local in Next.js
 
 async function testEmailFormat() {
   console.log('Testing email format...\n')
@@ -19,6 +17,7 @@ async function testEmailFormat() {
   const testBooking: Booking = {
     id: 'test-id',
     date: '2025-01-27', // Tuesday 27 January
+    time: '09:00',
     customer_name: 'Test Customer',
     customer_mobile: '07801550538',
     vehicle_reg: 'TEST123',

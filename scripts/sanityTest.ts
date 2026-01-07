@@ -92,6 +92,7 @@ loadEnvFile()
     const today = new Date().toISOString().split('T')[0]
     const booking = await createBooking({
       date: today,
+      time: '09:00',
       appointment_type: 'MOT',
       issue_description: 'Test booking for sanity check',
       customer_name: 'Jon Tester',

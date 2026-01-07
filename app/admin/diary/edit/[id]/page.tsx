@@ -55,6 +55,7 @@ export default function EditBookingPage() {
           date: foundBooking.date,
           time: foundBooking.time ?? "",
           vehicle_reg: foundBooking.vehicle_reg || "",
+          vehicle_make_model: "",
           issue_description: foundBooking.issue_description || "",
           appointment_type: foundBooking.appointment_type,
         });

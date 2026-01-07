@@ -98,7 +98,7 @@ function DiaryPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [currentMonth]);
+  }, [currentMonth, setBookingInfo]);
 
   useEffect(() => {
     loadData();
