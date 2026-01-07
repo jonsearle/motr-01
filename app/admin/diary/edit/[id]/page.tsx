@@ -5,12 +5,14 @@ import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { getBookingById, updateBooking } from "@/lib/db";
 import type { Booking } from "@/types/db";
 import toast from "react-hot-toast";
+import TimePicker from "@/components/TimePicker";
+import DatePicker from "@/components/DatePicker";
 
 const APPOINTMENT_TYPES = [
   "MOT",
   "Interim Service",
   "Full Service",
-  "Request a Specific Job",
+  "Specific job",
 ];
 
 export default function EditBookingPage() {
@@ -50,7 +52,7 @@ export default function EditBookingPage() {
           customer_name: foundBooking.customer_name,
           customer_mobile: foundBooking.customer_mobile,
           date: foundBooking.date,
-          time: foundBooking.time || "",
+          time: foundBooking.time ?? "",
           vehicle_reg: foundBooking.vehicle_reg || "",
           issue_description: foundBooking.issue_description || "",
           appointment_type: foundBooking.appointment_type,
@@ -74,6 +76,14 @@ export default function EditBookingPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTimeChange = (time: string) => {
+    setFormData((prev) => ({ ...prev, time }));
+  };
+
+  const handleDateChange = (date: string) => {
+    setFormData((prev) => ({ ...prev, date }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,13 +112,18 @@ export default function EditBookingPage() {
         setSaving(false);
         return;
       }
+      if (!formData.time) {
+        toast.error("Expected arrival time is required");
+        setSaving(false);
+        return;
+      }
 
       // Update booking
       await updateBooking(bookingId, {
         customer_name: formData.customer_name.trim(),
         customer_mobile: formData.customer_mobile.trim(),
         date: formData.date,
-        time: formData.time || undefined,
+        time: formData.time,
         vehicle_reg: formData.vehicle_reg.trim() || undefined,
         issue_description: formData.issue_description.trim() || undefined,
         appointment_type: formData.appointment_type,
@@ -171,13 +186,13 @@ export default function EditBookingPage() {
             value={formData.customer_name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
           <label htmlFor="customer_mobile" className="block text-sm font-medium text-gray-700 mb-1">
-            Customer phone
+            Customer phone number
           </label>
           <input
             type="tel"
@@ -186,37 +201,32 @@ export default function EditBookingPage() {
             value={formData.customer_mobile}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="inline-block">
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
               Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               id="date"
-              name="date"
               value={formData.date}
-              onChange={handleChange}
+              onChange={handleDateChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div>
+          <div className="inline-block">
             <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
-              Time (optional)
+              Expected arrival time
             </label>
-            <input
-              type="time"
+            <TimePicker
               id="time"
-              name="time"
               value={formData.time}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleTimeChange}
+              required
             />
           </div>
         </div>
@@ -231,7 +241,7 @@ export default function EditBookingPage() {
             value={formData.appointment_type}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select appointment type</option>
             {APPOINTMENT_TYPES.map((type) => (
@@ -244,7 +254,7 @@ export default function EditBookingPage() {
 
         <div>
           <label htmlFor="vehicle_reg" className="block text-sm font-medium text-gray-700 mb-1">
-            Car Registration (optional)
+            Car Registration
           </label>
           <input
             type="text"
@@ -252,13 +262,13 @@ export default function EditBookingPage() {
             name="vehicle_reg"
             value={formData.vehicle_reg}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
           <label htmlFor="issue_description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description (optional)
+            Additional information (optional)
           </label>
           <textarea
             id="issue_description"

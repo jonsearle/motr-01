@@ -85,7 +85,14 @@ function MobilePageContent() {
       // Get dropoff window start time for the selected date
       const dayOfWeek = getDayOfWeekName(selectedDate, bookingSettings.timezone);
       const openingDay = bookingSettings.opening_days.find(day => day.day_of_week === dayOfWeek);
-      const dropoffTime = openingDay?.dropoff_from_time || null;
+      const dropoffTime = openingDay?.dropoff_from_time;
+
+      // Ensure time is always set - use dropoff_from_time or fallback to 09:00
+      if (!dropoffTime) {
+        setError("Drop-off time not configured for this day. Please contact the garage.");
+        setSubmitting(false);
+        return;
+      }
 
       // Determine appointment type and issue description
       let finalAppointmentType = appointmentType || "Custom job";
@@ -101,7 +108,7 @@ function MobilePageContent() {
       // Create booking
       const bookingData = {
         date: dateStr,
-        time: dropoffTime || undefined,
+        time: dropoffTime,
         appointment_type: finalAppointmentType,
         issue_description: issueDescription,
         customer_name: customerName.trim(),
