@@ -819,10 +819,10 @@ function DateTimePageContent() {
           Continue
         </button>
 
-        {/* Powered by Spannr footer */}
-        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
+        {/* Powered by Motr footer */}
+        <div className="flex justify-end mt-6 mb-4">
           <a
-            href="https://bbc.co.uk"
+            href="https://motex-home.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
@@ -843,7 +843,7 @@ function DateTimePageContent() {
                 strokeLinejoin="round"
               />
             </svg>
-            <span>Powered by Spannr</span>
+            <span>Powered by Motr</span>
           </a>
         </div>
       </div>

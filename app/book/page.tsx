@@ -64,8 +64,8 @@ export default function BookPage() {
   const businessName = content?.business_name || "Garage";
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-20 md:pb-24">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-24 md:pb-32">
+      <div className="w-full max-w-md relative min-h-[calc(100vh-4rem)]">
         {/* Header with garage name */}
         <Link 
           href="/"
@@ -146,10 +146,10 @@ export default function BookPage() {
           </Link>
         </div>
 
-        {/* Powered by Spannr footer */}
-        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
+        {/* Powered by Motr footer */}
+        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">
           <a
-            href="https://bbc.co.uk"
+            href="https://motex-home.netlify.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
@@ -170,7 +170,7 @@ export default function BookPage() {
                 strokeLinejoin="round"
               />
             </svg>
-            <span>Powered by Spannr</span>
+            <span>Powered by Motr</span>
           </a>
         </div>
       </div>
