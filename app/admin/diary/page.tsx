@@ -264,7 +264,7 @@ function DiaryPageContent() {
                 </div>
                 <button
                   onClick={() => router.push('/admin/diary/rules')}
-                  className="text-sm font-semibold text-[#0278BD] no-underline ml-4"
+                  className="text-sm font-bold md:font-semibold text-[#0278BD] no-underline ml-4"
                 >
                   Edit
                 </button>
