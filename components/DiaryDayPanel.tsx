@@ -32,9 +32,9 @@ export default function DiaryDayPanel({
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
     }).format(date);
   };
 
@@ -108,17 +108,18 @@ export default function DiaryDayPanel({
               {!dateIsPast && (
                 <button
                   onClick={handleCreateBooking}
-                  className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                  className="h-9 flex items-center justify-center gap-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors px-3 font-medium"
                 >
-                  Create booking
+                  <span className="text-lg leading-none">+</span>
+                  <span>Add</span>
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="ml-2 text-gray-500 hover:text-gray-700 text-xl font-bold"
+                className="px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 aria-label="Close"
               >
-                ×
+                Close
               </button>
             </div>
           </div>
@@ -138,34 +139,37 @@ export default function DiaryDayPanel({
                   >
                     <div className="space-y-2">
                       {booking.time && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <span>🕐</span>
-                          <span>{booking.time}</span>
+                        <div className="text-sm">
+                          <span className="text-gray-700">Arrival time:</span>{" "}
+                          <span className="font-semibold text-gray-700">
+                            {booking.time.length > 5 ? booking.time.substring(0, 5) : booking.time}
+                          </span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <span>👤</span>
-                        <span>{booking.customer_name}</span>
+                      <div className="text-sm">
+                        <span className="text-gray-700">Customer name:</span>{" "}
+                        <span className="font-semibold text-gray-700">{booking.customer_name}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <span>📞</span>
-                        <span>{booking.customer_mobile}</span>
+                      <div className="text-sm">
+                        <span className="text-gray-700">Phone:</span>{" "}
+                        <span className="font-semibold text-gray-700">{booking.customer_mobile}</span>
                       </div>
                       {booking.vehicle_reg && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <span>🚗</span>
-                          <span>{booking.vehicle_reg}</span>
-                        </div>
-                      )}
-                      {booking.issue_description && (
-                        <div className="flex items-start gap-2 text-sm text-gray-700">
-                          <span>📄</span>
-                          <span>{booking.issue_description}</span>
+                        <div className="text-sm">
+                          <span className="text-gray-700">Car Registration:</span>{" "}
+                          <span className="font-semibold text-gray-700">{booking.vehicle_reg}</span>
                         </div>
                       )}
                       {booking.appointment_type && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {booking.appointment_type}
+                        <div className="text-sm">
+                          <span className="text-gray-700">Appointment type:</span>{" "}
+                          <span className="font-semibold text-gray-700">{booking.appointment_type}</span>
+                        </div>
+                      )}
+                      {booking.issue_description && (
+                        <div className="text-sm">
+                          <span className="text-gray-700">Additional info:</span>{" "}
+                          <span className="font-semibold text-gray-700">{booking.issue_description}</span>
                         </div>
                       )}
                     </div>
@@ -175,14 +179,14 @@ export default function DiaryDayPanel({
                         className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                         aria-label="Edit booking"
                       >
-                        ✏️ Edit
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDeleteClick(booking)}
                         className="flex-1 px-3 py-1.5 border border-red-300 rounded text-sm text-red-700 hover:bg-red-50 transition-colors"
                         aria-label="Delete booking"
                       >
-                        🗑️ Delete
+                        Delete
                       </button>
                     </div>
                   </div>

@@ -24,6 +24,7 @@ function CreateBookingPageContent() {
     date: "",
     time: "09:00",
     vehicle_reg: "",
+    vehicle_make_model: "",
     issue_description: "",
     appointment_type: "",
   });
@@ -141,7 +142,7 @@ function CreateBookingPageContent() {
 
   return (
     <div className="w-full max-w-4xl">
-      <h1 className="text-[28px] font-semibold tracking-[-0.02em] mb-4">Create Booking</h1>
+      <h1 className="text-[28px] font-semibold tracking-[-0.02em] mb-4">Add Booking</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -221,18 +222,35 @@ function CreateBookingPageContent() {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="vehicle_reg" className="block text-sm font-medium text-gray-700 mb-1">
-            Car Registration
-          </label>
-          <input
-            type="text"
-            id="vehicle_reg"
-            name="vehicle_reg"
-            value={formData.vehicle_reg}
-            onChange={handleChange}
-            className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="inline-block">
+            <label htmlFor="vehicle_reg" className="block text-sm font-medium text-gray-700 mb-1">
+              Car Registration
+            </label>
+            <input
+              type="text"
+              id="vehicle_reg"
+              name="vehicle_reg"
+              value={formData.vehicle_reg}
+              onChange={handleChange}
+              className="w-full sm:w-36 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="inline-block">
+            <label htmlFor="vehicle_make_model" className="block text-sm font-medium text-gray-700 mb-1">
+              Make and Model
+            </label>
+            <input
+              type="text"
+              id="vehicle_make_model"
+              name="vehicle_make_model"
+              value={formData.vehicle_make_model}
+              onChange={handleChange}
+              placeholder="e.g. Ford Fiesta"
+              className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         <div>
