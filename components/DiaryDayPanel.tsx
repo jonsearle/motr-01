@@ -49,6 +49,22 @@ export default function DiaryDayPanel({
 
   const dateIsPast = isPastDate();
 
+  // Get reminder status for a booking based on its date
+  const getReminderStatus = (booking: Booking): { text: string; showTick: boolean } => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingDate = new Date(booking.date);
+    bookingDate.setHours(0, 0, 0, 0);
+    
+    // Past bookings (before today) OR today's bookings: show "Reminder sent" with tick
+    // Future bookings (tomorrow onwards): show "Not yet sent" without tick
+    if (bookingDate <= today) {
+      return { text: "Reminder sent", showTick: true };
+    } else {
+      return { text: "Not yet sent", showTick: false };
+    }
+  };
+
   const handleCreateBooking = () => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -166,6 +182,18 @@ export default function DiaryDayPanel({
                           <span className="font-semibold text-gray-700">{booking.appointment_type}</span>
                         </div>
                       )}
+                      {(() => {
+                        const reminderStatus = getReminderStatus(booking);
+                        return (
+                          <div className="text-sm">
+                            <span className="text-gray-700">Reminder:</span>
+                            {reminderStatus.showTick && (
+                              <span className="text-gray-500 ml-1">✓</span>
+                            )}{" "}
+                            <span className="font-semibold text-gray-700">{reminderStatus.text}</span>
+                          </div>
+                        );
+                      })()}
                       {booking.issue_description && (
                         <div className="text-sm">
                           <span className="text-gray-700">Additional info:</span>{" "}

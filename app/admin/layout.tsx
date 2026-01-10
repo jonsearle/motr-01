@@ -5,8 +5,6 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import { useState, useEffect, useRef } from "react";
-import { BookingInfoProvider } from "@/app/contexts/BookingInfoContext";
-import HeaderBookingInfo from "@/app/components/HeaderBookingInfo";
 
 export default function AdminLayout({
   children,
@@ -90,65 +88,58 @@ export default function AdminLayout({
   };
 
   return (
-    <BookingInfoProvider>
-      <div className="min-h-screen bg-[#F9FAFB]">
-        {/* Top Bar - Full Width */}
-        {!isCreateOrEditPage && !isRulesPage && (
-        <div className="w-full bg-[#F9FAFB] h-16 flex items-center justify-between px-4 relative">
-          <div className="flex items-center gap-3">
-            {/* Hamburger Menu Button */}
-            <button
-              onClick={toggleMenu}
-              className="p-2 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Toggle menu"
-            >
-              <div className="w-6 h-6 flex flex-col justify-center gap-1.5">
-                <span
-                  className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "rotate-45 translate-y-2" : ""
-                  }`}
-                />
-                <span
-                  className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "opacity-0" : ""
-                  }`}
-                />
-                <span
-                  className={`block h-1 w-6 bg-gray-800 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                  }`}
-                />
-              </div>
-            </button>
+    <div className="min-h-screen bg-[#F9FAFB]">
+      {/* Top Bar - Full Width */}
+      {!isCreateOrEditPage && !isRulesPage && (
+      <div className="w-full bg-[#F9FAFB] h-16 flex items-center justify-between px-4 relative">
+        <div className="flex items-center gap-3">
+          {/* Hamburger Menu Button */}
+          <button
+            onClick={toggleMenu}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Toggle menu"
+          >
+            <div className="w-6 h-6 flex flex-col justify-center gap-1.5">
+              <span
+                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "rotate-45 translate-y-2" : ""
+                }`}
+              />
+              <span
+                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`block h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
+              />
+            </div>
+          </button>
 
-            {/* Page Title */}
-            {pageTitle && (
-              <div className="text-gray-800 font-semibold text-[28px] tracking-[-0.02em]">
-                {pageTitle}
-              </div>
-            )}
-          </div>
-          
-          {/* Right side: Booking info (desktop) and Add Booking Button */}
-          {isDiaryPage && (
-            <div className="flex items-center gap-[1.1rem]">
-              {/* Booking Info Section - Desktop only */}
-              <HeaderBookingInfo />
-              
-              {/* Add Booking Button */}
-              <button
-                onClick={handleCreateBooking}
-                className="h-10 flex items-center justify-center gap-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors px-3 md:px-4 text-sm md:text-base font-medium"
-                aria-label="Add booking"
-              >
-                <span className="text-xl leading-none">+</span>
-                <span className="md:hidden">Add</span>
-                <span className="hidden md:inline">Add Booking</span>
-              </button>
+          {/* Page Title */}
+          {pageTitle && (
+            <div className="text-gray-800 font-semibold text-lg">
+              {pageTitle}
             </div>
           )}
         </div>
+        
+        {/* Add Booking Button (Diary page only) */}
+        {isDiaryPage && (
+          <div className="flex items-center">
+            <button
+              onClick={handleCreateBooking}
+              className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xl leading-none"
+              aria-label="Add booking"
+            >
+              +
+            </button>
+          </div>
         )}
+      </div>
+      )}
 
       {/* Mobile Menu - Full Screen Overlay */}
       {isMenuOpen && (
@@ -240,13 +231,10 @@ export default function AdminLayout({
         </div>
       )}
 
-        {/* Main Content Area - Full Width */}
-        <main className={`w-full ${isCreateOrEditPage || isRulesPage ? (isRulesPage ? 'bg-white' : 'bg-[#F9FAFB] p-4 md:p-6 pt-4 md:pt-6') : 'bg-[#F9FAFB] p-4 md:p-8'}`}>
-          {children}
-        </main>
-        <Toaster position="top-right" />
-      </div>
-    </BookingInfoProvider>
+      {/* Main Content Area - Full Width */}
+      <main className={`w-full ${isCreateOrEditPage || isRulesPage ? (isRulesPage ? 'bg-white' : 'bg-[#F9FAFB] p-4 md:p-6 pt-4 md:pt-6') : 'bg-[#F9FAFB] p-4 md:p-8'}`}>{children}</main>
+      <Toaster position="top-right" />
+    </div>
   );
 }
 

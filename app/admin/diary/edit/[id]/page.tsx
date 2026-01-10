@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { getBookingById, updateBooking } from "@/lib/db";
-import type { Booking } from "@/types/db";
 import toast from "react-hot-toast";
 import TimePicker from "@/components/TimePicker";
 import DatePicker from "@/components/DatePicker";
+import type { Booking } from "@/types/db";
 
 const APPOINTMENT_TYPES = [
   "MOT",
@@ -15,49 +15,50 @@ const APPOINTMENT_TYPES = [
   "Specific job",
 ];
 
-export default function EditBookingPage() {
+function EditBookingPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const params = useParams();
-  const bookingId = params.id as string;
-
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [booking, setBooking] = useState<Booking | null>(null);
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_mobile: "",
     date: "",
-    time: "",
+    time: "09:00",
     vehicle_reg: "",
     vehicle_make_model: "",
     issue_description: "",
     appointment_type: "",
   });
 
-  // Load booking data
+  const bookingId = params?.id as string;
+
+  // Load existing booking
   useEffect(() => {
-    async function loadBooking() {
+    const loadBooking = async () => {
+      if (!bookingId) return;
+
       try {
         setLoading(true);
-        const foundBooking = await getBookingById(bookingId);
+        const booking = await getBookingById(bookingId);
         
-        if (!foundBooking) {
+        if (!booking) {
           toast.error("Booking not found");
           router.push("/admin/diary");
           return;
         }
 
-        setBooking(foundBooking);
+        // Pre-fill form with existing booking data
         setFormData({
-          customer_name: foundBooking.customer_name,
-          customer_mobile: foundBooking.customer_mobile,
-          date: foundBooking.date,
-          time: foundBooking.time ?? "",
-          vehicle_reg: foundBooking.vehicle_reg || "",
-          vehicle_make_model: "",
-          issue_description: foundBooking.issue_description || "",
-          appointment_type: foundBooking.appointment_type,
+          customer_name: booking.customer_name || "",
+          customer_mobile: booking.customer_mobile || "",
+          date: booking.date || "",
+          time: booking.time || "09:00",
+          vehicle_reg: booking.vehicle_reg || "",
+          vehicle_make_model: "", // Not in booking type, but keep for form consistency
+          issue_description: booking.issue_description || "",
+          appointment_type: booking.appointment_type || "",
         });
       } catch (error) {
         console.error("Error loading booking:", error);
@@ -66,11 +67,9 @@ export default function EditBookingPage() {
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    if (bookingId) {
-      loadBooking();
-    }
+    loadBooking();
   }, [bookingId, router]);
 
   const handleChange = (
@@ -166,14 +165,16 @@ export default function EditBookingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
+      <div className="w-full max-w-4xl">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full max-w-4xl">
       <h1 className="text-[28px] font-semibold tracking-[-0.02em] mb-4">Edit Booking</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -233,7 +234,11 @@ export default function EditBookingPage() {
           </div>
         </div>
 
-        <div>
+        <div className="text-sm text-gray-600 italic -mt-2">
+          A reminder SMS will be sent the day before
+        </div>
+
+        <div className="!mt-8">
           <label htmlFor="appointment_type" className="block text-sm font-medium text-gray-700 mb-1">
             Appointment Type
           </label>
@@ -305,7 +310,7 @@ export default function EditBookingPage() {
             disabled={saving}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {saving ? "Updating..." : "Update booking"}
+            {saving ? "Saving..." : "Update booking"}
           </button>
           <button
             type="button"
@@ -320,3 +325,14 @@ export default function EditBookingPage() {
   );
 }
 
+export default function EditBookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <EditBookingPageContent />
+    </Suspense>
+  );
+}

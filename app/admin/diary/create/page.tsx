@@ -201,7 +201,11 @@ function CreateBookingPageContent() {
           </div>
         </div>
 
-        <div>
+        <div className="text-sm text-gray-600 italic -mt-2">
+          A reminder SMS will be sent the day before
+        </div>
+
+        <div className="!mt-8">
           <label htmlFor="appointment_type" className="block text-sm font-medium text-gray-700 mb-1">
             Appointment Type
           </label>

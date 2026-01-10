@@ -6,7 +6,6 @@ import { getBookingsByMonth, getBookingSettings, getBookingsByDateRange } from "
 import { isDayClosed, formatDateForDisplay, getNextAvailableOnlineBookingDate, formatDateForDisplayFull, getNextAvailableOnlineBookingDateObject } from "@/lib/business-hours";
 import type { Booking, BookingSettings } from "@/types/db";
 import DiaryDayPanel from "@/components/DiaryDayPanel";
-import { useBookingInfo } from "@/app/contexts/BookingInfoContext";
 
 function DiaryPageContent() {
   const router = useRouter();
@@ -19,7 +18,6 @@ function DiaryPageContent() {
   const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
   const [nextAvailableDateObject, setNextAvailableDateObject] = useState<Date | null>(null);
   const [futureBookings, setFutureBookings] = useState<Booking[]>([]);
-  const { setBookingInfo } = useBookingInfo();
   const [today] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -57,15 +55,6 @@ function DiaryPageContent() {
       setBookings(bookingsData);
       setSettings(settingsData);
 
-      // Update context (clear if no settings)
-      if (!settingsData) {
-        setBookingInfo({
-          settings: null,
-          nextAvailableDate: null,
-          nextAvailableDateObject: null,
-        });
-      }
-
       // Load future bookings for next available date calculation
       if (settingsData) {
         const today = new Date();
@@ -82,13 +71,6 @@ function DiaryPageContent() {
           const nextDateObject = getNextAvailableOnlineBookingDateObject(settingsData, futureBookingsData);
           setNextAvailableDate(nextDate);
           setNextAvailableDateObject(nextDateObject);
-          
-          // Update context for layout to use
-          setBookingInfo({
-            settings: settingsData,
-            nextAvailableDate: nextDate,
-            nextAvailableDateObject: nextDateObject,
-          });
         } catch (error) {
           console.error("Error loading future bookings:", error);
         }
@@ -98,7 +80,7 @@ function DiaryPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [currentMonth, setBookingInfo]);
+  }, [currentMonth]);
 
   useEffect(() => {
     loadData();
@@ -226,10 +208,9 @@ function DiaryPageContent() {
   const firstDayOfWeek = getFirstDayOfWeek();
   const monthName = currentMonth.toLocaleDateString("en-GB", { month: "long" });
   
-  // Always use 6 rows for the calendar (6 rows × 7 columns = 42 cells)
-  const TOTAL_CALENDAR_CELLS = 42;
-  const totalCellsUsed = firstDayOfWeek + calendarDays.length;
-  const emptyCellsAfter = TOTAL_CALENDAR_CELLS - totalCellsUsed;
+  // Calculate number of rows needed for the calendar
+  const totalCells = firstDayOfWeek + calendarDays.length;
+  const numberOfRows = Math.ceil(totalCells / 7);
 
   // Get bookings for selected date
   const selectedDateBookings = selectedDate ? getBookingsForDate(selectedDate) : [];
@@ -244,34 +225,33 @@ function DiaryPageContent() {
 
   return (
     <div className="relative w-full h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] flex flex-col">
-        {/* Header */}
-        <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
-          {/* Online Booking Rules Panel - Mobile only */}
-          {settings && nextAvailableDate && (
-            <div className="border-t border-gray-200 md:hidden">
-              <div className="py-4 flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="text-sm font-normal text-gray-600 -mb-0.5">
-                    Customers can book online from
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {nextAvailableDate === 'Tomorrow' 
-                      ? 'Tomorrow' 
-                      : nextAvailableDateObject 
-                        ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
-                        : nextAvailableDate}
-                  </div>
+      {/* Header */}
+      <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
+        {/* Online Booking Rules Panel */}
+        {settings && nextAvailableDate && (
+          <div className="bg-white rounded">
+            <div className="flex items-start justify-between px-4 py-3">
+              <div className="flex-1">
+                <div className="text-sm font-normal tracking-[-0.02em] text-[#1F2933] mb-0">
+                  Customers can book online from
                 </div>
-                <button
-                  onClick={() => router.push('/admin/diary/rules')}
-                  className="text-sm font-bold md:font-semibold text-[#0278BD] no-underline ml-4"
-                >
-                  Edit
-                </button>
+                <div className="text-lg font-semibold tracking-[-0.02em] text-[#1F2933]">
+                  {nextAvailableDate === 'Tomorrow' 
+                    ? 'Tomorrow' 
+                    : nextAvailableDateObject 
+                      ? formatDateForDisplayFull(nextAvailableDateObject, settings.timezone)
+                      : nextAvailableDate}
+                </div>
               </div>
-              <div className="border-t border-gray-200"></div>
+              <button
+                onClick={() => router.push('/admin/diary/rules')}
+                className="text-sm font-semibold tracking-[-0.02em] text-[#0278BD] no-underline ml-4"
+              >
+                Edit
+              </button>
             </div>
-          )}
+          </div>
+        )}
         
         {/* Month Navigation */}
         <div className="flex items-center justify-end gap-1">
@@ -296,7 +276,7 @@ function DiaryPageContent() {
         <div 
           className="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0"
           style={{ 
-            gridTemplateRows: 'auto repeat(6, 1fr)',
+            gridTemplateRows: `auto repeat(${numberOfRows}, 1fr)`,
           }}
         >
           {/* Day headers */}
@@ -308,7 +288,7 @@ function DiaryPageContent() {
 
           {/* Empty cells for days before month starts */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-            <div key={`empty-before-${i}`} />
+            <div key={`empty-${i}`} />
           ))}
 
           {/* Calendar days */}
@@ -323,7 +303,7 @@ function DiaryPageContent() {
               date.getDate() === selectedDate.getDate();
 
             // Determine styling classes
-            let dayClasses = "rounded px-1 py-0.5 sm:px-1.5 sm:py-1 cursor-pointer transition-colors flex flex-col items-center overflow-hidden ";
+            let dayClasses = "rounded p-1 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between items-center overflow-hidden ";
             
             if (dayIsClosed) {
               dayClasses += "bg-gray-100 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.05)_10px,rgba(0,0,0,0.05)_20px)] ";
@@ -343,9 +323,9 @@ function DiaryPageContent() {
                 onClick={() => handleDayClick(date)}
                 className={dayClasses}
               >
-                <div className="flex items-center justify-center w-full h-5 sm:h-6">
+                <div className="flex items-center justify-center gap-1">
                   {dayIsToday ? (
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#344058] flex items-center justify-center">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#344058] flex items-center justify-center">
                       <div className="text-[13px] font-semibold tracking-[-0.02em] text-[#FFFFFF]">
                         {date.getDate()}
                       </div>
@@ -374,11 +354,6 @@ function DiaryPageContent() {
               </div>
             );
           })}
-
-          {/* Empty cells for days after month ends */}
-          {Array.from({ length: emptyCellsAfter }).map((_, i) => (
-            <div key={`empty-after-${i}`} />
-          ))}
         </div>
       </div>
 

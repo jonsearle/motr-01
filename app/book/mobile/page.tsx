@@ -85,30 +85,23 @@ function MobilePageContent() {
       // Get dropoff window start time for the selected date
       const dayOfWeek = getDayOfWeekName(selectedDate, bookingSettings.timezone);
       const openingDay = bookingSettings.opening_days.find(day => day.day_of_week === dayOfWeek);
-      const dropoffTime = openingDay?.dropoff_from_time;
-
-      // Ensure time is always set - use dropoff_from_time or fallback to 09:00
-      if (!dropoffTime) {
-        setError("Drop-off time not configured for this day. Please contact the garage.");
-        setSubmitting(false);
-        return;
-      }
+      const dropoffTime = openingDay?.dropoff_from_time || null;
 
       // Determine appointment type and issue description
-      let finalAppointmentType = appointmentType || "Specific job";
+      let finalAppointmentType = appointmentType || "Custom job";
       let issueDescription: string | undefined = undefined;
 
       if (problem) {
         finalAppointmentType = problem;
       } else if (description) {
-        finalAppointmentType = "Specific job";
+        finalAppointmentType = "Custom job";
         issueDescription = description;
       }
 
       // Create booking
       const bookingData = {
         date: dateStr,
-        time: dropoffTime,
+        time: dropoffTime || undefined,
         appointment_type: finalAppointmentType,
         issue_description: issueDescription,
         customer_name: customerName.trim(),
@@ -116,19 +109,7 @@ function MobilePageContent() {
         vehicle_reg: vehicleReg.trim() || undefined,
       };
 
-      const booking = await createBooking(bookingData);
-
-      // Send email notification (fire-and-forget, don't block on errors)
-      fetch('/api/bookings/send-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookingId: booking.id }),
-      }).catch((error) => {
-        console.error("Failed to send booking notification email:", error);
-        // Don't show error to user - email failure shouldn't block booking
-      });
+      await createBooking(bookingData);
 
       // Navigate to confirmation page
       router.push(`/book/confirmation?date=${dateParam}`);
@@ -187,8 +168,8 @@ function MobilePageContent() {
   const businessName = content?.business_name || "Garage";
 
   return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-24 md:pb-32">
-      <div className="w-full max-w-md relative min-h-[calc(100vh-4rem)]">
+    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-20 md:pb-24">
+      <div className="w-full max-w-md">
         {/* Header with garage name */}
         <Link 
           href="/"
@@ -216,7 +197,7 @@ function MobilePageContent() {
         </Link>
 
         {/* Title */}
-        <h1 className="text-white text-[28px] font-semibold tracking-[-0.02em] mb-2">Book an appointment</h1>
+        <h1 className="text-white text-2xl font-bold mb-2">Book an appointment</h1>
 
         {/* Subtitle */}
         <p className="text-white text-base mb-6">Enter your details</p>
@@ -279,10 +260,10 @@ function MobilePageContent() {
           {submitting ? "Booking..." : "Book now"}
         </button>
 
-        {/* Powered by Motr footer */}
-        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">
+        {/* Powered by Spannr footer */}
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6">
           <a
-            href="https://motex-home.netlify.app/"
+            href="https://bbc.co.uk"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
@@ -303,7 +284,7 @@ function MobilePageContent() {
                 strokeLinejoin="round"
               />
             </svg>
-            <span>Powered by Motr</span>
+            <span>Powered by Spannr</span>
           </a>
         </div>
       </div>
