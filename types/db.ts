@@ -37,7 +37,7 @@ export interface BookingSettings {
 export interface Booking {
   id: string;
   date: string;
-  time: string; // Required: expected arrival time (HH:MM format)
+  time?: string; // Optional: expected arrival time (HH:MM format)
   appointment_type: string;
   issue_description?: string;
   customer_name: string;
