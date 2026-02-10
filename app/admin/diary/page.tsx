@@ -229,7 +229,11 @@ function DiaryPageContent() {
       <div className="mb-4 md:mb-6 space-y-3 flex-shrink-0">
         {/* Online Booking Rules Panel */}
         {settings && nextAvailableDate && (
-          <div className="bg-white rounded">
+          <button
+            type="button"
+            onClick={() => router.push('/admin/diary/rules')}
+            className="w-full text-left bg-white rounded hover:bg-gray-50 transition-colors"
+          >
             <div className="flex items-start justify-between px-4 py-3">
               <div className="flex-1">
                 <div className="text-sm font-normal tracking-[-0.02em] text-[#1F2933] mb-0">
@@ -243,14 +247,11 @@ function DiaryPageContent() {
                       : nextAvailableDate}
                 </div>
               </div>
-              <button
-                onClick={() => router.push('/admin/diary/rules')}
-                className="text-sm font-semibold tracking-[-0.02em] text-[#0278BD] no-underline ml-4"
-              >
+              <span className="text-sm font-semibold tracking-[-0.02em] text-[#0278BD] no-underline ml-4">
                 Edit
-              </button>
+              </span>
             </div>
-          </div>
+          </button>
         )}
         
         {/* Month Navigation */}
@@ -303,7 +304,7 @@ function DiaryPageContent() {
               date.getDate() === selectedDate.getDate();
 
             // Determine styling classes
-            let dayClasses = "rounded p-1 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between items-center overflow-hidden ";
+            let dayClasses = "rounded border border-gray-200 p-1 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between items-center overflow-hidden ";
             
             if (dayIsClosed) {
               dayClasses += "bg-gray-100 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.05)_10px,rgba(0,0,0,0.05)_20px)] ";
