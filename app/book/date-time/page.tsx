@@ -6,17 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getGarageSiteContent, getBookingSettings, getBookingsByDateRange } from "@/lib/db";
 import type { GarageSiteContent, BookingSettings, OpeningDay, Booking } from "@/types/db";
 
-// Map problem options to shortened display text
-const PROBLEM_DISPLAY_MAP: Record<string, string> = {
-  "Car won't start": "Car won't start",
-  "Warning light came on": "Warning light came on",
-  "I hear a strange noise": "Strange noise",
-  "Something smells odd": "Odd smell",
-  "I see smoke": "Smoke",
-  "I see a leak": "Leak",
-  "Something else": "Your description",
-};
-
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES = [
   "January",
@@ -165,29 +154,6 @@ function DateTimePageContent() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingSettings, bookings, currentMonth, currentYear, loading, hasAutoSelected]);
-
-  // Get previous choice from URL parameters
-  const getPreviousChoice = (): string | null => {
-    const appointmentType = searchParams.get("appointment_type");
-    const problem = searchParams.get("problem");
-    const description = searchParams.get("description");
-
-    if (appointmentType) {
-      return appointmentType;
-    }
-
-    if (problem) {
-      return PROBLEM_DISPLAY_MAP[problem] || problem;
-    }
-
-    if (description) {
-      return "Your description";
-    }
-
-    return null;
-  };
-
-  const previousChoice = getPreviousChoice();
 
   // Get current date in garage timezone
   const getCurrentDateInTimezone = (timezone: string = 'Europe/London'): Date => {
@@ -596,36 +562,7 @@ function DateTimePageContent() {
         <h1 className="text-white text-[28px] font-semibold tracking-[-0.02em] mb-2">Book an appointment</h1>
 
         {/* Subtitle */}
-        <p className="text-white text-base mb-6">When would you like to come in?</p>
-
-        {/* Previous choice lozenge */}
-        {previousChoice && (
-          <div className="mb-6 flex items-center justify-start">
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-2">
-              <span className="text-gray-800 text-sm font-medium">{previousChoice}</span>
-              <Link
-                href="/book"
-                className="text-gray-800 hover:text-gray-600 transition-colors"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        )}
+        <p className="text-white text-base mb-8">When would you like to come in?</p>
 
         {/* Calendar */}
         <div className="mb-6">
