@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sent: true });
   } catch (error) {
     console.error("Failed to process missed call", error);
-    const message = error instanceof Error ? error.message : "Failed to process missed call";
-    return NextResponse.json({ error: "Failed to process missed call", detail: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process missed call" }, { status: 500 });
   }
 }
