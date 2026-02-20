@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ sent: false, reason: "auto_sms_disabled" });
     }
 
-    const text = `MOTR: Sorry we missed your call. Book here: ${bookingLink()}`;
+    // Prefer runtime origin so SMS always points at the currently deployed host.
+    const requestOrigin = request.nextUrl.origin;
+    const link = requestOrigin ? `${requestOrigin.replace(/\/$/, "")}/book` : bookingLink();
+    const text = `MOTR: Sorry we missed your call. Book here: ${link}`;
     await sendSms(phone, text);
 
     return NextResponse.json({ sent: true });
