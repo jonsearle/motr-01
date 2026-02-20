@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import twilio from "twilio";
 
 type ResendSmsClient = {
   sms?: {
@@ -9,12 +10,7 @@ type ResendSmsClient = {
   };
 };
 
-function getResendClient(): { client: ResendSmsClient; from: string } {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing RESEND_API_KEY");
-  }
-
+function getFromNumber(): string {
   const from =
     process.env.RESEND_SMS_FROM ||
     process.env.RESEND_FROM_PHONE ||
@@ -26,23 +22,47 @@ function getResendClient(): { client: ResendSmsClient; from: string } {
     );
   }
 
-  return { client: new Resend(apiKey) as unknown as ResendSmsClient, from };
+  return from;
 }
 
-export async function sendSms(to: string, text: string): Promise<void> {
-  const { client, from } = getResendClient();
+async function sendViaResend(from: string, to: string, text: string): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return false;
+
+  const client = new Resend(apiKey) as unknown as ResendSmsClient;
 
   if (typeof client.sms?.send === "function") {
     await client.sms.send({ from, to, text });
-    return;
+    return true;
   }
 
   if (typeof client.messages?.send === "function") {
     await client.messages.send({ from, to, text });
-    return;
+    return true;
   }
 
-  throw new Error("Current Resend SDK does not expose sms/messages send methods.");
+  return false;
+}
+
+async function sendViaTwilio(from: string, to: string, text: string): Promise<void> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+  if (!accountSid || !authToken) {
+    throw new Error("Resend SMS API unavailable and Twilio credentials are missing.");
+  }
+
+  const client = twilio(accountSid, authToken);
+  await client.messages.create({ from, to, body: text });
+}
+
+export async function sendSms(to: string, text: string): Promise<void> {
+  const from = getFromNumber();
+  const sentByResend = await sendViaResend(from, to, text);
+
+  if (sentByResend) return;
+
+  await sendViaTwilio(from, to, text);
 }
 
 export function bookingLink(): string {
