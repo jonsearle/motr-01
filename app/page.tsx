@@ -1,22 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { Booking, GarageSettings } from "@/types/db";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { GarageSettings } from "@/types/db";
 
-type Tab = "capture" | "bookings";
 const REQUEST_TIMEOUT_MS = 8000;
-
-function formatDate(value: string): string {
-  return new Date(`${value}T00:00:00`).toLocaleDateString();
-}
-
-function formatTime(value: string): string {
-  return value.slice(0, 5);
-}
-
-function formatCreatedAt(value: string): string {
-  return new Date(value).toLocaleString();
-}
 
 async function fetchJsonWithTimeout<T>(url: string, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
   const controller = new AbortController();
@@ -33,50 +21,105 @@ async function fetchJsonWithTimeout<T>(url: string, timeoutMs = REQUEST_TIMEOUT_
   }
 }
 
+function AccountIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SmartReplyIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 12a7 7 0 0 1 7-7h2a7 7 0 1 1 0 14h-2l-4 3v-6a7 7 0 0 1-3-4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m13 8-2.2 3h2l-1.6 5 4.8-6h-2L16 8h-3Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 3v4M17 3v4M4 9h16M6 6h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function BottomNav({ active }: { active: "smart" | "bookings" }) {
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}>
+      <div className="mx-auto w-full max-w-md bg-[#FBFCFE] px-1 py-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/"
+            className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
+              active === "smart" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
+            }`}
+          >
+            <SmartReplyIcon />
+            <span>Smart Reply</span>
+          </Link>
+          <Link
+            href="/bookings"
+            className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
+              active === "bookings" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
+            }`}
+          >
+            <CalendarIcon />
+            <span>Bookings</span>
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>("capture");
-  const [settings, setSettings] = useState<GarageSettings | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [selected, setSelected] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggleSaving, setToggleSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [settings, setSettings] = useState<GarageSettings | null>(null);
+  const [microPress, setMicroPress] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     async function load() {
       setLoading(true);
-      setError(null);
 
       try {
-        const [settingsResult, bookingsResult] = await Promise.allSettled([
-          fetchJsonWithTimeout<GarageSettings>("/api/garage-settings"),
-          fetchJsonWithTimeout<Booking[]>("/api/bookings"),
-        ]);
-
+        const settingsData = await fetchJsonWithTimeout<GarageSettings>("/api/garage-settings");
         if (!mounted) return;
-
-        if (settingsResult.status === "fulfilled") {
-          setSettings(settingsResult.value);
-        } else {
-          setSettings({ id: "", auto_sms_enabled: false });
-        }
-
-        if (bookingsResult.status === "fulfilled") {
-          setBookings(bookingsResult.value);
-        } else {
-          setBookings([]);
-        }
-
-        if (settingsResult.status === "rejected" || bookingsResult.status === "rejected") {
-          setError("Some data failed to load. Check Supabase connection and table permissions.");
-        }
-      } catch (loadError) {
+        setSettings(settingsData);
+      } catch {
         if (!mounted) return;
-        setError(loadError instanceof Error ? loadError.message : "Failed to load app");
         setSettings({ id: "", auto_sms_enabled: false });
-        setBookings([]);
+        setToast("Couldn’t load state.");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -89,158 +132,124 @@ export default function Home() {
     };
   }, []);
 
-  async function onToggleChange(nextValue: boolean) {
-    if (!settings?.id) {
-      setError("Settings row is unavailable. Confirm Supabase table access.");
-      return;
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const enabled = !!settings?.auto_sms_enabled;
+
+  const heroCircleClasses = useMemo(() => {
+    const base = "mx-auto flex aspect-square w-full max-w-[336px] items-center justify-center rounded-full text-center transition-all duration-200";
+
+    if (loading) {
+      return `${base} bg-[#ECEEF2] animate-pulse`;
     }
 
-    setToggleSaving(true);
-    setError(null);
+    if (enabled) {
+      return `${base} bg-[#FF6B35] text-white shadow-[0_14px_28px_rgba(255,107,53,0.24)]`;
+    }
+
+    return `${base} bg-[#E8EAF0] text-[#373E48]`;
+  }, [enabled, loading]);
+
+  async function onToggleCircle() {
+    if (loading || saving || !settings?.id) return;
+
+    const next = !enabled;
+    setMicroPress(true);
+    window.setTimeout(() => setMicroPress(false), 180);
+
+    setSettings({ ...settings, auto_sms_enabled: next });
+    setSaving(true);
 
     try {
       const response = await fetch("/api/garage-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auto_sms_enabled: nextValue }),
+        body: JSON.stringify({ auto_sms_enabled: next }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save toggle");
-      }
+      if (!response.ok) throw new Error("save_failed");
 
       const updated: GarageSettings = await response.json();
       setSettings(updated);
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Failed to save toggle");
+    } catch {
+      setSettings({ ...settings, auto_sms_enabled: !next });
+      setToast("Couldn’t update. Try again.");
     } finally {
-      setToggleSaving(false);
+      setSaving(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#F4F5F7] text-[#101820]">
-      <div className="mx-auto w-full max-w-md px-4 pb-28 pt-6">
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold">MOTR</h1>
-          <p className="text-sm text-[#4A5565]">Missed Call Revenue Wedge</p>
+    <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
+      <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
+        <header className="mb-6 flex items-center justify-end">
+          <button
+            type="button"
+            aria-label="Account"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
+          >
+            <AccountIcon />
+          </button>
         </header>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+        <button
+          type="button"
+          onClick={onToggleCircle}
+          disabled={loading || saving || !settings?.id}
+          className={`w-full transition-transform duration-300 ${microPress ? "scale-[1.035]" : "scale-100"}`}
+          aria-pressed={enabled}
+        >
+          <div className={heroCircleClasses}>
+            <div className="w-[78%]">
+              {loading ? (
+                <p className="text-sm text-[#949AA4]">Loading...</p>
+              ) : (
+                <>
+                  <p className={`h-[74px] text-[32px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
+                    <span className="block">Smart Reply</span>
+                    <span className="block">{enabled ? "Active" : "Paused"}</span>
+                  </p>
+                  <p className={`mx-auto mt-3 max-w-[240px] text-[14px] leading-[1.25] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
+                    {enabled ? (
+                      <>
+                        <span className="block">Customers receive a booking</span>
+                        <span className="block">link automatically.</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block">Missed callers will not</span>
+                        <span className="block">receive text.</span>
+                      </>
+                    )}
+                  </p>
+                  <p className={`mt-4 text-[30px] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
+                    {saving ? "..." : enabled ? "ON" : "OFF"}
+                  </p>
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </button>
 
-        {loading ? (
-          <div className="rounded-2xl bg-white p-6 text-sm text-[#4A5565]">Loading...</div>
-        ) : activeTab === "capture" ? (
-          <section className="rounded-2xl bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold">Revenue Capture</h2>
-            <p className="mt-2 text-sm text-[#4A5565]">
-              Automatically sends customers a booking link when you miss a call.
-            </p>
-
-            <button
-              type="button"
-              aria-pressed={!!settings?.auto_sms_enabled}
-              onClick={() => onToggleChange(!settings?.auto_sms_enabled)}
-              disabled={toggleSaving || !settings}
-              className="mt-6 w-full rounded-2xl border border-[#D6DCE5] bg-[#F8FAFC] px-4 py-5 text-left"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-base font-medium">Missed Call Auto-Text</span>
-                <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    settings?.auto_sms_enabled
-                      ? "bg-[#D7FBE8] text-[#086C3A]"
-                      : "bg-[#ECEFF4] text-[#485466]"
-                  }`}
-                >
-                  {settings?.auto_sms_enabled ? "ON" : "OFF"}
-                </span>
-              </div>
-            </button>
-
-            <p className="mt-3 text-xs text-[#6B7280]">
-              {toggleSaving ? "Saving..." : "State is persisted in Supabase."}
-            </p>
-          </section>
-        ) : (
-          <section className="rounded-2xl bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-lg font-semibold">Bookings</h2>
-
-            {bookings.length === 0 ? (
-              <p className="rounded-xl bg-[#F8FAFC] px-4 py-5 text-sm text-[#4A5565]">No bookings yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {bookings.map((booking) => (
-                  <button
-                    type="button"
-                    key={booking.id}
-                    onClick={() => setSelected(booking)}
-                    className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFF] p-4 text-left"
-                  >
-                    <p className="text-sm font-semibold">
-                      {formatDate(booking.date)} at {formatTime(booking.time)}
-                    </p>
-                    <p className="mt-1 text-sm">{booking.name}</p>
-                    <p className="text-sm text-[#4A5565]">{booking.phone}</p>
-                    <p className="text-sm text-[#4A5565]">{booking.service_type}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
+        {enabled && (
+          <button type="button" className="mt-10 w-full text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#A0A6B0]">Booking Availability</p>
+            <p className="mt-1 text-lg leading-tight text-[#959BA6]">Next available: Tomorrow 8am</p>
+          </button>
         )}
       </div>
 
-      {selected && (
-        <div className="fixed inset-0 z-20 bg-black/45 px-4 pb-6 pt-20" role="dialog" aria-modal="true">
-          <div className="mx-auto w-full max-w-md rounded-2xl bg-white p-5">
-            <h3 className="text-lg font-semibold">Booking Details</h3>
-            <div className="mt-4 space-y-2 text-sm">
-              <p><strong>Name:</strong> {selected.name}</p>
-              <p><strong>Phone:</strong> {selected.phone}</p>
-              <p><strong>Date:</strong> {formatDate(selected.date)}</p>
-              <p><strong>Time:</strong> {formatTime(selected.time)}</p>
-              <p><strong>Service Type:</strong> {selected.service_type}</p>
-              {selected.description && <p><strong>Description:</strong> {selected.description}</p>}
-              <p><strong>Created:</strong> {formatCreatedAt(selected.created_at)}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              className="mt-5 w-full rounded-xl bg-[#101820] px-4 py-3 text-sm font-semibold text-white"
-            >
-              Close
-            </button>
-          </div>
+      <BottomNav active="smart" />
+
+      {toast && (
+        <div className="fixed left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-[#1E222B] px-4 py-2 text-xs font-medium text-white shadow-lg">
+          {toast}
         </div>
       )}
-
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-[#DCE3EC] bg-white">
-        <div className="mx-auto flex w-full max-w-md gap-3 px-4 py-3">
-          <button
-            type="button"
-            onClick={() => setActiveTab("capture")}
-            className={`h-12 flex-1 rounded-xl text-sm font-semibold ${
-              activeTab === "capture" ? "bg-[#101820] text-white" : "bg-[#EEF2F7] text-[#263241]"
-            }`}
-          >
-            Revenue Capture
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("bookings")}
-            className={`h-12 flex-1 rounded-xl text-sm font-semibold ${
-              activeTab === "bookings" ? "bg-[#101820] text-white" : "bg-[#EEF2F7] text-[#263241]"
-            }`}
-          >
-            Bookings
-          </button>
-        </div>
-      </nav>
     </main>
   );
 }

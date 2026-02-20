@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { createBooking, listBookings } from "@/lib/db";
 import { sendSms } from "@/lib/sms";
 
-const ALLOWED_TIMES = new Set(["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"]);
+const ALLOWED_TIMES = new Set([
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+]);
 
 function validate(input: unknown): string | null {
   if (!input || typeof input !== "object") {

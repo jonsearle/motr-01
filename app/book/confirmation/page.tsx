@@ -1,34 +1,43 @@
-import Link from "next/link";
-
 export default function ConfirmationPage({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: { id?: string; date?: string; time?: string };
 }) {
+  const readableDate =
+    searchParams.date && /^\d{4}-\d{2}-\d{2}$/.test(searchParams.date)
+      ? new Date(`${searchParams.date}T00:00:00`).toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : null;
+
+  const readableTime = searchParams.time ? searchParams.time.slice(0, 5) : null;
+
   return (
-    <main className="min-h-screen bg-[#F4F5F7] px-4 pb-8 pt-10 text-[#101820]">
-      <div className="mx-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold">Booking Confirmed</h1>
-        <p className="mt-3 text-sm text-[#4A5565]">
-          Thanks, your appointment has been booked. We also sent a confirmation SMS.
-        </p>
-        {searchParams.id && (
-          <p className="mt-3 text-xs text-[#6B7280]">Reference: {searchParams.id}</p>
-        )}
-        <div className="mt-5 space-y-3">
-          <Link
-            href="/book"
-            className="block h-12 rounded-xl bg-[#E8EDF5] px-4 py-3 text-center text-sm font-semibold"
-          >
-            Make Another Booking
-          </Link>
-          <Link
-            href="/"
-            className="block h-12 rounded-xl bg-[#101820] px-4 py-3 text-center text-sm font-semibold text-white"
-          >
-            Open Garage App
-          </Link>
+    <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
+      <div className="mx-auto w-full max-w-md">
+        <div className="mb-6 mt-2 flex h-14 w-14 items-center justify-center rounded-full border-2 border-white">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" className="text-white">
+            <path
+              d="M20 6L9 17l-5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
+
+        <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Thanks for booking.</h1>
+        {readableDate && readableTime ? (
+          <p className="mt-4 text-base text-gray-100">
+            We&apos;ll see you on {readableDate} at {readableTime}.
+          </p>
+        ) : (
+          <p className="mt-4 text-base text-gray-100">Your booking is confirmed.</p>
+        )}
       </div>
     </main>
   );

@@ -1,168 +1,65 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
-
-const SERVICE_TYPES = ["MOT", "Service", "Diagnostics", "Repair"];
-const TIME_SLOTS = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"];
-
-function todayIso(): string {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+const SERVICE_OPTIONS = [
+  {
+    label: "MOT",
+    description: "Annual safety and compliance check.",
+  },
+  {
+    label: "Interim Service",
+    description: "Basic checks and fluid top-ups between full services.",
+  },
+  {
+    label: "Full Service",
+    description: "Comprehensive inspection and maintenance.",
+  },
+  {
+    label: "Diagnostics",
+    description: "Fault finding for warning lights and performance issues.",
+  },
+];
 
 export default function BookPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]);
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState(todayIso());
-  const [time, setTime] = useState(TIME_SLOTS[0]);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const canSubmit = useMemo(() => {
-    return name.trim().length > 0 && phone.trim().length > 0 && serviceType.trim().length > 0;
-  }, [name, phone, serviceType]);
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!canSubmit) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          phone,
-          service_type: serviceType,
-          description,
-          date,
-          time,
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to create booking");
-      }
-
-      const booking = await response.json();
-      router.push(`/book/confirmation?id=${booking.id}`);
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Booking failed");
-      setSubmitting(false);
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-[#F4F5F7] pb-8 pt-6 text-[#101820]">
-      <div className="mx-auto w-full max-w-md px-4">
-        <Link href="/" className="inline-flex rounded-lg bg-[#E8EDF5] px-3 py-2 text-sm font-medium">
-          Back
+    <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
+      <div className="mx-auto w-full max-w-md">
+        <Link href="/" className="mb-6 inline-flex items-center gap-2 opacity-90">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
+            <path
+              d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="text-base font-bold">MOTR Garage</span>
         </Link>
 
-        <h1 className="mt-5 text-2xl font-semibold">Book Appointment</h1>
+        <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
+        <p className="mb-6 mt-2 text-base">How can we help you?</p>
 
-        {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={onSubmit} className="mt-5 space-y-4 rounded-2xl bg-white p-5 shadow-sm">
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Name</span>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Phone</span>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              required
-              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Service Type</span>
-            <select
-              value={serviceType}
-              onChange={(event) => setServiceType(event.target.value)}
-              required
-              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+        <div className="space-y-4">
+          {SERVICE_OPTIONS.map((option) => (
+            <Link
+              key={option.label}
+              href={`/book/date-time?service_type=${encodeURIComponent(option.label)}`}
+              className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
             >
-              {SERVICE_TYPES.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+              <p className="text-base font-bold">{option.label}</p>
+              <p className="mt-1 text-sm text-gray-200">{option.description}</p>
+            </Link>
+          ))}
 
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Description (optional)</span>
-            <textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={4}
-              className="w-full rounded-xl border border-[#CED6E2] px-3 py-2 text-base"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Date</span>
-            <input
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
-              required
-              min={todayIso()}
-              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Time</span>
-            <select
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              required
-              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
-            >
-              {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button
-            type="submit"
-            disabled={!canSubmit || submitting}
-            className="h-12 w-full rounded-xl bg-[#101820] text-base font-semibold text-white disabled:opacity-60"
+          <Link
+            href="/book/date-time?service_type=Custom%20Job"
+            className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
           >
-            {submitting ? "Booking..." : "Confirm Booking"}
-          </button>
-        </form>
+            <p className="text-base font-bold">Know exactly what you need?</p>
+            <p className="mt-1 text-sm text-gray-200">Describe the job and we&apos;ll get it booked in.</p>
+          </Link>
+        </div>
       </div>
     </main>
   );
