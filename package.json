@@ -1,21 +1,18 @@
 {
-  "name": "spannr-dropoff-prototype-02",
+  "name": "motr-revenue-wedge",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test:db": "tsx scripts/sanityTest.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
     "next": "^14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-hot-toast": "^2.6.0",
-    "twilio": "^5.10.7",
     "resend": "^4.0.0"
   },
   "devDependencies": {
@@ -27,7 +24,6 @@
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "tsx": "^4.7.0",
     "typescript": "^5.5.2"
   }
 }

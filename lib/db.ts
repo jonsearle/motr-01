@@ -1,185 +1,114 @@
-import { createClient } from '@supabase/supabase-js'
-import type { BookingSettings, Booking, GarageSiteContent } from '../types/db'
+import { createClient } from "@supabase/supabase-js";
+import type { Booking, CreateBookingInput, GarageSettings } from "@/types/db";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Booking Settings helpers
-export async function getBookingSettings(): Promise<BookingSettings | null> {
-  const { data, error } = await supabase
-    .from('booking_settings')
-    .select('*')
-    .single()
-
-  if (error) {
-    // If no rows found, return null instead of throwing
-    if (error.code === 'PGRST116') {
-      return null
-    }
-    throw error
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables.");
   }
 
-  return data
+  return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-export async function upsertBookingSettings(
-  settings: BookingSettings
-): Promise<BookingSettings> {
+export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('booking_settings')
-    .upsert(settings, { onConflict: 'id' })
-    .select()
-    .single()
+    .from("garage_settings")
+    .select("id, auto_sms_enabled")
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
-    throw error
+    throw error;
   }
 
-  return data
+  if (data) {
+    return data;
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("garage_settings")
+    .insert({ auto_sms_enabled: false })
+    .select("id, auto_sms_enabled")
+    .single();
+
+  if (insertError) {
+    throw insertError;
+  }
+
+  return inserted;
 }
 
-// Booking helpers
-export async function createBooking(
-  data: Omit<Booking, 'id' | 'created_at'>
-): Promise<Booking> {
-  const { data: booking, error } = await supabase
-    .from('bookings')
-    .insert(data)
-    .select()
-    .single()
+export async function setAutoSmsEnabled(enabled: boolean): Promise<GarageSettings> {
+  const supabase = getSupabaseClient();
+  const current = await getOrCreateGarageSettings();
+
+  const { data, error } = await supabase
+    .from("garage_settings")
+    .update({ auto_sms_enabled: enabled })
+    .eq("id", current.id)
+    .select("id, auto_sms_enabled")
+    .single();
 
   if (error) {
-    throw error
+    throw error;
   }
 
-  return booking
+  return data;
+}
+
+export async function createBooking(input: CreateBookingInput): Promise<Booking> {
+  const supabase = getSupabaseClient();
+  const payload = {
+    name: input.name,
+    phone: input.phone,
+    service_type: input.service_type,
+    description: input.description?.trim() ? input.description.trim() : null,
+    date: input.date,
+    time: input.time,
+  };
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert(payload)
+    .select("id, name, phone, service_type, description, date, time, created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function listBookings(): Promise<Booking[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, name, phone, service_type, description, date, time, created_at")
+    .order("date", { ascending: true })
+    .order("time", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
 }
 
 export async function getBookingById(id: string): Promise<Booking | null> {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', id)
-    .single()
+    .from("bookings")
+    .select("id, name, phone, service_type, description, date, time, created_at")
+    .eq("id", id)
+    .maybeSingle();
 
   if (error) {
-    // If no rows found, return null instead of throwing
-    if ((error as any).code === 'PGRST116') {
-      return null
-    }
-    throw error
+    throw error;
   }
 
-  return data
-}
-
-export async function updateBooking(
-  id: string,
-  data: Omit<Booking, 'id' | 'created_at'>
-): Promise<Booking> {
-  const { data: updatedBooking, error } = await supabase
-    .from('bookings')
-    .update(data)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    throw error
-  }
-
-  return updatedBooking
-}
-
-export async function deleteBooking(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    throw error
-  }
-}
-
-export async function getBookingsByMonth(
-  year: number,
-  month: number
-): Promise<Booking[]> {
-  // Calculate first and last day of the month
-  // Month is 1-indexed (1 = January, 12 = December)
-  const startDate = new Date(year, month - 1, 1)
-  const endDate = new Date(year, month, 0) // Last day of the month
-
-  // Format dates as YYYY-MM-DD strings for PostgreSQL date comparison
-  const start = startDate.toISOString().split('T')[0]
-  const end = endDate.toISOString().split('T')[0]
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .gte('date', start)
-    .lte('date', end)
-    .order('date', { ascending: true })
-
-  if (error) {
-    throw error
-  }
-
-  return data || []
-}
-
-export async function getBookingsByDateRange(
-  startDate: string,
-  endDate: string
-): Promise<Booking[]> {
-  // Format dates as YYYY-MM-DD strings for PostgreSQL date comparison
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true })
-
-  if (error) {
-    throw error
-  }
-
-  return data || []
-}
-
-// Garage Site Content helpers
-export async function getGarageSiteContent(): Promise<GarageSiteContent | null> {
-  const { data, error } = await supabase
-    .from('garage_site_content')
-    .select('*')
-    .single()
-
-  if (error) {
-    // If no rows found, return null instead of throwing
-    if (error.code === 'PGRST116') {
-      return null
-    }
-    throw error
-  }
-
-  return data
-}
-
-export async function upsertGarageSiteContent(
-  data: GarageSiteContent
-): Promise<GarageSiteContent> {
-  const { data: updatedData, error } = await supabase
-    .from('garage_site_content')
-    .upsert(data, { onConflict: 'id' })
-    .select()
-    .single()
-
-  if (error) {
-    throw error
-  }
-
-  return updatedData
+  return data;
 }

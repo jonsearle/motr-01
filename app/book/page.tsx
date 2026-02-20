@@ -1,180 +1,169 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getGarageSiteContent } from "@/lib/db";
-import type { GarageSiteContent } from "@/types/db";
+import { useRouter } from "next/navigation";
+import { FormEvent, useMemo, useState } from "react";
 
-export default function BookPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [content, setContent] = useState<GarageSiteContent | null>(null);
+const SERVICE_TYPES = ["MOT", "Service", "Diagnostics", "Repair"];
+const TIME_SLOTS = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"];
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadGarageName() {
-      try {
-        setError(null);
-        console.log("Loading garage content...");
-
-        const contentData = await getGarageSiteContent();
-
-        if (!isMounted) return;
-
-        setContent(contentData);
-      } catch (error) {
-        if (!isMounted) return;
-        const errorMessage = error instanceof Error ? error.message : "Failed to load garage information";
-        setError(errorMessage);
-        console.error("Error loading garage content:", error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadGarageName();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center p-6">
-        <div className="text-white text-center">
-          <p className="text-lg font-semibold mb-2">Error loading garage information</p>
-          <p className="text-sm text-gray-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const businessName = content?.business_name || "Garage";
-
-  return (
-    <div className="min-h-screen bg-gray-800 flex items-start justify-center pt-8 px-6 pb-24 md:pb-32">
-      <div className="w-full max-w-md relative min-h-[calc(100vh-4rem)]">
-        {/* Header with garage name */}
-        <Link 
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 mb-6 hover:opacity-80 transition-opacity"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-white"
-          >
-            <path
-              d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="text-white font-bold text-base">{businessName}</span>
-        </Link>
-
-        {/* Title */}
-        <h1 className="text-white text-[28px] font-semibold tracking-[-0.02em] mb-2">Book an appointment</h1>
-
-        {/* Subtitle */}
-        <p className="text-white text-base mb-6">How can we help you?</p>
-
-        {/* Service option cards */}
-        <div className="space-y-4 mb-12">
-          {/* MOT */}
-          <Link
-            href={`/book/date-time?appointment_type=${encodeURIComponent("MOT")}`}
-            className="block w-full text-left border border-white rounded-lg p-4 hover:bg-gray-700 active:bg-gray-600 transition-colors cursor-pointer touch-manipulation"
-          >
-            <div className="text-white font-bold text-base mb-1">MOT</div>
-            <div className="text-white text-sm">Annual safety and compliance check.</div>
-          </Link>
-
-          {/* Interim Service */}
-          <Link
-            href={`/book/date-time?appointment_type=${encodeURIComponent("Interim Service")}`}
-            className="block w-full text-left border border-white rounded-lg p-4 hover:bg-gray-700 active:bg-gray-600 transition-colors cursor-pointer touch-manipulation"
-          >
-            <div className="text-white font-bold text-base mb-1">Interim Service</div>
-            <div className="text-white text-sm">Basic checks and fluid top-ups between full services.</div>
-          </Link>
-
-          {/* Full Service */}
-          <Link
-            href={`/book/date-time?appointment_type=${encodeURIComponent("Full Service")}`}
-            className="block w-full text-left border border-white rounded-lg p-4 hover:bg-gray-700 active:bg-gray-600 transition-colors cursor-pointer touch-manipulation"
-          >
-            <div className="text-white font-bold text-base mb-1">Full Service</div>
-            <div className="text-white text-sm">Comprehensive inspection and maintenance.</div>
-          </Link>
-
-          {/* Know exactly what you need? */}
-          <Link
-            href="/book/custom-job"
-            className="block w-full text-left border border-white rounded-lg p-4 hover:bg-gray-700 active:bg-gray-600 transition-colors cursor-pointer touch-manipulation"
-          >
-            <div className="text-white font-bold text-base mb-1">Know exactly what you need?</div>
-            <div className="text-white text-sm">Describe the job - we&apos;ll take care of it, big or small.</div>
-          </Link>
-
-          {/* I'm not sure what's wrong */}
-          <Link
-            href="/book/not-sure"
-            className="block w-full text-left border border-white rounded-lg p-4 hover:bg-gray-700 active:bg-gray-600 transition-colors cursor-pointer touch-manipulation"
-          >
-            <div className="text-white font-bold text-base mb-1">I&apos;m not sure what&apos;s wrong</div>
-            <div className="text-white text-sm">Describe the problem and we&apos;ll guide you with a few quick questions.</div>
-          </Link>
-        </div>
-
-        {/* Powered by Motr footer */}
-        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10">
-          <a
-            href="https://motex-home.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-white text-xs hover:text-gray-300 transition-colors"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
-            >
-              <path
-                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>Powered by Motr</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+function todayIso(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
+export default function BookPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]);
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState(todayIso());
+  const [time, setTime] = useState(TIME_SLOTS[0]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const canSubmit = useMemo(() => {
+    return name.trim().length > 0 && phone.trim().length > 0 && serviceType.trim().length > 0;
+  }, [name, phone, serviceType]);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSubmit) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          service_type: serviceType,
+          description,
+          date,
+          time,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to create booking");
+      }
+
+      const booking = await response.json();
+      router.push(`/book/confirmation?id=${booking.id}`);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Booking failed");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-[#F4F5F7] pb-8 pt-6 text-[#101820]">
+      <div className="mx-auto w-full max-w-md px-4">
+        <Link href="/" className="inline-flex rounded-lg bg-[#E8EDF5] px-3 py-2 text-sm font-medium">
+          Back
+        </Link>
+
+        <h1 className="mt-5 text-2xl font-semibold">Book Appointment</h1>
+
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="mt-5 space-y-4 rounded-2xl bg-white p-5 shadow-sm">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Name</span>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Phone</span>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              required
+              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Service Type</span>
+            <select
+              value={serviceType}
+              onChange={(event) => setServiceType(event.target.value)}
+              required
+              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+            >
+              {SERVICE_TYPES.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Description (optional)</span>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={4}
+              className="w-full rounded-xl border border-[#CED6E2] px-3 py-2 text-base"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Date</span>
+            <input
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+              required
+              min={todayIso()}
+              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Time</span>
+            <select
+              value={time}
+              onChange={(event) => setTime(event.target.value)}
+              required
+              className="h-12 w-full rounded-xl border border-[#CED6E2] px-3 text-base"
+            >
+              {TIME_SLOTS.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="submit"
+            disabled={!canSubmit || submitting}
+            className="h-12 w-full rounded-xl bg-[#101820] text-base font-semibold text-white disabled:opacity-60"
+          >
+            {submitting ? "Booking..." : "Confirm Booking"}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}

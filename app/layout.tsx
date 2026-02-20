@@ -1,15 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({ 
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-});
-
 export const metadata: Metadata = {
-  title: "Motr",
-  description: "Admin Portal and Booking Site MVP",
+  title: "MOTR",
+  description: "Missed call revenue wedge",
   icons: {
     icon: "/images/favicon.jpg",
   },
@@ -18,7 +12,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -28,11 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={dmSans.variable}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
-
-
-
-
