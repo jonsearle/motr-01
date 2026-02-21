@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const PROBLEMS = [
-  "Strange noise",
-  "Warning light on dashboard",
-  "Brakes feel wrong",
-  "Engine performance issue",
-  "Battery or starting issue",
+  "Car won't start",
+  "Warning light came on",
+  "I hear a strange noise",
+  "Something smells odd",
+  "I see smoke",
+  "I see a leak",
+  "Something else",
 ];
 
 export default function NotSurePage() {
@@ -55,23 +57,24 @@ export default function NotSurePage() {
         <p className="mb-6 mt-2 text-base">What&apos;s the problem?</p>
 
         <div className="space-y-4">
-          {PROBLEMS.map((problem) => (
-            <Link
-              key={problem}
-              href={`/book/date-time?service_type=${encodeURIComponent("Diagnostic")}&description=${encodeURIComponent(problem)}`}
-              className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
-            >
-              <p className="text-base font-bold">{problem}</p>
-            </Link>
-          ))}
+          {PROBLEMS.map((problem) => {
+            const href =
+              problem === "Something else"
+                ? "/book/custom-job"
+                : `/book/date-time?problem=${encodeURIComponent(problem)}&service_type=${encodeURIComponent(
+                    "Diagnostic"
+                  )}`;
 
-          <Link
-            href="/book/custom-job"
-            className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
-          >
-            <p className="text-base font-bold">Something else</p>
-            <p className="mt-1 text-sm text-gray-200">Describe the issue in your own words.</p>
-          </Link>
+            return (
+              <Link
+                key={problem}
+                href={href}
+                className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
+              >
+                <p className="text-base font-bold">{problem}</p>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </main>

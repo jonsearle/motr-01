@@ -65,6 +65,7 @@ function DateTimeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const serviceType = searchParams.get("service_type") || "MOT";
+  const problem = searchParams.get("problem") || "";
   const description = searchParams.get("description") || "";
 
   const today = useMemo(() => {
@@ -132,6 +133,9 @@ function DateTimeContent() {
     });
     if (description.trim()) {
       params.set("description", description.trim());
+    }
+    if (problem.trim()) {
+      params.set("problem", problem.trim());
     }
 
     router.push(`/book/mobile?${params.toString()}`);

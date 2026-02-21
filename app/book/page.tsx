@@ -48,7 +48,7 @@ export default function BookPage() {
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
-        <Link href="/" className="mb-6 inline-flex items-center gap-2 opacity-90">
+        <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
             <path
               d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"

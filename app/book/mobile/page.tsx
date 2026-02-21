@@ -9,13 +9,14 @@ function MobileFormContent() {
   const router = useRouter();
 
   const serviceType = searchParams.get("service_type") || "MOT";
+  const problem = searchParams.get("problem") || "";
+  const issueDescription = searchParams.get("description") || "";
   const date = searchParams.get("date") || "";
   const time = searchParams.get("time") || "";
-  const initialDescription = searchParams.get("description") || "";
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [description, setDescription] = useState(initialDescription);
+  const [vehicleReg, setVehicleReg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [garageName, setGarageName] = useState("MOTR Garage");
@@ -53,14 +54,19 @@ function MobileFormContent() {
     setError(null);
 
     try {
+      const finalServiceType = problem.trim() || serviceType;
+      const mergedDescription = [issueDescription.trim(), vehicleReg.trim() ? `Vehicle reg: ${vehicleReg.trim()}` : ""]
+        .filter(Boolean)
+        .join(" | ");
+
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           phone,
-          service_type: serviceType,
-          description,
+          service_type: finalServiceType,
+          description: mergedDescription || undefined,
           date,
           time,
         }),
@@ -95,7 +101,7 @@ function MobileFormContent() {
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
-        <Link href={`/book/date-time?service_type=${encodeURIComponent(serviceType)}`} className="mb-6 inline-flex items-center gap-2 opacity-90">
+        <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
             <path
               d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
@@ -127,17 +133,16 @@ function MobileFormContent() {
           <input
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            placeholder="Enter mobile number"
+            placeholder="Enter phone number"
             required
             className="h-12 w-full rounded-lg border border-white bg-transparent px-4 text-base text-white placeholder:text-gray-400"
           />
 
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="Optional description"
-            rows={4}
-            className="w-full rounded-lg border border-white bg-transparent px-4 py-3 text-base text-white placeholder:text-gray-400"
+          <input
+            value={vehicleReg}
+            onChange={(event) => setVehicleReg(event.target.value)}
+            placeholder="Car registration (optional)"
+            className="h-12 w-full rounded-lg border border-white bg-transparent px-4 text-base text-white placeholder:text-gray-400"
           />
 
           <button
