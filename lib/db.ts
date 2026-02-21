@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { normalizePhoneInput, normalizeWhatsappNumber } from "@/lib/missed-call";
 import type {
   Booking,
   CreateBookingInput,
@@ -98,11 +99,11 @@ function assertValidCtaConfig(next: GarageSettings): void {
     throw new Error("At least one CTA must be enabled.");
   }
 
-  if (next.cta_whatsapp_enabled && !next.whatsapp_number.trim()) {
+  if (next.cta_whatsapp_enabled && !normalizeWhatsappNumber(next.whatsapp_number)) {
     throw new Error("WhatsApp number is required when WhatsApp CTA is enabled.");
   }
 
-  if (next.cta_phone_enabled && !next.garage_phone.trim()) {
+  if (next.cta_phone_enabled && !normalizePhoneInput(next.garage_phone)) {
     throw new Error("Phone number is required when phone CTA is enabled.");
   }
 }
@@ -117,8 +118,12 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
   if (typeof input.cta_booking_enabled === "boolean") updatePayload.cta_booking_enabled = input.cta_booking_enabled;
   if (typeof input.cta_whatsapp_enabled === "boolean") updatePayload.cta_whatsapp_enabled = input.cta_whatsapp_enabled;
   if (typeof input.cta_phone_enabled === "boolean") updatePayload.cta_phone_enabled = input.cta_phone_enabled;
-  if (typeof input.whatsapp_number === "string") updatePayload.whatsapp_number = input.whatsapp_number.trim();
-  if (typeof input.garage_phone === "string") updatePayload.garage_phone = input.garage_phone.trim();
+  if (typeof input.whatsapp_number === "string") {
+    updatePayload.whatsapp_number = normalizePhoneInput(input.whatsapp_number);
+  }
+  if (typeof input.garage_phone === "string") {
+    updatePayload.garage_phone = normalizePhoneInput(input.garage_phone);
+  }
 
   const nextState: GarageSettings = {
     ...current,

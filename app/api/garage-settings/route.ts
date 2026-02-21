@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOrCreateGarageSettings, updateGarageSettings } from "@/lib/db";
-import { normalizeWhatsappNumber } from "@/lib/missed-call";
+import { normalizePhoneInput } from "@/lib/missed-call";
 import type { UpdateGarageSettingsInput } from "@/types/db";
 
 export async function GET() {
@@ -24,9 +24,11 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.cta_whatsapp_enabled === "boolean") updateInput.cta_whatsapp_enabled = body.cta_whatsapp_enabled;
     if (typeof body.cta_phone_enabled === "boolean") updateInput.cta_phone_enabled = body.cta_phone_enabled;
     if (typeof body.whatsapp_number === "string") {
-      updateInput.whatsapp_number = normalizeWhatsappNumber(body.whatsapp_number);
+      updateInput.whatsapp_number = normalizePhoneInput(body.whatsapp_number);
     }
-    if (typeof body.garage_phone === "string") updateInput.garage_phone = body.garage_phone;
+    if (typeof body.garage_phone === "string") {
+      updateInput.garage_phone = normalizePhoneInput(body.garage_phone);
+    }
 
     if (Object.keys(updateInput).length === 0) {
       return NextResponse.json({ error: "No valid settings fields provided" }, { status: 400 });

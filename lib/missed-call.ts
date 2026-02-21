@@ -3,8 +3,18 @@ import type { GarageSettings } from "@/types/db";
 const DISPLAY_DOMAIN = "motr.one";
 const WHATSAPP_TEXT = "Hi I just called about my car (Motr)";
 
+export function normalizePhoneInput(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+
+  const compact = trimmed.replace(/[()\-\s]/g, "");
+  if (compact.startsWith("+")) return `+${compact.slice(1).replace(/\D/g, "")}`;
+  if (compact.startsWith("00")) return `+${compact.slice(2).replace(/\D/g, "")}`;
+  return compact.replace(/\D/g, "");
+}
+
 export function normalizeWhatsappNumber(input: string): string {
-  return input.replace(/\D/g, "");
+  return normalizePhoneInput(input).replace(/\D/g, "");
 }
 
 export function buildShortLinks(shortCode: string): { booking: string; whatsapp: string } {
@@ -51,4 +61,3 @@ export function composeMissedCallSms(settings: GarageSettings): string {
 
   return lines.join("\n");
 }
-

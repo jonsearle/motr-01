@@ -40,7 +40,7 @@ function Toggle({
   label: string;
 }) {
   return (
-    <label className="flex items-center justify-between rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+    <label className="flex items-center justify-between">
       <span className="text-sm font-medium text-[#1D2530]">{label}</span>
       <button
         type="button"
@@ -56,6 +56,33 @@ function Toggle({
           }`}
         />
       </button>
+    </label>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="mt-3 block">
+      <span className="mb-1 block text-sm font-medium text-[#1D2530]">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
+        placeholder={placeholder}
+      />
+      <p className="mt-1 text-xs text-[#7B8492]">
+        Use international format (for example: +44 7700 900123 or 447700900123).
+      </p>
     </label>
   );
 }
@@ -202,48 +229,47 @@ export default function AccountPage() {
 
             <section className="rounded-3xl border border-[#E9EDF2] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#1D2530]">Missed Call Message Options</h2>
-              <div className="mt-3 space-y-2">
-                <Toggle
-                  checked={form.cta_booking_enabled}
-                  onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                  label="Enable booking link"
-                />
-                <Toggle
-                  checked={form.cta_whatsapp_enabled}
-                  onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
-                  label="Enable WhatsApp link"
-                />
-                <Toggle
-                  checked={form.cta_phone_enabled}
-                  onChange={(next) => setForm({ ...form, cta_phone_enabled: next })}
-                  label="Include phone number"
-                />
+              <div className="mt-3 space-y-3">
+                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+                  <Toggle
+                    checked={form.cta_booking_enabled}
+                    onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
+                    label="Enable booking link"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+                  <Toggle
+                    checked={form.cta_whatsapp_enabled}
+                    onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
+                    label="Enable WhatsApp link"
+                  />
+                  {form.cta_whatsapp_enabled && (
+                    <NumberField
+                      label="WhatsApp number"
+                      value={form.whatsapp_number}
+                      onChange={(next) => setForm({ ...form, whatsapp_number: next })}
+                      placeholder="+44 7700 900123"
+                    />
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+                  <Toggle
+                    checked={form.cta_phone_enabled}
+                    onChange={(next) => setForm({ ...form, cta_phone_enabled: next })}
+                    label="Include phone number"
+                  />
+                  {form.cta_phone_enabled && (
+                    <NumberField
+                      label="Callback phone number"
+                      value={form.garage_phone}
+                      onChange={(next) => setForm({ ...form, garage_phone: next })}
+                      placeholder="+44 7700 900123"
+                    />
+                  )}
+                </div>
               </div>
-
-              {form.cta_whatsapp_enabled && (
-                <label className="mt-3 block">
-                  <span className="mb-1 block text-sm font-medium text-[#1D2530]">WhatsApp number</span>
-                  <input
-                    value={form.whatsapp_number}
-                    onChange={(event) => setForm({ ...form, whatsapp_number: event.target.value })}
-                    className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
-                    placeholder="447700900123"
-                  />
-                  <p className="mt-1 text-xs text-[#7B8492]">Use international format, digits only.</p>
-                </label>
-              )}
-
-              {form.cta_phone_enabled && (
-                <label className="mt-3 block">
-                  <span className="mb-1 block text-sm font-medium text-[#1D2530]">Callback phone number</span>
-                  <input
-                    value={form.garage_phone}
-                    onChange={(event) => setForm({ ...form, garage_phone: event.target.value })}
-                    className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
-                    placeholder="+44 7700 900123"
-                  />
-                </label>
-              )}
             </section>
 
             <section className="rounded-3xl border border-[#E9EDF2] bg-white p-4">
@@ -279,4 +305,3 @@ export default function AccountPage() {
     </main>
   );
 }
-
