@@ -235,3 +235,12 @@ export async function getBookingById(id: string): Promise<Booking | null> {
 
   return data;
 }
+
+export async function deleteBooking(id: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("bookings").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}

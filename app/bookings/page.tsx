@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Booking } from "@/types/db";
+
+type BookingTab = "future" | "past" | "all";
+
+function todayIso(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00`);
@@ -17,7 +27,13 @@ function formatTime(value: string): string {
 }
 
 function formatCreatedAt(value: string): string {
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function SmartReplyIcon() {
@@ -111,6 +127,35 @@ function WrenchIcon() {
   );
 }
 
+function NoteIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M14 3H6a2 2 0 0 0-2 2v14l4-3h10a2 2 0 0 0 2-2V9l-6-6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3v6h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AccountIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function BottomNav({ active }: { active: "smart" | "bookings" }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}>
@@ -140,25 +185,14 @@ function BottomNav({ active }: { active: "smart" | "bookings" }) {
   );
 }
 
-function AccountIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<BookingTab>("future");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -189,11 +223,45 @@ export default function BookingsPage() {
     };
   }, []);
 
+  const filteredBookings = useMemo(() => {
+    const today = todayIso();
+
+    if (activeTab === "future") {
+      return bookings.filter((booking) => booking.date >= today);
+    }
+
+    if (activeTab === "past") {
+      return bookings.filter((booking) => booking.date < today);
+    }
+
+    return bookings;
+  }, [bookings, activeTab]);
+
+  async function onDeleteBooking() {
+    if (!selected) return;
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/bookings/${selected.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("delete_failed");
+
+      setBookings((current) => current.filter((b) => b.id !== selected.id));
+      setSelected(null);
+      setConfirmDelete(false);
+    } catch {
+      setError("Couldn’t delete booking.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1F252E]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <header className="mb-5 flex items-center justify-between">
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Bookings</h1>
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
           <button
             type="button"
             aria-label="Account"
@@ -203,6 +271,25 @@ export default function BookingsPage() {
           </button>
         </header>
 
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          {([
+            ["future", "Future"],
+            ["past", "Past"],
+            ["all", "All"],
+          ] as Array<[BookingTab, string]>).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`h-10 rounded-xl text-sm font-medium transition-colors ${
+                activeTab === key ? "bg-[#FFEDE5] text-[#1F252E]" : "bg-[#F3F5F8] text-[#7A828F]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {error && <p className="mb-3 text-sm text-[#7B4A40]">{error}</p>}
 
         {loading ? (
@@ -211,15 +298,18 @@ export default function BookingsPage() {
             <div className="h-20 animate-pulse rounded-2xl bg-white" />
             <div className="h-20 animate-pulse rounded-2xl bg-white" />
           </div>
-        ) : bookings.length === 0 ? (
-          <p className="py-6 text-sm text-[#737A85]">No bookings yet.</p>
+        ) : filteredBookings.length === 0 ? (
+          <p className="py-6 text-sm text-[#737A85]">No bookings in this view.</p>
         ) : (
           <div className="divide-y divide-[#ECEFF4]">
-            {bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <button
                 type="button"
                 key={booking.id}
-                onClick={() => setSelected(booking)}
+                onClick={() => {
+                  setSelected(booking);
+                  setConfirmDelete(false);
+                }}
                 className="w-full py-4 text-left transition-colors hover:bg-[#F7F9FC]"
               >
                 <div className="space-y-1.5">
@@ -241,6 +331,12 @@ export default function BookingsPage() {
                     <span className="text-[#8A92A0]"><WrenchIcon /></span>
                     <span>{booking.service_type}</span>
                   </p>
+                  {booking.description?.trim() && (
+                    <p className="flex items-start gap-2 text-sm text-[#606875]">
+                      <span className="mt-0.5 text-[#8A92A0]"><NoteIcon /></span>
+                      <span>{booking.description}</span>
+                    </p>
+                  )}
                 </div>
               </button>
             ))}
@@ -252,22 +348,58 @@ export default function BookingsPage() {
         <div className="fixed inset-0 z-30 bg-black/35 px-4 pb-6 pt-20" role="dialog" aria-modal="true">
           <div className="mx-auto w-full max-w-md rounded-3xl border border-[#E8EBF0] bg-white p-5">
             <h3 className="text-lg font-semibold">Booking Details</h3>
-            <div className="mt-4 space-y-2 text-sm">
+
+            <div className="mt-4 space-y-2 text-sm text-[#303745]">
               <p><strong>Name:</strong> {selected.name}</p>
               <p><strong>Phone:</strong> {selected.phone}</p>
               <p><strong>Date:</strong> {formatDate(selected.date)}</p>
               <p><strong>Time:</strong> {formatTime(selected.time)}</p>
               <p><strong>Service Type:</strong> {selected.service_type}</p>
-              {selected.description && <p><strong>Description:</strong> {selected.description}</p>}
+              {selected.description?.trim() && <p><strong>Note:</strong> {selected.description}</p>}
               <p><strong>Created:</strong> {formatCreatedAt(selected.created_at)}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              className="mt-5 w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
-            >
-              Close
-            </button>
+
+            {!confirmDelete ? (
+              <div className="mt-5 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+                >
+                  Delete Booking
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-700">Delete this booking?</p>
+                <p className="mt-1 text-xs text-red-600">This cannot be undone.</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-[#1F252E]"
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDeleteBooking}
+                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting..." : "Confirm Delete"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
