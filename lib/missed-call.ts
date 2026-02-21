@@ -51,13 +51,13 @@ export function composeMissedCallSms(settings: GarageSettings): string {
   const ctas: string[] = [];
 
   if (settings.cta_booking_enabled) {
-    ctas.push(`Book online: ${links.booking}`);
+    ctas.push(`Book online:\n${links.booking}`);
   }
   if (settings.cta_whatsapp_enabled) {
-    ctas.push(`Send WhatsApp: ${links.whatsapp}`);
+    ctas.push(`Send WhatsApp:\n${links.whatsapp}`);
   }
   if (settings.cta_phone_enabled) {
-    ctas.push(`Call us: ${settings.garage_phone.trim()}`);
+    ctas.push(`Call us:\n${settings.garage_phone.trim()}`);
   }
 
   lines.push(ctas.join("\n\n"));
