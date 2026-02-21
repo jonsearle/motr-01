@@ -5,6 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { Booking } from "@/types/db";
 
 type BookingTab = "future" | "past" | "all";
+type BookingDetails = {
+  note: string | null;
+  vehicleReg: string | null;
+};
 
 function todayIso(): string {
   const now = new Date();
@@ -34,6 +38,34 @@ function formatCreatedAt(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function parseBookingDetails(description: string | null): BookingDetails {
+  if (!description?.trim()) {
+    return { note: null, vehicleReg: null };
+  }
+
+  const parts = description
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  let vehicleReg: string | null = null;
+  const noteParts: string[] = [];
+
+  for (const part of parts) {
+    const match = part.match(/^vehicle reg:\s*(.+)$/i);
+    if (match && match[1]?.trim()) {
+      vehicleReg = match[1].trim();
+      continue;
+    }
+    noteParts.push(part);
+  }
+
+  return {
+    note: noteParts.length > 0 ? noteParts.join(" | ") : null,
+    vehicleReg,
+  };
 }
 
 function SmartReplyIcon() {
@@ -118,6 +150,20 @@ function WrenchIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CarIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 13h18M6 13l1.5-4h9L18 13M6 13v4m12-4v4M8 17a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -236,6 +282,7 @@ export default function BookingsPage() {
 
     return bookings;
   }, [bookings, activeTab]);
+  const selectedDetails = selected ? parseBookingDetails(selected.description) : null;
 
   async function onDeleteBooking() {
     if (!selected) return;
@@ -282,10 +329,12 @@ export default function BookingsPage() {
               type="button"
               onClick={() => setActiveTab(key)}
               className={`h-10 rounded-xl text-sm font-medium transition-colors ${
-                activeTab === key ? "bg-[#FFEDE5] text-[#1F252E]" : "bg-[#F3F5F8] text-[#7A828F]"
+                activeTab === key
+                  ? "bg-transparent text-[#1F252E] ring-1 ring-[#DCE1E8]"
+                  : "bg-transparent text-[#8D94A0]"
               }`}
             >
-              {label}
+              {key === "future" ? "Upcoming" : label}
             </button>
           ))}
         </div>
@@ -302,44 +351,54 @@ export default function BookingsPage() {
           <p className="py-6 text-sm text-[#737A85]">No bookings in this view.</p>
         ) : (
           <div className="divide-y divide-[#ECEFF4]">
-            {filteredBookings.map((booking) => (
-              <button
-                type="button"
-                key={booking.id}
-                onClick={() => {
-                  setSelected(booking);
-                  setConfirmDelete(false);
-                }}
-                className="w-full py-4 text-left transition-colors hover:bg-[#F7F9FC]"
-              >
-                <div className="space-y-1.5">
-                  <p className="flex items-center gap-2 text-sm font-semibold">
-                    <span className="text-[#8A92A0]"><ClockIcon /></span>
-                    <span>
-                      {formatDate(booking.date)} {formatTime(booking.time)}
-                    </span>
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-[#303745]">
-                    <span className="text-[#8A92A0]"><UserIcon /></span>
-                    <span>{booking.name}</span>
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-[#606875]">
-                    <span className="text-[#8A92A0]"><PhoneIcon /></span>
-                    <span>{booking.phone}</span>
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-[#606875]">
-                    <span className="text-[#8A92A0]"><WrenchIcon /></span>
-                    <span>{booking.service_type}</span>
-                  </p>
-                  {booking.description?.trim() && (
-                    <p className="flex items-start gap-2 text-sm text-[#606875]">
-                      <span className="mt-0.5 text-[#8A92A0]"><NoteIcon /></span>
-                      <span>{booking.description}</span>
+            {filteredBookings.map((booking) => {
+              const details = parseBookingDetails(booking.description);
+
+              return (
+                <button
+                  type="button"
+                  key={booking.id}
+                  onClick={() => {
+                    setSelected(booking);
+                    setConfirmDelete(false);
+                  }}
+                  className="w-full py-4 text-left transition-colors hover:bg-[#F7F9FC]"
+                >
+                  <div className="space-y-1.5">
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      <span className="text-[#8A92A0]"><ClockIcon /></span>
+                      <span>
+                        {formatDate(booking.date)} {formatTime(booking.time)}
+                      </span>
                     </p>
-                  )}
-                </div>
-              </button>
-            ))}
+                    <p className="flex items-center gap-2 text-sm text-[#303745]">
+                      <span className="text-[#8A92A0]"><UserIcon /></span>
+                      <span>{booking.name}</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-sm text-[#606875]">
+                      <span className="text-[#8A92A0]"><PhoneIcon /></span>
+                      <span>{booking.phone}</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-sm text-[#606875]">
+                      <span className="text-[#8A92A0]"><WrenchIcon /></span>
+                      <span>{booking.service_type}</span>
+                    </p>
+                    {details.vehicleReg && (
+                      <p className="flex items-start gap-2 text-sm text-[#606875]">
+                        <span className="mt-0.5 text-[#8A92A0]"><CarIcon /></span>
+                        <span>{details.vehicleReg}</span>
+                      </p>
+                    )}
+                    {details.note && (
+                      <p className="flex items-start gap-2 text-sm text-[#606875]">
+                        <span className="mt-0.5 text-[#8A92A0]"><NoteIcon /></span>
+                        <span>{details.note}</span>
+                      </p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -355,7 +414,8 @@ export default function BookingsPage() {
               <p><strong>Date:</strong> {formatDate(selected.date)}</p>
               <p><strong>Time:</strong> {formatTime(selected.time)}</p>
               <p><strong>Service Type:</strong> {selected.service_type}</p>
-              {selected.description?.trim() && <p><strong>Note:</strong> {selected.description}</p>}
+              {selectedDetails?.vehicleReg && <p><strong>Vehicle Reg:</strong> {selectedDetails.vehicleReg}</p>}
+              {selectedDetails?.note && <p><strong>Note:</strong> {selectedDetails.note}</p>}
               <p><strong>Created:</strong> {formatCreatedAt(selected.created_at)}</p>
             </div>
 
