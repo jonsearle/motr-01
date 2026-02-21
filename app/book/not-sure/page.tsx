@@ -40,9 +40,7 @@ export default function NotSurePage() {
             const href =
               problem === "Something else"
                 ? "/book/custom-job"
-                : `/book/date-time?problem=${encodeURIComponent(problem)}&service_type=${encodeURIComponent(
-                    "Diagnostic"
-                  )}`;
+                : `/book/not-sure/details?problem=${encodeURIComponent(problem)}`;
 
             return (
               <Link
