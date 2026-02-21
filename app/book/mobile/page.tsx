@@ -11,10 +11,11 @@ function MobileFormContent() {
   const serviceType = searchParams.get("service_type") || "MOT";
   const date = searchParams.get("date") || "";
   const time = searchParams.get("time") || "";
+  const initialDescription = searchParams.get("description") || "";
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(initialDescription);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [garageName, setGarageName] = useState("MOTR Garage");

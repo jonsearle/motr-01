@@ -65,6 +65,7 @@ function DateTimeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const serviceType = searchParams.get("service_type") || "MOT";
+  const description = searchParams.get("description") || "";
 
   const today = useMemo(() => {
     const now = new Date();
@@ -129,6 +130,9 @@ function DateTimeContent() {
       date: toIsoDate(selectedDate),
       time: selectedSlot,
     });
+    if (description.trim()) {
+      params.set("description", description.trim());
+    }
 
     router.push(`/book/mobile?${params.toString()}`);
   }

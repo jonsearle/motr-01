@@ -2,26 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-const SERVICE_OPTIONS = [
-  {
-    label: "MOT",
-    description: "Annual safety and compliance check.",
-  },
-  {
-    label: "Interim Service",
-    description: "Basic checks and fluid top-ups between full services.",
-  },
-  {
-    label: "Full Service",
-    description: "Comprehensive inspection and maintenance.",
-  },
-  {
-    label: "Diagnostics",
-    description: "Fault finding for warning lights and performance issues.",
-  },
+
+const PROBLEMS = [
+  "Strange noise",
+  "Warning light on dashboard",
+  "Brakes feel wrong",
+  "Engine performance issue",
+  "Battery or starting issue",
 ];
 
-export default function BookPage() {
+export default function NotSurePage() {
   const [garageName, setGarageName] = useState("MOTR Garage");
 
   useEffect(() => {
@@ -35,7 +25,7 @@ export default function BookPage() {
         const nextName = body.garage_name?.trim();
         if (mounted && nextName) setGarageName(nextName);
       } catch {
-        // Keep fallback name if settings load fails.
+        // Keep fallback name
       }
     }
 
@@ -48,7 +38,7 @@ export default function BookPage() {
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
-        <Link href="/" className="mb-6 inline-flex items-center gap-2 opacity-90">
+        <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
             <path
               d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
@@ -62,17 +52,16 @@ export default function BookPage() {
         </Link>
 
         <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
-        <p className="mb-6 mt-2 text-base">How can we help you?</p>
+        <p className="mb-6 mt-2 text-base">What&apos;s the problem?</p>
 
         <div className="space-y-4">
-          {SERVICE_OPTIONS.map((option) => (
+          {PROBLEMS.map((problem) => (
             <Link
-              key={option.label}
-              href={`/book/date-time?service_type=${encodeURIComponent(option.label)}`}
+              key={problem}
+              href={`/book/date-time?service_type=${encodeURIComponent("Diagnostic")}&description=${encodeURIComponent(problem)}`}
               className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
             >
-              <p className="text-base font-bold">{option.label}</p>
-              <p className="mt-1 text-sm text-gray-200">{option.description}</p>
+              <p className="text-base font-bold">{problem}</p>
             </Link>
           ))}
 
@@ -80,16 +69,8 @@ export default function BookPage() {
             href="/book/custom-job"
             className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
           >
-            <p className="text-base font-bold">Know exactly what you need?</p>
-            <p className="mt-1 text-sm text-gray-200">Describe the job and we&apos;ll get it booked in.</p>
-          </Link>
-
-          <Link
-            href="/book/not-sure"
-            className="block rounded-lg border border-white p-4 transition-colors hover:bg-gray-700 active:bg-gray-600"
-          >
-            <p className="text-base font-bold">I&apos;m not sure what&apos;s wrong</p>
-            <p className="mt-1 text-sm text-gray-200">Choose what sounds closest and we&apos;ll guide you.</p>
+            <p className="text-base font-bold">Something else</p>
+            <p className="mt-1 text-sm text-gray-200">Describe the issue in your own words.</p>
           </Link>
         </div>
       </div>
