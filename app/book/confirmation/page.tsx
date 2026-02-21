@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useGarageName } from "@/lib/use-garage-name";
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const garageName = useGarageName();
 
@@ -61,5 +62,13 @@ export default function ConfirmationPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-gray-800 p-6 text-white">Loading...</main>}>
+      <ConfirmationContent />
+    </Suspense>
   );
 }
