@@ -46,18 +46,20 @@ export function validateMissedCallCtas(settings: GarageSettings): string | null 
 }
 
 export function composeMissedCallSms(settings: GarageSettings): string {
-  const lines = [settings.garage_name.trim() || "MOTR", "Sorry we missed your call.", ""];
+  const lines = [`${settings.garage_name.trim() || "MOTR"}:`, "Sorry we missed your call.", ""];
   const links = buildShortLinks(settings.short_code);
+  const ctas: string[] = [];
 
   if (settings.cta_booking_enabled) {
-    lines.push(`BOOK ONLINE: ${links.booking}`);
+    ctas.push(`Book online: ${links.booking}`);
   }
   if (settings.cta_whatsapp_enabled) {
-    lines.push(`SEND WHATSAPP: ${links.whatsapp}`);
+    ctas.push(`Send WhatsApp: ${links.whatsapp}`);
   }
   if (settings.cta_phone_enabled) {
-    lines.push(`CALL US: ${settings.garage_phone.trim()}`);
+    ctas.push(`Call us: ${settings.garage_phone.trim()}`);
   }
 
+  lines.push(ctas.join("\n\n"));
   return lines.join("\n");
 }
