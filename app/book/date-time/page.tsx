@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -74,6 +74,28 @@ function DateTimeContent() {
   const [visibleWeekStart, setVisibleWeekStart] = useState(getStartOfWeek(today));
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(TIME_SLOTS[0]);
+  const [garageName, setGarageName] = useState("MOTR Garage");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadGarageName() {
+      try {
+        const response = await fetch("/api/garage-settings", { cache: "no-store" });
+        if (!response.ok) return;
+        const body = (await response.json()) as { garage_name?: string };
+        const nextName = body.garage_name?.trim();
+        if (mounted && nextName) setGarageName(nextName);
+      } catch {
+        // Keep fallback name if settings load fails.
+      }
+    }
+
+    loadGarageName();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const weekDates = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(visibleWeekStart, i)),
@@ -124,7 +146,7 @@ function DateTimeContent() {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="text-base font-bold">MOTR Garage</span>
+          <span className="text-base font-bold">{garageName}</span>
         </Link>
 
         <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>

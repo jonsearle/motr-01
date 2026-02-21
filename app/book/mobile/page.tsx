@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 
 function MobileFormContent() {
   const searchParams = useSearchParams();
@@ -17,6 +17,28 @@ function MobileFormContent() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [garageName, setGarageName] = useState("MOTR Garage");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadGarageName() {
+      try {
+        const response = await fetch("/api/garage-settings", { cache: "no-store" });
+        if (!response.ok) return;
+        const body = (await response.json()) as { garage_name?: string };
+        const nextName = body.garage_name?.trim();
+        if (mounted && nextName) setGarageName(nextName);
+      } catch {
+        // Keep fallback name if settings load fails.
+      }
+    }
+
+    loadGarageName();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const canSubmit = useMemo(() => {
     return !!date && !!time && name.trim().length > 0 && phone.trim().length > 0;
@@ -82,7 +104,7 @@ function MobileFormContent() {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="text-base font-bold">MOTR Garage</span>
+          <span className="text-base font-bold">{garageName}</span>
         </Link>
 
         <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
