@@ -3,33 +3,49 @@ import { getOrCreateGarageSettings, logTrackingEvent } from "@/lib/db";
 import { composeMissedCallSms, validateMissedCallCtas } from "@/lib/missed-call";
 import { sendSms } from "@/lib/sms";
 
-async function getPhoneFromRequest(request: NextRequest): Promise<string | null> {
+type MissedCallRequestData = {
+  phone: string | null;
+  isTwilioVoiceWebhook: boolean;
+};
+
+function twimlHangupResponse(): NextResponse {
+  return new NextResponse("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Hangup/></Response>", {
+    status: 200,
+    headers: { "Content-Type": "text/xml; charset=utf-8" },
+  });
+}
+
+async function getRequestData(request: NextRequest): Promise<MissedCallRequestData> {
   const contentType = request.headers.get("content-type") || "";
 
   if (contentType.includes("application/json")) {
     try {
       const body = await request.json();
-      return typeof body.phone === "string" && body.phone.trim() ? body.phone.trim() : null;
+      const phone = typeof body.phone === "string" && body.phone.trim() ? body.phone.trim() : null;
+      return { phone, isTwilioVoiceWebhook: false };
     } catch {
-      return null;
+      return { phone: null, isTwilioVoiceWebhook: false };
     }
   }
 
   if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
     const form = await request.formData();
     const candidate = form.get("phone") || form.get("From");
-    return typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
+    const phone = typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
+    const isTwilioVoiceWebhook = typeof form.get("CallSid") === "string";
+    return { phone, isTwilioVoiceWebhook };
   }
 
   const fromQuery = request.nextUrl.searchParams.get("phone");
-  return fromQuery?.trim() || null;
+  return { phone: fromQuery?.trim() || null, isTwilioVoiceWebhook: false };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const phone = await getPhoneFromRequest(request);
+    const { phone, isTwilioVoiceWebhook } = await getRequestData(request);
 
     if (!phone) {
+      if (isTwilioVoiceWebhook) return twimlHangupResponse();
       return NextResponse.json({ error: "phone is required" }, { status: 400 });
     }
 
@@ -45,11 +61,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!settings.auto_sms_enabled) {
+      if (isTwilioVoiceWebhook) return twimlHangupResponse();
       return NextResponse.json({ sent: false, reason: "auto_sms_disabled" });
     }
 
     const configError = validateMissedCallCtas(settings);
     if (configError) {
+      if (isTwilioVoiceWebhook) return twimlHangupResponse();
       return NextResponse.json({ sent: false, reason: "invalid_cta_config", error: configError }, { status: 400 });
     }
 
@@ -65,9 +83,14 @@ export async function POST(request: NextRequest) {
       console.error("Failed to log sms_sent", trackingError);
     }
 
+    if (isTwilioVoiceWebhook) return twimlHangupResponse();
     return NextResponse.json({ sent: true });
   } catch (error) {
     console.error("Failed to process missed call", error);
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      return twimlHangupResponse();
+    }
     return NextResponse.json({ error: "Failed to process missed call" }, { status: 500 });
   }
 }
