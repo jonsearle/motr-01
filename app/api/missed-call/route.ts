@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrCreateGarageSettings } from "@/lib/db";
-import { bookingLink, sendSms } from "@/lib/sms";
+import { getOrCreateGarageSettings, logTrackingEvent } from "@/lib/db";
+import { composeMissedCallSms, validateMissedCallCtas } from "@/lib/missed-call";
+import { sendSms } from "@/lib/sms";
 
 async function getPhoneFromRequest(request: NextRequest): Promise<string | null> {
   const contentType = request.headers.get("content-type") || "";
@@ -33,16 +34,36 @@ export async function POST(request: NextRequest) {
     }
 
     const settings = await getOrCreateGarageSettings();
+    try {
+      await logTrackingEvent({
+        garage_id: settings.id,
+        event_type: "missed_call",
+        phone_number: phone,
+      });
+    } catch (trackingError) {
+      console.error("Failed to log missed_call", trackingError);
+    }
 
     if (!settings.auto_sms_enabled) {
       return NextResponse.json({ sent: false, reason: "auto_sms_disabled" });
     }
 
-    // Prefer runtime origin so SMS always points at the currently deployed host.
-    const requestOrigin = request.nextUrl.origin;
-    const link = requestOrigin ? `${requestOrigin.replace(/\/$/, "")}/book` : bookingLink();
-    const text = `MOTR: Sorry we missed your call. Book here: ${link}`;
+    const configError = validateMissedCallCtas(settings);
+    if (configError) {
+      return NextResponse.json({ sent: false, reason: "invalid_cta_config", error: configError }, { status: 400 });
+    }
+
+    const text = composeMissedCallSms(settings);
     await sendSms(phone, text);
+    try {
+      await logTrackingEvent({
+        garage_id: settings.id,
+        event_type: "sms_sent",
+        phone_number: phone,
+      });
+    } catch (trackingError) {
+      console.error("Failed to log sms_sent", trackingError);
+    }
 
     return NextResponse.json({ sent: true });
   } catch (error) {

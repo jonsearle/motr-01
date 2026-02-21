@@ -118,7 +118,7 @@ export default function Home() {
         setSettings(settingsData);
       } catch {
         if (!mounted) return;
-        setSettings({ id: "", auto_sms_enabled: false });
+        setSettings(null);
         setToast("Couldn’t load state.");
       } finally {
         if (mounted) setLoading(false);
@@ -187,13 +187,13 @@ export default function Home() {
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <header className="mb-6 flex items-center justify-end">
-          <button
-            type="button"
+          <Link
+            href="/account"
             aria-label="Account"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
           >
             <AccountIcon />
-          </button>
+          </Link>
         </header>
 
         <button

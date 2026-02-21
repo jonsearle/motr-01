@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrCreateGarageSettings, setAutoSmsEnabled } from "@/lib/db";
+import { getOrCreateGarageSettings, updateGarageSettings } from "@/lib/db";
+import { normalizeWhatsappNumber } from "@/lib/missed-call";
+import type { UpdateGarageSettingsInput } from "@/types/db";
 
 export async function GET() {
   try {
@@ -13,17 +15,29 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    if (typeof body.auto_sms_enabled !== "boolean") {
-      return NextResponse.json(
-        { error: "auto_sms_enabled must be a boolean" },
-        { status: 400 }
-      );
+    const body = (await request.json()) as UpdateGarageSettingsInput;
+    const updateInput: UpdateGarageSettingsInput = {};
+
+    if (typeof body.auto_sms_enabled === "boolean") updateInput.auto_sms_enabled = body.auto_sms_enabled;
+    if (typeof body.garage_name === "string") updateInput.garage_name = body.garage_name;
+    if (typeof body.cta_booking_enabled === "boolean") updateInput.cta_booking_enabled = body.cta_booking_enabled;
+    if (typeof body.cta_whatsapp_enabled === "boolean") updateInput.cta_whatsapp_enabled = body.cta_whatsapp_enabled;
+    if (typeof body.cta_phone_enabled === "boolean") updateInput.cta_phone_enabled = body.cta_phone_enabled;
+    if (typeof body.whatsapp_number === "string") {
+      updateInput.whatsapp_number = normalizeWhatsappNumber(body.whatsapp_number);
+    }
+    if (typeof body.garage_phone === "string") updateInput.garage_phone = body.garage_phone;
+
+    if (Object.keys(updateInput).length === 0) {
+      return NextResponse.json({ error: "No valid settings fields provided" }, { status: 400 });
     }
 
-    const updated = await setAutoSmsEnabled(body.auto_sms_enabled);
+    const updated = await updateGarageSettings(updateInput);
     return NextResponse.json(updated);
   } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Failed to update garage settings", error);
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
