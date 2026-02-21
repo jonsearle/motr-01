@@ -40,8 +40,8 @@ function Toggle({
   label: string;
 }) {
   return (
-    <label className="flex items-center justify-between">
-      <span className="text-sm font-medium text-[#1D2530]">{label}</span>
+    <label className="flex items-center justify-between gap-4">
+      <span className="text-[18px] font-medium leading-tight text-[#1D2530]">{label}</span>
       <button
         type="button"
         onClick={() => onChange(!checked)}
@@ -73,14 +73,14 @@ function NumberField({
 }) {
   return (
     <label className="mt-3 block">
-      <span className="mb-1 block text-sm font-medium text-[#1D2530]">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold text-[#2E3643]">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
         placeholder={placeholder}
       />
-      <p className="mt-1 text-xs text-[#7B8492]">
+      <p className="mt-1.5 text-xs text-[#7B8492]">
         Use international format e.g. +44 7700 900123.
       </p>
     </label>
@@ -200,10 +200,11 @@ export default function AccountPage() {
         ) : !form ? (
           <p className="text-sm text-[#8E2E2E]">Couldn’t load account settings.</p>
         ) : (
-          <div className="space-y-7">
+          <div className="space-y-8">
             <section>
+              <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#7B8492]">Garage settings</h2>
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[#1D2530]">Garage name</span>
+                <span className="mb-2 block text-base font-semibold text-[#1D2530]">Garage name</span>
                 <input
                   value={form.garage_name}
                   onChange={(event) => setForm({ ...form, garage_name: event.target.value })}
@@ -214,19 +215,21 @@ export default function AccountPage() {
             </section>
 
             <section>
-              <h2 className="text-sm font-semibold text-[#1D2530]">Automatic reply options</h2>
+              <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#7B8492]">Automatic reply options</h2>
               <p className="mt-1 text-sm text-[#7B8492]">
                 Decide how your automatic SMS reply appears to customers.
               </p>
 
-              <div className="mt-4 space-y-4">
-                <Toggle
-                  checked={form.cta_booking_enabled}
-                  onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                  label="Enable booking link"
-                />
+              <div className="mt-5 space-y-5">
+                <div className="pb-4">
+                  <Toggle
+                    checked={form.cta_booking_enabled}
+                    onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
+                    label="Enable booking link"
+                  />
+                </div>
 
-                <div>
+                <div className="border-t border-[#E8ECF2] pt-5">
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
@@ -242,7 +245,7 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="border-t border-[#E8ECF2] pt-5">
                   <Toggle
                     checked={form.cta_phone_enabled}
                     onChange={(next) => setForm({ ...form, cta_phone_enabled: next })}
