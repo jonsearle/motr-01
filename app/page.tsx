@@ -37,7 +37,7 @@ function AccountIcon() {
 
 function SmartReplyIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M4 12a7 7 0 0 1 7-7h2a7 7 0 1 1 0 14h-2l-4 3v-6a7 7 0 0 1-3-4Z"
         stroke="currentColor"
@@ -210,7 +210,7 @@ export default function Home() {
                   <p className="text-sm text-[#949AA4]">Loading...</p>
                 ) : (
                   <>
-                    <div className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${enabled ? "bg-white/20 text-white" : "bg-white/80 text-[#4A515D]"}`}>
+                    <div className={`mx-auto mb-4 flex items-center justify-center ${enabled ? "text-white" : "text-[#4A515D]"}`}>
                       <SmartReplyIcon />
                     </div>
                     <p className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
@@ -220,8 +220,8 @@ export default function Home() {
                     <p className={`mx-auto mt-2 h-[38px] max-w-[220px] text-[14px] leading-[1.3] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
                       {enabled ? (
                         <>
-                          <span className="block">Customers receive a booking</span>
-                          <span className="block">link automatically.</span>
+                          <span className="block">Customers will receive a smart</span>
+                          <span className="block">reply text automatically.</span>
                         </>
                       ) : (
                         <>
