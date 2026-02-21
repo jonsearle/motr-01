@@ -2,33 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useGarageName } from "@/lib/use-garage-name";
 
 export default function CustomJobPage() {
   const router = useRouter();
-  const [garageName, setGarageName] = useState("MOTR Garage");
+  const garageName = useGarageName();
   const [description, setDescription] = useState("");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadGarageName() {
-      try {
-        const response = await fetch("/api/garage-settings", { cache: "no-store" });
-        if (!response.ok) return;
-        const body = (await response.json()) as { garage_name?: string };
-        const nextName = body.garage_name?.trim();
-        if (mounted && nextName) setGarageName(nextName);
-      } catch {
-        // Keep fallback name
-      }
-    }
-
-    loadGarageName();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const canContinue = useMemo(() => description.trim().length > 0, [description]);
 

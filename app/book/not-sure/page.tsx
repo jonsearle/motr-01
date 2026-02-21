@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useGarageName } from "@/lib/use-garage-name";
 
 const PROBLEMS = [
   "Car won't start",
@@ -14,28 +14,7 @@ const PROBLEMS = [
 ];
 
 export default function NotSurePage() {
-  const [garageName, setGarageName] = useState("MOTR Garage");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadGarageName() {
-      try {
-        const response = await fetch("/api/garage-settings", { cache: "no-store" });
-        if (!response.ok) return;
-        const body = (await response.json()) as { garage_name?: string };
-        const nextName = body.garage_name?.trim();
-        if (mounted && nextName) setGarageName(nextName);
-      } catch {
-        // Keep fallback name
-      }
-    }
-
-    loadGarageName();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const garageName = useGarageName();
 
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
