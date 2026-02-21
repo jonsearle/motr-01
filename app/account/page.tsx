@@ -225,7 +225,7 @@ export default function AccountPage() {
                   <Toggle
                     checked={form.cta_booking_enabled}
                     onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                    label="Enable booking link"
+                    label="Show online booking"
                   />
                 </div>
 
@@ -233,7 +233,7 @@ export default function AccountPage() {
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
-                    label="Enable WhatsApp link"
+                    label="Show WhatsApp link"
                   />
                   {form.cta_whatsapp_enabled && (
                     <NumberField
