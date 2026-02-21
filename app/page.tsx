@@ -196,51 +196,49 @@ export default function Home() {
           </Link>
         </header>
 
-        <button
-          type="button"
-          onClick={onToggleCircle}
-          disabled={loading || saving || !settings?.id}
-          className={`w-full transition-transform duration-300 ${microPress ? "scale-[1.035]" : "scale-100"}`}
-          aria-pressed={enabled}
-        >
-          <div className={heroCircleClasses}>
-            <div className="w-[78%]">
-              {loading ? (
-                <p className="text-sm text-[#949AA4]">Loading...</p>
-              ) : (
-                <>
-                  <p className={`h-[74px] text-[32px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                    <span className="block">Smart Reply</span>
-                    <span className="block">{enabled ? "Active" : "Paused"}</span>
-                  </p>
-                  <p className={`mx-auto mt-3 max-w-[240px] text-[14px] leading-[1.25] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
-                    {enabled ? (
-                      <>
-                        <span className="block">Customers receive a booking</span>
-                        <span className="block">link automatically.</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="block">Missed callers will not</span>
-                        <span className="block">receive text.</span>
-                      </>
-                    )}
-                  </p>
-                  <p className={`mt-4 text-[30px] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                    {saving ? "..." : enabled ? "ON" : "OFF"}
-                  </p>
-                </>
-              )}
+        <div className="flex min-h-[calc(100vh-240px)] items-center">
+          <button
+            type="button"
+            onClick={onToggleCircle}
+            disabled={loading || saving || !settings?.id}
+            className={`w-full transition-transform duration-300 ${microPress ? "scale-[1.045]" : "scale-100"}`}
+            aria-pressed={enabled}
+          >
+            <div className={heroCircleClasses}>
+              <div className="w-[78%]">
+                {loading ? (
+                  <p className="text-sm text-[#949AA4]">Loading...</p>
+                ) : (
+                  <>
+                    <div className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${enabled ? "bg-white/20 text-white" : "bg-white/80 text-[#4A515D]"}`}>
+                      <SmartReplyIcon />
+                    </div>
+                    <p className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
+                      <span className="block">Smart Reply</span>
+                      <span className="block">{enabled ? "Active" : "Paused"}</span>
+                    </p>
+                    <p className={`mx-auto mt-2 h-[38px] max-w-[220px] text-[14px] leading-[1.3] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
+                      {enabled ? (
+                        <>
+                          <span className="block">Customers receive a booking</span>
+                          <span className="block">link automatically.</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="block">Missed callers will not</span>
+                          <span className="block">receive a text.</span>
+                        </>
+                      )}
+                    </p>
+                    <p className={`mt-4 text-[30px] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
+                      {saving ? "..." : enabled ? "ON" : "OFF"}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        </button>
-
-        {enabled && (
-          <button type="button" className="mt-10 w-full text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#A0A6B0]">Booking Availability</p>
-            <p className="mt-1 text-lg leading-tight text-[#959BA6]">Next available: Tomorrow 8am</p>
           </button>
-        )}
+        </div>
       </div>
 
       <BottomNav active="smart" />

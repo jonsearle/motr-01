@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { composeMissedCallSms, normalizeWhatsappNumber } from "@/lib/missed-call";
+import { normalizeWhatsappNumber } from "@/lib/missed-call";
 import type { GarageSettings } from "@/types/db";
 
 type AccountFormState = Pick<
@@ -81,7 +81,7 @@ function NumberField({
         placeholder={placeholder}
       />
       <p className="mt-1 text-xs text-[#7B8492]">
-        Use international format (for example: +44 7700 900123 or 447700900123).
+        Use international format e.g. +44 7700 900123.
       </p>
     </label>
   );
@@ -142,15 +142,6 @@ export default function AccountPage() {
     return null;
   }, [form]);
 
-  const previewText = useMemo(() => {
-    if (!settings || !form) return "";
-    return composeMissedCallSms({
-      ...settings,
-      ...form,
-      whatsapp_number: normalizeWhatsappNumber(form.whatsapp_number),
-    });
-  }, [form, settings]);
-
   async function onSave() {
     if (!settings || !form || validationError) return;
 
@@ -195,29 +186,24 @@ export default function AccountPage() {
 
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
-      <div className="mx-auto w-full max-w-md px-6 pb-10 pt-6">
-        <header className="mb-5 flex items-center justify-between">
+      <div className="mx-auto w-full max-w-md px-6 pb-40 pt-6">
+        <header className="mb-6 flex items-center justify-between">
           <Link href="/" className="text-sm font-medium text-[#657083]">
             Back
           </Link>
-          <h1 className="text-lg font-semibold">Account</h1>
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Your account</h1>
           <span className="w-10" />
         </header>
 
         {loading ? (
-          <p className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3 text-sm text-[#657083]">
-            Loading...
-          </p>
+          <p className="text-sm text-[#657083]">Loading...</p>
         ) : !form ? (
-          <p className="rounded-2xl border border-[#F2D7D7] bg-[#FFF5F5] px-4 py-3 text-sm text-[#8E2E2E]">
-            Couldn’t load account settings.
-          </p>
+          <p className="text-sm text-[#8E2E2E]">Couldn’t load account settings.</p>
         ) : (
-          <div className="space-y-4">
-            <section className="rounded-3xl border border-[#E9EDF2] bg-white p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#97A0AE]">Garage</p>
+          <div className="space-y-7">
+            <section>
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-[#1D2530]">Garage name</span>
+                <span className="mb-2 block text-sm font-semibold text-[#1D2530]">Garage name</span>
                 <input
                   value={form.garage_name}
                   onChange={(event) => setForm({ ...form, garage_name: event.target.value })}
@@ -227,18 +213,20 @@ export default function AccountPage() {
               </label>
             </section>
 
-            <section className="rounded-3xl border border-[#E9EDF2] bg-white p-4">
-              <h2 className="text-sm font-semibold text-[#1D2530]">Missed Call Message Options</h2>
-              <div className="mt-3 space-y-3">
-                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
-                  <Toggle
-                    checked={form.cta_booking_enabled}
-                    onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                    label="Enable booking link"
-                  />
-                </div>
+            <section>
+              <h2 className="text-sm font-semibold text-[#1D2530]">Automatic reply options</h2>
+              <p className="mt-1 text-sm text-[#7B8492]">
+                Decide how your automatic SMS reply appears to customers.
+              </p>
 
-                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+              <div className="mt-4 space-y-4">
+                <Toggle
+                  checked={form.cta_booking_enabled}
+                  onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
+                  label="Enable booking link"
+                />
+
+                <div>
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
@@ -254,7 +242,7 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-3">
+                <div>
                   <Toggle
                     checked={form.cta_phone_enabled}
                     onChange={(next) => setForm({ ...form, cta_phone_enabled: next })}
@@ -272,13 +260,6 @@ export default function AccountPage() {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-[#E9EDF2] bg-white p-4">
-              <p className="mb-2 text-sm font-semibold text-[#1D2530]">SMS Preview</p>
-              <pre className="whitespace-pre-wrap rounded-2xl bg-[#F7F9FC] p-3 text-sm leading-6 text-[#2C3646]">
-                {previewText}
-              </pre>
-            </section>
-
             {(validationError || error || success) && (
               <p
                 className={`rounded-xl px-3 py-2 text-sm ${
@@ -290,7 +271,16 @@ export default function AccountPage() {
                 {validationError || error || success}
               </p>
             )}
+          </div>
+        )}
+      </div>
 
+      {!loading && !!form && (
+        <div
+          className="fixed bottom-0 left-0 right-0 border-t border-[#E7EBF1] bg-[#FBFCFE] px-6 pt-3"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+        >
+          <div className="mx-auto w-full max-w-md">
             <button
               type="button"
               onClick={onSave}
@@ -300,8 +290,8 @@ export default function AccountPage() {
               {saving ? "Saving..." : "Save"}
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -309,13 +309,13 @@ export default function BookingsPage() {
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <header className="mb-5 flex items-center justify-between">
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
-          <button
-            type="button"
+          <Link
+            href="/account"
             aria-label="Account"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
           >
             <AccountIcon />
-          </button>
+          </Link>
         </header>
 
         <div className="mb-4 grid grid-cols-3 gap-2">
