@@ -20,8 +20,8 @@ export function normalizeWhatsappNumber(input: string): string {
 export function buildShortLinks(shortCode: string): { booking: string; whatsapp: string } {
   const normalizedCode = shortCode.trim().toLowerCase();
   return {
-    booking: `${DISPLAY_DOMAIN}/b/${normalizedCode}`,
-    whatsapp: `${DISPLAY_DOMAIN}/w/${normalizedCode}`,
+    booking: `https://${DISPLAY_DOMAIN}/b/${normalizedCode}`,
+    whatsapp: `https://${DISPLAY_DOMAIN}/w/${normalizedCode}`,
   };
 }
 
