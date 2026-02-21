@@ -35,9 +35,9 @@ function AccountIcon() {
   );
 }
 
-function SmartReplyIcon() {
+function SmartReplyIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M4 12a7 7 0 0 1 7-7h2a7 7 0 1 1 0 14h-2l-4 3v-6a7 7 0 0 1-3-4Z"
         stroke="currentColor"
@@ -188,7 +188,7 @@ export default function Home() {
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <header className="mb-6 flex items-center justify-end">
           <Link
-            href="/account"
+            href="/account?from=smart"
             aria-label="Account"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
           >
@@ -211,7 +211,7 @@ export default function Home() {
                 ) : (
                   <>
                     <div className={`mx-auto mb-4 flex items-center justify-center ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                      <SmartReplyIcon />
+                      <SmartReplyIcon size={30} />
                     </div>
                     <p className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
                       <span className="block">Smart Reply</span>

@@ -88,12 +88,18 @@ function NumberField({
 }
 
 export default function AccountPage() {
+  const [backHref, setBackHref] = useState("/");
   const [settings, setSettings] = useState<GarageSettings | null>(null);
   const [form, setForm] = useState<AccountFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setBackHref(params.get("from") === "bookings" ? "/bookings" : "/");
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -188,7 +194,7 @@ export default function AccountPage() {
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-40 pt-6">
         <header className="mb-6 flex items-center justify-between">
-          <Link href="/" className="text-sm font-medium text-[#657083]">
+          <Link href={backHref} className="text-sm font-medium text-[#657083]">
             Back
           </Link>
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Your account</h1>

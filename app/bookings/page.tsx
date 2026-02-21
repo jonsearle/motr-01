@@ -307,37 +307,41 @@ export default function BookingsPage() {
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1F252E]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
-        <header className="mb-5 flex items-center justify-between">
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
-          <Link
-            href="/account"
-            aria-label="Account"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
-          >
-            <AccountIcon />
-          </Link>
-        </header>
-
-        <div className="mb-4 grid grid-cols-3 gap-2">
-          {([
-            ["future", "Future"],
-            ["past", "Past"],
-            ["all", "All"],
-          ] as Array<[BookingTab, string]>).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActiveTab(key)}
-              className={`h-10 rounded-xl text-sm font-medium transition-colors ${
-                activeTab === key
-                  ? "bg-transparent text-[#1F252E] ring-1 ring-[#DCE1E8]"
-                  : "bg-transparent text-[#8D94A0]"
-              }`}
+        <div className="sticky top-0 z-10 -mx-6 bg-[#FBFCFE] px-6 pb-3 pt-1">
+          <header className="mb-4 flex items-center justify-between">
+            <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
+            <Link
+              href="/account?from=bookings"
+              aria-label="Account"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
             >
-              {key === "future" ? "Upcoming" : label}
-            </button>
-          ))}
+              <AccountIcon />
+            </Link>
+          </header>
+
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              ["future", "Future"],
+              ["past", "Past"],
+              ["all", "All"],
+            ] as Array<[BookingTab, string]>).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key)}
+                className={`h-10 rounded-xl text-sm font-medium transition-colors ${
+                  activeTab === key
+                    ? "bg-transparent text-[#1F252E] ring-1 ring-[#DCE1E8]"
+                    : "bg-transparent text-[#8D94A0]"
+                }`}
+              >
+                {key === "future" ? "Upcoming" : label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        <div className="mt-3" />
 
         {error && <p className="mb-3 text-sm text-[#7B4A40]">{error}</p>}
 
