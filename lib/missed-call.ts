@@ -1,7 +1,7 @@
 import type { GarageSettings } from "@/types/db";
 
 const DISPLAY_DOMAIN = "motr.one";
-const WHATSAPP_TEXT = "Hi I just called about my car (Motr)";
+const WHATSAPP_TEXT = "Hi there, I'm looking for some help.";
 
 export function normalizePhoneInput(input: string): string {
   const trimmed = input.trim();
