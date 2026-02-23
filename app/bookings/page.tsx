@@ -70,20 +70,18 @@ function parseBookingDetails(description: string | null): BookingDetails {
 
 function SmartReplyIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="20" height="20" viewBox="0 0 12 12" fill="none" aria-hidden>
       <path
-        d="M4 12a7 7 0 0 1 7-7h2a7 7 0 1 1 0 14h-2l-4 3v-6a7 7 0 0 1-3-4Z"
+        d="M1 .5h10c.28 0 .5.22.5.5v7c0 .28-.22.5-.5.5H6l-2.65 2.65a.5.5 0 01-.85-.35V8.5H1C.72 8.5.5 8.28.5 8V1C.5.72.72.5 1 .5z"
+        fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="m13 8-2.2 3h2l-1.6 5 4.8-6h-2L16 8h-3Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M7.87 4H6.83l1.03-1.8c.04-.11-.01-.2-.11-.2H5.72c-.1 0-.23.09-.28.2l-.96 2.58c-.05.11 0 .22.11.22h.91L4.48 7.57c-.08.2-.02.37.23.15l3.17-3.45c.17-.16.16-.27-.01-.27z"
+        fill="currentColor"
       />
     </svg>
   );
