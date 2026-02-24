@@ -39,7 +39,7 @@ function Toggle({
 }) {
   return (
     <label className="flex items-center justify-between gap-4">
-      <span className="text-[18px] font-medium leading-tight text-[#1D2530]">{label}</span>
+      <span className="text-base font-medium leading-tight text-[#1D2530]">{label}</span>
       <button
         type="button"
         onClick={() => onChange(!checked)}
@@ -71,16 +71,13 @@ function NumberField({
 }) {
   return (
     <label className="mt-3 block">
-      <span className="mb-1.5 block text-sm font-semibold text-[#2E3643]">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-[#2E3643]">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
         placeholder={placeholder}
       />
-      <p className="mt-1.5 text-xs text-[#7B8492]">
-        Use international format e.g. +44 7700 900123.
-      </p>
     </label>
   );
 }
@@ -187,7 +184,7 @@ export default function AccountPage() {
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Edit Reply</h1>
           <span className="w-10" />
         </header>
-        <p className="mb-7 text-sm text-[#6F7885]">Choose what customers receive when you miss a call.</p>
+        <p className="mb-7 text-sm text-[#6F7885]">Choose what customers receive when you miss their call.</p>
 
         {loading ? (
           <p className="text-sm text-[#657083]">Loading...</p>
