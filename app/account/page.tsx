@@ -204,14 +204,14 @@ export default function AccountPage() {
                     label="Include online booking"
                   />
                   {form.cta_booking_enabled && (
-                    <div className="mt-3 flex items-center justify-between">
+                    <div className="mt-3">
                       <p className="text-sm text-[#2E3643]">
                         Customers must book online at least {form.min_booking_notice_days}{" "}
                         {form.min_booking_notice_days === 1 ? "day" : "days"} ahead.
                       </p>
                       <Link
                         href="/account/booking-rules"
-                        className="rounded-md border border-[#D9DEE7] px-2 py-1 text-xs font-semibold text-[#1D2530]"
+                        className="mt-2 inline-flex rounded-md border border-[#D9DEE7] px-2 py-1 text-xs font-semibold text-[#1D2530]"
                       >
                         Edit
                       </Link>
@@ -219,7 +219,7 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="pt-2">
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
