@@ -46,7 +46,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
     .from("garage_settings")
     .insert({
       auto_sms_enabled: false,
-      garage_name: "MOTR",
+      garage_name: "Jon's Garage",
       short_code: generateShortCode(),
       cta_booking_enabled: true,
       cta_whatsapp_enabled: true,
@@ -86,15 +86,13 @@ function isCtaOrContactUpdate(input: UpdateGarageSettingsInput): boolean {
   return (
     typeof input.cta_booking_enabled === "boolean" ||
     typeof input.cta_whatsapp_enabled === "boolean" ||
-    typeof input.cta_phone_enabled === "boolean" ||
     typeof input.whatsapp_number === "string" ||
-    typeof input.garage_phone === "string" ||
-    typeof input.garage_name === "string"
+    typeof input.garage_phone === "string"
   );
 }
 
 function assertValidCtaConfig(next: GarageSettings): void {
-  const ctaCount = Number(next.cta_booking_enabled) + Number(next.cta_whatsapp_enabled) + Number(next.cta_phone_enabled);
+  const ctaCount = Number(next.cta_booking_enabled) + Number(next.cta_whatsapp_enabled) + 1;
   if (ctaCount < 1) {
     throw new Error("At least one CTA must be enabled.");
   }
@@ -103,7 +101,7 @@ function assertValidCtaConfig(next: GarageSettings): void {
     throw new Error("WhatsApp number is required when WhatsApp CTA is enabled.");
   }
 
-  if (next.cta_phone_enabled && !normalizePhoneInput(next.garage_phone)) {
+  if (!normalizePhoneInput(next.garage_phone)) {
     throw new Error("Phone number is required when phone CTA is enabled.");
   }
 }
@@ -114,16 +112,16 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
 
   const updatePayload: Record<string, unknown> = {};
   if (typeof input.auto_sms_enabled === "boolean") updatePayload.auto_sms_enabled = input.auto_sms_enabled;
-  if (typeof input.garage_name === "string") updatePayload.garage_name = input.garage_name.trim();
   if (typeof input.cta_booking_enabled === "boolean") updatePayload.cta_booking_enabled = input.cta_booking_enabled;
   if (typeof input.cta_whatsapp_enabled === "boolean") updatePayload.cta_whatsapp_enabled = input.cta_whatsapp_enabled;
-  if (typeof input.cta_phone_enabled === "boolean") updatePayload.cta_phone_enabled = input.cta_phone_enabled;
   if (typeof input.whatsapp_number === "string") {
     updatePayload.whatsapp_number = normalizePhoneInput(input.whatsapp_number);
   }
   if (typeof input.garage_phone === "string") {
     updatePayload.garage_phone = normalizePhoneInput(input.garage_phone);
   }
+  updatePayload.garage_name = "Jon's Garage";
+  updatePayload.cta_phone_enabled = true;
 
   const nextState: GarageSettings = {
     ...current,

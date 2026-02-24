@@ -1,48 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+const GARAGE_NAME = "Jon's Garage";
 
-const STORAGE_KEY = "motr_garage_name";
-let cachedGarageName: string | null = null;
-
-export function useGarageName(fallback = "MOTR Garage"): string {
-  const [garageName, setGarageName] = useState<string>(fallback);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadGarageName() {
-      if (cachedGarageName && mounted) {
-        setGarageName(cachedGarageName);
-      } else {
-        const stored = window.sessionStorage.getItem(STORAGE_KEY)?.trim();
-        if (stored && mounted) {
-          cachedGarageName = stored;
-          setGarageName(stored);
-        }
-      }
-
-      try {
-        const response = await fetch("/api/garage-settings", { cache: "no-store" });
-        if (!response.ok) return;
-
-        const body = (await response.json()) as { garage_name?: string };
-        const nextName = body.garage_name?.trim();
-        if (!nextName || !mounted) return;
-
-        cachedGarageName = nextName;
-        setGarageName(nextName);
-        window.sessionStorage.setItem(STORAGE_KEY, nextName);
-      } catch {
-        // Keep existing fallback/cached name.
-      }
-    }
-
-    loadGarageName();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  return garageName;
+export function useGarageName(): string {
+  return GARAGE_NAME;
 }

@@ -7,12 +7,9 @@ import type { GarageSettings } from "@/types/db";
 
 type AccountFormState = Pick<
   GarageSettings,
-  | "garage_name"
   | "cta_booking_enabled"
   | "cta_whatsapp_enabled"
-  | "cta_phone_enabled"
   | "whatsapp_number"
-  | "garage_phone"
 >;
 
 const REQUEST_TIMEOUT_MS = 8000;
@@ -110,12 +107,9 @@ export default function AccountPage() {
         if (!mounted) return;
         setSettings(data);
         setForm({
-          garage_name: data.garage_name,
           cta_booking_enabled: data.cta_booking_enabled,
           cta_whatsapp_enabled: data.cta_whatsapp_enabled,
-          cta_phone_enabled: data.cta_phone_enabled,
           whatsapp_number: data.whatsapp_number,
-          garage_phone: data.garage_phone,
         });
       } catch {
         if (!mounted) return;
@@ -133,17 +127,11 @@ export default function AccountPage() {
 
   const validationError = useMemo(() => {
     if (!form) return null;
-    const enabledCount =
-      Number(form.cta_booking_enabled) +
-      Number(form.cta_whatsapp_enabled) +
-      Number(form.cta_phone_enabled);
+    const enabledCount = Number(form.cta_booking_enabled) + Number(form.cta_whatsapp_enabled);
 
     if (enabledCount < 1) return "Enable at least one message option.";
     if (form.cta_whatsapp_enabled && !normalizeWhatsappNumber(form.whatsapp_number)) {
       return "WhatsApp number is required when WhatsApp is enabled.";
-    }
-    if (form.cta_phone_enabled && !form.garage_phone.trim()) {
-      return "Phone number is required when phone callback is enabled.";
     }
     return null;
   }, [form]);
@@ -160,12 +148,11 @@ export default function AccountPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          garage_name: form.garage_name.trim() || "MOTR",
+          garage_name: "Jon's Garage",
           cta_booking_enabled: form.cta_booking_enabled,
           cta_whatsapp_enabled: form.cta_whatsapp_enabled,
-          cta_phone_enabled: form.cta_phone_enabled,
+          cta_phone_enabled: true,
           whatsapp_number: form.whatsapp_number,
-          garage_phone: form.garage_phone.trim(),
         }),
       });
 
@@ -175,12 +162,9 @@ export default function AccountPage() {
       const next = body as GarageSettings;
       setSettings(next);
       setForm({
-        garage_name: next.garage_name,
         cta_booking_enabled: next.cta_booking_enabled,
         cta_whatsapp_enabled: next.cta_whatsapp_enabled,
-        cta_phone_enabled: next.cta_phone_enabled,
         whatsapp_number: next.whatsapp_number,
-        garage_phone: next.garage_phone,
       });
       setSuccess("Saved.");
     } catch (saveError) {
@@ -208,19 +192,6 @@ export default function AccountPage() {
         ) : (
           <div className="space-y-8">
             <section>
-              <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#7B8492]">Garage settings</h2>
-              <label className="block">
-                <span className="mb-2 block text-base font-semibold text-[#1D2530]">Garage name</span>
-                <input
-                  value={form.garage_name}
-                  onChange={(event) => setForm({ ...form, garage_name: event.target.value })}
-                  className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
-                  placeholder="MOTR"
-                />
-              </label>
-            </section>
-
-            <section>
               <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#7B8492]">Automatic reply options</h2>
               <p className="mt-1 text-sm text-[#7B8492]">
                 Decide how your automatic SMS reply appears to customers.
@@ -231,7 +202,7 @@ export default function AccountPage() {
                   <Toggle
                     checked={form.cta_booking_enabled}
                     onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                    label="Show online booking"
+                    label="Enable online booking"
                   />
                 </div>
 
@@ -239,29 +210,13 @@ export default function AccountPage() {
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
-                    label="Show WhatsApp link"
+                    label="Enable WhatsApp link"
                   />
                   {form.cta_whatsapp_enabled && (
                     <NumberField
                       label="WhatsApp number"
                       value={form.whatsapp_number}
                       onChange={(next) => setForm({ ...form, whatsapp_number: next })}
-                      placeholder="+44 7700 900123"
-                    />
-                  )}
-                </div>
-
-                <div className="border-t border-[#E8ECF2] pt-5">
-                  <Toggle
-                    checked={form.cta_phone_enabled}
-                    onChange={(next) => setForm({ ...form, cta_phone_enabled: next })}
-                    label="Include phone number"
-                  />
-                  {form.cta_phone_enabled && (
-                    <NumberField
-                      label="Callback phone number"
-                      value={form.garage_phone}
-                      onChange={(next) => setForm({ ...form, garage_phone: next })}
                       placeholder="+44 7700 900123"
                     />
                   )}
