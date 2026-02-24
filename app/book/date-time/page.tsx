@@ -169,7 +169,7 @@ function DateTimeContent() {
                   <button
                     onClick={() => handleDateClick(date)}
                     disabled={isPast}
-                    className={`${classes} flex items-center justify-center text-3xl leading-none font-semibold transition-colors disabled:cursor-not-allowed`}
+                    className={`${classes} flex items-center justify-center text-xl leading-none font-semibold transition-colors disabled:cursor-not-allowed`}
                     type="button"
                   >
                     {date.getDate()}

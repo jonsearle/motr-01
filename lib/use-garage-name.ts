@@ -6,24 +6,22 @@ const STORAGE_KEY = "motr_garage_name";
 let cachedGarageName: string | null = null;
 
 export function useGarageName(fallback = "MOTR Garage"): string {
-  const [garageName, setGarageName] = useState<string>(() => {
-    if (cachedGarageName) return cachedGarageName;
-
-    if (typeof window !== "undefined") {
-      const stored = window.sessionStorage.getItem(STORAGE_KEY);
-      if (stored?.trim()) {
-        cachedGarageName = stored.trim();
-        return cachedGarageName;
-      }
-    }
-
-    return fallback;
-  });
+  const [garageName, setGarageName] = useState<string>(fallback);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadGarageName() {
+      if (cachedGarageName && mounted) {
+        setGarageName(cachedGarageName);
+      } else {
+        const stored = window.sessionStorage.getItem(STORAGE_KEY)?.trim();
+        if (stored && mounted) {
+          cachedGarageName = stored;
+          setGarageName(stored);
+        }
+      }
+
       try {
         const response = await fetch("/api/garage-settings", { cache: "no-store" });
         if (!response.ok) return;
