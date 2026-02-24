@@ -19,14 +19,28 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseAnonKey);
 }
 
+function toBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true" || normalized === "t" || normalized === "1") return true;
+    if (normalized === "false" || normalized === "f" || normalized === "0") return false;
+  }
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+  return fallback;
+}
+
 function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
   return {
     id: String(raw.id ?? ""),
-    auto_sms_enabled: !!raw.auto_sms_enabled,
+    auto_sms_enabled: toBoolean(raw.auto_sms_enabled, false),
     garage_name: "Jon's Garage",
     short_code: typeof raw.short_code === "string" && raw.short_code.trim() ? raw.short_code : generateShortCode(),
-    cta_booking_enabled: typeof raw.cta_booking_enabled === "boolean" ? raw.cta_booking_enabled : true,
-    cta_whatsapp_enabled: typeof raw.cta_whatsapp_enabled === "boolean" ? raw.cta_whatsapp_enabled : true,
+    cta_booking_enabled: toBoolean(raw.cta_booking_enabled, true),
+    cta_whatsapp_enabled: toBoolean(raw.cta_whatsapp_enabled, true),
     cta_phone_enabled: true,
     whatsapp_number: typeof raw.whatsapp_number === "string" ? raw.whatsapp_number : "",
     garage_phone: typeof raw.garage_phone === "string" ? raw.garage_phone : "",
