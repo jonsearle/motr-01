@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { useGarageName } from "@/lib/use-garage-name";
 
-const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const TIME_SLOTS = [
   "08:00",
@@ -39,20 +39,11 @@ const isSameDay = (a: Date, b: Date): boolean =>
 
 const formatWeekRange = (weekStart: Date): string => {
   const weekEnd = addDays(weekStart, 6);
-  const startDay = String(weekStart.getDate()).padStart(2, "0");
-  const endDay = String(weekEnd.getDate()).padStart(2, "0");
+  const startDay = weekStart.getDate();
+  const endDay = weekEnd.getDate();
   const startMonth = MONTH_NAMES[weekStart.getMonth()];
   const endMonth = MONTH_NAMES[weekEnd.getMonth()];
   return `${startDay} ${startMonth} to ${endDay} ${endMonth}`;
-};
-
-const formatSelectedDate = (date: Date): string => {
-  return date.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 };
 
 const toIsoDate = (date: Date): string => {
@@ -122,7 +113,7 @@ function DateTimeContent() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
+    <main className="min-h-screen bg-gray-800 px-6 pb-36 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
         <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
@@ -152,7 +143,7 @@ function DateTimeContent() {
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <span className="text-base font-semibold">{formatWeekRange(visibleWeekStart)}</span>
+            <span className="text-base text-gray-100">{formatWeekRange(visibleWeekStart)}</span>
             <button onClick={handleNextWeek} className="text-white transition-colors hover:text-gray-300" type="button">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -160,41 +151,34 @@ function DateTimeContent() {
             </button>
           </div>
 
-          <div className="mb-2 grid grid-cols-7 gap-1">
-            {DAYS_OF_WEEK.map((day) => (
-              <div key={day} className="py-2 text-center text-xs text-white">
-                {day}
-              </div>
-            ))}
-          </div>
-
           <div className="grid grid-cols-7 gap-1">
             {weekDates.map((date) => {
               const isPast = date < today;
               const selected = isSameDay(date, selectedDate);
               const classes = selected
-                ? "aspect-square rounded border border-white bg-white text-sm font-semibold text-gray-800"
+                ? "aspect-square rounded-xl border border-white bg-white text-gray-900"
                 : isPast
-                  ? "aspect-square rounded border border-gray-700 bg-gray-800 text-sm text-gray-600"
-                  : "aspect-square rounded border border-white bg-gray-800 text-sm text-white hover:bg-gray-700";
+                  ? "aspect-square rounded-xl border border-gray-600 bg-gray-700 text-gray-500"
+                  : "aspect-square rounded-xl border border-white bg-gray-800 text-white hover:bg-gray-700";
 
               return (
                 <button
                   key={date.toISOString()}
                   onClick={() => handleDateClick(date)}
                   disabled={isPast}
-                  className={classes}
+                  className={`${classes} flex flex-col items-center justify-center gap-0.5 transition-colors disabled:cursor-not-allowed`}
                   type="button"
                 >
-                  {date.getDate()}
+                  <span className="text-xs leading-none font-normal">{DAYS_OF_WEEK[date.getDay()]}</span>
+                  <span className="text-2xl leading-none font-semibold">{date.getDate()}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="mb-6">
-          <p className="mb-2 text-base font-bold">{formatSelectedDate(selectedDate)}</p>
+        <div className="mb-8 mt-2">
+          <p className="mb-5 text-base text-gray-200">Pick a time</p>
           <div className="flex flex-col gap-3">
             {TIME_SLOTS.map((slot) => {
               const isSelected = selectedSlot === slot;
@@ -214,6 +198,12 @@ function DateTimeContent() {
           </div>
         </div>
 
+      </div>
+
+      <div
+        className="sticky bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-gradient-to-t from-gray-800 via-gray-800 to-transparent pt-4"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      >
         <button
           onClick={handleContinue}
           disabled={!canContinue}
