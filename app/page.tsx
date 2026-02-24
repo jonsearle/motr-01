@@ -21,13 +21,13 @@ async function fetchJsonWithTimeout<T>(url: string, timeoutMs = REQUEST_TIMEOUT_
   }
 }
 
-function AccountIcon() {
+function EditIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+        d="M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.9"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -187,10 +187,11 @@ export default function Home() {
         <header className="mb-6 flex items-center justify-end">
           <Link
             href="/account?from=smart"
-            aria-label="Account"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
+            aria-label="Edit Reply"
+            className="inline-flex items-center gap-1.5 text-[15px] font-medium text-[#6E7785] transition-colors hover:text-[#404854]"
           >
-            <AccountIcon />
+            <span>Edit Reply</span>
+            <EditIcon />
           </Link>
         </header>
 

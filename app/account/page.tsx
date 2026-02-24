@@ -184,33 +184,29 @@ export default function AccountPage() {
           <Link href={backHref} className="text-sm font-medium text-[#657083]">
             Back
           </Link>
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Your account</h1>
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Edit Reply</h1>
           <span className="w-10" />
         </header>
+        <p className="mb-7 text-sm text-[#6F7885]">Choose what customers receive when you miss a call.</p>
 
         {loading ? (
           <p className="text-sm text-[#657083]">Loading...</p>
         ) : !form ? (
           <p className="text-sm text-[#8E2E2E]">Couldn’t load account settings.</p>
         ) : (
-          <div className="space-y-8">
+          <div>
             <section>
-              <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#7B8492]">Automatic reply options</h2>
-              <p className="mt-1 text-sm text-[#7B8492]">
-                Decide how your automatic SMS reply appears to customers.
-              </p>
-
-              <div className="mt-5 space-y-5">
+              <div className="space-y-6">
                 <div className="pb-4">
                   <Toggle
                     checked={form.cta_booking_enabled}
                     onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
-                    label="Enable online booking"
+                    label="Include online booking"
                   />
                   {form.cta_booking_enabled && (
-                    <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2.5">
+                    <div className="mt-3 flex items-center justify-between">
                       <p className="text-sm text-[#2E3643]">
-                        Customers must book at least {form.min_booking_notice_days}{" "}
+                        Customers must book online at least {form.min_booking_notice_days}{" "}
                         {form.min_booking_notice_days === 1 ? "day" : "days"} ahead.
                       </p>
                       <Link
@@ -223,11 +219,11 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                <div className="border-t border-[#E8ECF2] pt-5">
+                <div>
                   <Toggle
                     checked={form.cta_whatsapp_enabled}
                     onChange={(next) => setForm({ ...form, cta_whatsapp_enabled: next })}
-                    label="Enable WhatsApp link"
+                    label="Include WhatsApp link"
                   />
                   {form.cta_whatsapp_enabled && (
                     <NumberField
