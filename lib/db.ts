@@ -19,8 +19,27 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-const GARAGE_SETTINGS_SELECT =
-  "id, auto_sms_enabled, garage_name, short_code, cta_booking_enabled, cta_whatsapp_enabled, cta_phone_enabled, whatsapp_number, garage_phone, min_booking_notice_days, max_bookings_per_day";
+function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
+  return {
+    id: String(raw.id ?? ""),
+    auto_sms_enabled: !!raw.auto_sms_enabled,
+    garage_name: "Jon's Garage",
+    short_code: typeof raw.short_code === "string" && raw.short_code.trim() ? raw.short_code : generateShortCode(),
+    cta_booking_enabled: typeof raw.cta_booking_enabled === "boolean" ? raw.cta_booking_enabled : true,
+    cta_whatsapp_enabled: typeof raw.cta_whatsapp_enabled === "boolean" ? raw.cta_whatsapp_enabled : true,
+    cta_phone_enabled: true,
+    whatsapp_number: typeof raw.whatsapp_number === "string" ? raw.whatsapp_number : "",
+    garage_phone: typeof raw.garage_phone === "string" ? raw.garage_phone : "",
+    min_booking_notice_days:
+      typeof raw.min_booking_notice_days === "number" && Number.isInteger(raw.min_booking_notice_days)
+        ? Math.max(1, raw.min_booking_notice_days)
+        : 2,
+    max_bookings_per_day:
+      typeof raw.max_bookings_per_day === "number" && Number.isInteger(raw.max_bookings_per_day)
+        ? Math.max(1, raw.max_bookings_per_day)
+        : 3,
+  };
+}
 
 function generateShortCode(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 6).toLowerCase();
@@ -30,7 +49,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("garage_settings")
-    .select(GARAGE_SETTINGS_SELECT)
+    .select("*")
     .limit(1)
     .maybeSingle();
 
@@ -39,7 +58,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
   }
 
   if (data) {
-    return data;
+    return normalizeGarageSettings(data as Record<string, unknown>);
   }
 
   const { data: inserted, error: insertError } = await supabase
@@ -53,17 +72,15 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
       cta_phone_enabled: true,
       whatsapp_number: "",
       garage_phone: "",
-      min_booking_notice_days: 2,
-      max_bookings_per_day: 3,
     })
-    .select(GARAGE_SETTINGS_SELECT)
+    .select("*")
     .single();
 
   if (insertError) {
     throw insertError;
   }
 
-  return inserted;
+  return normalizeGarageSettings(inserted as Record<string, unknown>);
 }
 
 export async function setAutoSmsEnabled(enabled: boolean): Promise<GarageSettings> {
@@ -74,14 +91,14 @@ export async function setAutoSmsEnabled(enabled: boolean): Promise<GarageSetting
     .from("garage_settings")
     .update({ auto_sms_enabled: enabled })
     .eq("id", current.id)
-    .select(GARAGE_SETTINGS_SELECT)
+    .select("*")
     .single();
 
   if (error) {
     throw error;
   }
 
-  return data;
+  return normalizeGarageSettings(data as Record<string, unknown>);
 }
 
 function isCtaOrContactUpdate(input: UpdateGarageSettingsInput): boolean {
@@ -154,21 +171,21 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
     .from("garage_settings")
     .update(updatePayload)
     .eq("id", current.id)
-    .select(GARAGE_SETTINGS_SELECT)
+    .select("*")
     .single();
 
   if (error) {
     throw error;
   }
 
-  return data;
+  return normalizeGarageSettings(data as Record<string, unknown>);
 }
 
 export async function getGarageSettingsByShortCode(code: string): Promise<GarageSettings | null> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("garage_settings")
-    .select(GARAGE_SETTINGS_SELECT)
+    .select("*")
     .eq("short_code", code.toLowerCase())
     .maybeSingle();
 
@@ -176,7 +193,7 @@ export async function getGarageSettingsByShortCode(code: string): Promise<Garage
     throw error;
   }
 
-  return data;
+  return data ? normalizeGarageSettings(data as Record<string, unknown>) : null;
 }
 
 export async function logTrackingEvent(input: {
