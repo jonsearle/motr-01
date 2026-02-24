@@ -151,27 +151,30 @@ function DateTimeContent() {
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5">
             {weekDates.map((date) => {
               const isPast = date < today;
               const selected = isSameDay(date, selectedDate);
               const classes = selected
-                ? "aspect-square rounded-xl border border-white bg-white text-gray-900"
+                ? "h-14 w-full rounded-xl border border-white bg-white text-gray-900"
                 : isPast
-                  ? "aspect-square rounded-xl border border-gray-600 bg-gray-700 text-gray-500"
-                  : "aspect-square rounded-xl border border-white bg-gray-800 text-white hover:bg-gray-700";
+                  ? "h-14 w-full rounded-xl border border-gray-600 bg-gray-700 text-gray-500"
+                  : "h-14 w-full rounded-xl border border-white bg-gray-800 text-white hover:bg-gray-700";
 
               return (
-                <button
-                  key={date.toISOString()}
-                  onClick={() => handleDateClick(date)}
-                  disabled={isPast}
-                  className={`${classes} flex flex-col items-center justify-center gap-0.5 transition-colors disabled:cursor-not-allowed`}
-                  type="button"
-                >
-                  <span className="text-xs leading-none font-normal">{DAYS_OF_WEEK[date.getDay()]}</span>
-                  <span className="text-2xl leading-none font-semibold">{date.getDate()}</span>
-                </button>
+                <div key={date.toISOString()} className="flex flex-col items-center gap-1.5">
+                  <span className={`text-sm leading-none ${isPast ? "text-gray-500" : "text-gray-100"}`}>
+                    {DAYS_OF_WEEK[date.getDay()]}
+                  </span>
+                  <button
+                    onClick={() => handleDateClick(date)}
+                    disabled={isPast}
+                    className={`${classes} flex items-center justify-center text-3xl leading-none font-semibold transition-colors disabled:cursor-not-allowed`}
+                    type="button"
+                  >
+                    {date.getDate()}
+                  </button>
+                </div>
               );
             })}
           </div>
