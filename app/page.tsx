@@ -136,6 +136,21 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const saved = params.get("saved");
+    if (saved === "reply") {
+      setToast("Reply settings saved.");
+    } else if (saved === "rules") {
+      setToast("Booking rules saved.");
+    }
+    if (saved) {
+      params.delete("saved");
+      const next = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+    }
+  }, []);
+
   const enabled = !!settings?.auto_sms_enabled;
 
   const heroCircleClasses = useMemo(() => {

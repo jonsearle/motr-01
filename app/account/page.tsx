@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { normalizeWhatsappNumber } from "@/lib/missed-call";
 import type { GarageSettings } from "@/types/db";
@@ -83,13 +84,12 @@ function NumberField({
 }
 
 export default function AccountPage() {
+  const router = useRouter();
   const [backHref, setBackHref] = useState("/");
-  const [settings, setSettings] = useState<GarageSettings | null>(null);
   const [form, setForm] = useState<AccountFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -103,7 +103,6 @@ export default function AccountPage() {
       try {
         const data = await fetchJsonWithTimeout<GarageSettings>("/api/garage-settings");
         if (!mounted) return;
-        setSettings(data);
         setForm({
           cta_booking_enabled: data.cta_booking_enabled,
           cta_whatsapp_enabled: data.cta_whatsapp_enabled,
@@ -136,17 +135,17 @@ export default function AccountPage() {
   }, [form]);
 
   async function onSave() {
-    if (!settings || !form || validationError) return;
+    if (!form || validationError) return;
 
     setSaving(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const response = await fetch("/api/garage-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          auto_sms_enabled: true,
           garage_name: "Jon's Garage",
           cta_booking_enabled: form.cta_booking_enabled,
           cta_whatsapp_enabled: form.cta_whatsapp_enabled,
@@ -155,21 +154,11 @@ export default function AccountPage() {
         }),
       });
 
-      const body = await response.json();
+      const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || "save_failed");
-
-      const next = body as GarageSettings;
-      setSettings(next);
-      setForm({
-        cta_booking_enabled: next.cta_booking_enabled,
-        cta_whatsapp_enabled: next.cta_whatsapp_enabled,
-        whatsapp_number: next.whatsapp_number,
-        min_booking_notice_days: next.min_booking_notice_days,
-      });
-      setSuccess("Saved.");
+      router.push(backHref === "/" ? "/?saved=reply" : `${backHref}?saved=reply`);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Couldn’t save settings.");
-    } finally {
       setSaving(false);
     }
   }
@@ -178,11 +167,17 @@ export default function AccountPage() {
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-40 pt-6">
         <header className="mb-6 flex items-center justify-between">
-          <Link href={backHref} className="text-sm font-medium text-[#657083]">
-            Back
-          </Link>
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Edit Reply</h1>
           <span className="w-10" />
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Edit Reply</h1>
+          <Link
+            href={backHref}
+            aria-label="Close"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#657083] transition-colors hover:text-[#3E4654]"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
         </header>
         <p className="mb-7 text-sm text-[#6F7885]">Choose what customers receive when you miss their call.</p>
 
@@ -234,15 +229,11 @@ export default function AccountPage() {
               </div>
             </section>
 
-            {(validationError || error || success) && (
+            {(validationError || error) && (
               <p
-                className={`rounded-xl px-3 py-2 text-sm ${
-                  validationError || error
-                    ? "border border-[#F2D7D7] bg-[#FFF5F5] text-[#8E2E2E]"
-                    : "border border-[#D6ECD9] bg-[#F3FBF4] text-[#20652D]"
-                }`}
+                className="rounded-xl border border-[#F2D7D7] bg-[#FFF5F5] px-3 py-2 text-sm text-[#8E2E2E]"
               >
-                {validationError || error || success}
+                {validationError || error}
               </p>
             )}
           </div>

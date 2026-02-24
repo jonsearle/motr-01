@@ -64,6 +64,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
   const { data, error } = await supabase
     .from("garage_settings")
     .select("*")
+    .order("id", { ascending: true })
     .limit(1)
     .maybeSingle();
 
@@ -120,10 +121,12 @@ function isCtaOrContactUpdate(input: UpdateGarageSettingsInput): boolean {
     typeof input.cta_booking_enabled === "boolean" ||
     typeof input.cta_whatsapp_enabled === "boolean" ||
     typeof input.whatsapp_number === "string" ||
-    typeof input.garage_phone === "string" ||
-    typeof input.min_booking_notice_days === "number" ||
-    typeof input.max_bookings_per_day === "number"
+    typeof input.garage_phone === "string"
   );
+}
+
+function isBookingRulesUpdate(input: UpdateGarageSettingsInput): boolean {
+  return typeof input.min_booking_notice_days === "number" || typeof input.max_bookings_per_day === "number";
 }
 
 function assertValidCtaConfig(next: GarageSettings): void {
@@ -135,11 +138,9 @@ function assertValidCtaConfig(next: GarageSettings): void {
   if (next.cta_whatsapp_enabled && !normalizeWhatsappNumber(next.whatsapp_number)) {
     throw new Error("WhatsApp number is required when WhatsApp CTA is enabled.");
   }
+}
 
-  if (!normalizePhoneInput(next.garage_phone)) {
-    throw new Error("Phone number is required when phone CTA is enabled.");
-  }
-
+function assertValidBookingRules(next: GarageSettings): void {
   if (!Number.isInteger(next.min_booking_notice_days) || next.min_booking_notice_days < 1) {
     throw new Error("Minimum booking notice must be at least 1 day.");
   }
@@ -179,6 +180,9 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
 
   if (isCtaOrContactUpdate(input)) {
     assertValidCtaConfig(nextState);
+  }
+  if (isBookingRulesUpdate(input)) {
+    assertValidBookingRules(nextState);
   }
 
   const { data, error } = await supabase
