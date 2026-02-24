@@ -29,20 +29,26 @@ export function buildWhatsappDestination(number: string): string {
   return `https://wa.me/${normalizeWhatsappNumber(number)}?text=${encodeURIComponent(WHATSAPP_TEXT)}`;
 }
 
-export function validateMissedCallCtas(settings: GarageSettings): string | null {
+function resolveCallbackNumber(settings: GarageSettings, fallbackPhone?: string | null): string {
+  const primary = normalizePhoneInput(settings.garage_phone);
+  if (primary) return primary;
+  return normalizePhoneInput(fallbackPhone ?? "");
+}
+
+export function validateMissedCallCtas(settings: GarageSettings, fallbackPhone?: string | null): string | null {
   const enabledCount = Number(settings.cta_booking_enabled) + Number(settings.cta_whatsapp_enabled) + 1;
 
   if (enabledCount < 1) return "At least one CTA must be enabled.";
   if (settings.cta_whatsapp_enabled && !normalizeWhatsappNumber(settings.whatsapp_number)) {
     return "WhatsApp CTA is enabled but WhatsApp number is missing.";
   }
-  if (!settings.garage_phone.trim()) {
+  if (!resolveCallbackNumber(settings, fallbackPhone)) {
     return "Phone CTA is enabled but callback number is missing.";
   }
   return null;
 }
 
-export function composeMissedCallSms(settings: GarageSettings): string {
+export function composeMissedCallSms(settings: GarageSettings, fallbackPhone?: string | null): string {
   const lines = ["Jon's Garage:", "Sorry we missed your call.", ""];
   const links = buildShortLinks(settings.short_code);
   const ctas: string[] = [];
@@ -53,7 +59,7 @@ export function composeMissedCallSms(settings: GarageSettings): string {
   if (settings.cta_whatsapp_enabled) {
     ctas.push(`Send WhatsApp:\n${links.whatsapp}`);
   }
-  ctas.push(`Call us:\n${settings.garage_phone.trim()}`);
+  ctas.push(`Call us:\n${resolveCallbackNumber(settings, fallbackPhone)}`);
 
   lines.push(ctas.join("\n\n"));
   return lines.join("\n");

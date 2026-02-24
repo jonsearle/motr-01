@@ -5,6 +5,7 @@ import { sendSms } from "@/lib/sms";
 
 type MissedCallRequestData = {
   phone: string | null;
+  toPhone: string | null;
   isTwilioVoiceWebhook: boolean;
 };
 
@@ -29,9 +30,9 @@ async function getRequestData(request: NextRequest): Promise<MissedCallRequestDa
     try {
       const body = await request.json();
       const phone = typeof body.phone === "string" && body.phone.trim() ? body.phone.trim() : null;
-      return { phone, isTwilioVoiceWebhook: false };
+      return { phone, toPhone: null, isTwilioVoiceWebhook: false };
     } catch {
-      return { phone: null, isTwilioVoiceWebhook: false };
+      return { phone: null, toPhone: null, isTwilioVoiceWebhook: false };
     }
   }
 
@@ -39,15 +40,17 @@ async function getRequestData(request: NextRequest): Promise<MissedCallRequestDa
     const form = await request.formData();
     const candidate = form.get("phone") || form.get("From");
     const phone = typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
+    const toCandidate = form.get("To");
+    const toPhone = typeof toCandidate === "string" && toCandidate.trim() ? toCandidate.trim() : null;
     const isTwilioVoiceWebhook = typeof form.get("CallSid") === "string";
-    return { phone, isTwilioVoiceWebhook };
+    return { phone, toPhone, isTwilioVoiceWebhook };
   }
 
   const fromQuery = request.nextUrl.searchParams.get("phone");
-  return { phone: fromQuery?.trim() || null, isTwilioVoiceWebhook: false };
+  return { phone: fromQuery?.trim() || null, toPhone: null, isTwilioVoiceWebhook: false };
 }
 
-async function processMissedCall(phone: string): Promise<MissedCallResult> {
+async function processMissedCall(phone: string, toPhone?: string | null): Promise<MissedCallResult> {
   const settings = await getOrCreateGarageSettings();
   try {
     await logTrackingEvent({
@@ -63,12 +66,12 @@ async function processMissedCall(phone: string): Promise<MissedCallResult> {
     return { sent: false, reason: "auto_sms_disabled" };
   }
 
-  const configError = validateMissedCallCtas(settings);
+  const configError = validateMissedCallCtas(settings, toPhone);
   if (configError) {
     return { sent: false, reason: "invalid_cta_config", error: configError, status: 400 };
   }
 
-  const text = composeMissedCallSms(settings);
+  const text = composeMissedCallSms(settings, toPhone);
   await sendSms(phone, text);
   try {
     await logTrackingEvent({
@@ -85,7 +88,7 @@ async function processMissedCall(phone: string): Promise<MissedCallResult> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, isTwilioVoiceWebhook } = await getRequestData(request);
+    const { phone, toPhone, isTwilioVoiceWebhook } = await getRequestData(request);
 
     if (!phone) {
       if (isTwilioVoiceWebhook) return twimlHangupResponse();
@@ -93,14 +96,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (isTwilioVoiceWebhook) {
-      // Return hangup immediately so the call drops fast; process SMS asynchronously.
-      void processMissedCall(phone).catch((error) => {
-        console.error("Failed to process missed call asynchronously", error);
-      });
+      // Process synchronously for reliability, then return immediate hangup TwiML.
+      await processMissedCall(phone, toPhone);
       return twimlHangupResponse();
     }
 
-    const result = await processMissedCall(phone);
+    const result = await processMissedCall(phone, toPhone);
     if (!result.sent) {
       if (result.reason === "auto_sms_disabled") {
         return NextResponse.json({ sent: false, reason: result.reason });
