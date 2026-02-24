@@ -3,13 +3,15 @@
 CREATE TABLE garage_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   auto_sms_enabled boolean NOT NULL DEFAULT false,
-  garage_name text NOT NULL DEFAULT 'MOTR',
+  garage_name text NOT NULL DEFAULT 'Jon''s Garage',
   short_code text NOT NULL UNIQUE DEFAULT lower(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)),
   cta_booking_enabled boolean NOT NULL DEFAULT true,
   cta_whatsapp_enabled boolean NOT NULL DEFAULT true,
   cta_phone_enabled boolean NOT NULL DEFAULT true,
   whatsapp_number text NOT NULL DEFAULT '',
-  garage_phone text NOT NULL DEFAULT ''
+  garage_phone text NOT NULL DEFAULT '',
+  min_booking_notice_days integer NOT NULL DEFAULT 2,
+  max_bookings_per_day integer NOT NULL DEFAULT 3
 );
 
 CREATE TABLE bookings (

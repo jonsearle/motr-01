@@ -8,6 +8,8 @@ export interface GarageSettings {
   cta_phone_enabled: boolean;
   whatsapp_number: string;
   garage_phone: string;
+  min_booking_notice_days: number;
+  max_bookings_per_day: number;
 }
 
 export interface UpdateGarageSettingsInput {
@@ -18,6 +20,8 @@ export interface UpdateGarageSettingsInput {
   cta_phone_enabled?: boolean;
   whatsapp_number?: string;
   garage_phone?: string;
+  min_booking_notice_days?: number;
+  max_bookings_per_day?: number;
 }
 
 export type TrackingEventType =

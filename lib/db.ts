@@ -20,7 +20,7 @@ function getSupabaseClient() {
 }
 
 const GARAGE_SETTINGS_SELECT =
-  "id, auto_sms_enabled, garage_name, short_code, cta_booking_enabled, cta_whatsapp_enabled, cta_phone_enabled, whatsapp_number, garage_phone";
+  "id, auto_sms_enabled, garage_name, short_code, cta_booking_enabled, cta_whatsapp_enabled, cta_phone_enabled, whatsapp_number, garage_phone, min_booking_notice_days, max_bookings_per_day";
 
 function generateShortCode(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 6).toLowerCase();
@@ -53,6 +53,8 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
       cta_phone_enabled: true,
       whatsapp_number: "",
       garage_phone: "",
+      min_booking_notice_days: 2,
+      max_bookings_per_day: 3,
     })
     .select(GARAGE_SETTINGS_SELECT)
     .single();
@@ -87,7 +89,9 @@ function isCtaOrContactUpdate(input: UpdateGarageSettingsInput): boolean {
     typeof input.cta_booking_enabled === "boolean" ||
     typeof input.cta_whatsapp_enabled === "boolean" ||
     typeof input.whatsapp_number === "string" ||
-    typeof input.garage_phone === "string"
+    typeof input.garage_phone === "string" ||
+    typeof input.min_booking_notice_days === "number" ||
+    typeof input.max_bookings_per_day === "number"
   );
 }
 
@@ -104,6 +108,14 @@ function assertValidCtaConfig(next: GarageSettings): void {
   if (!normalizePhoneInput(next.garage_phone)) {
     throw new Error("Phone number is required when phone CTA is enabled.");
   }
+
+  if (!Number.isInteger(next.min_booking_notice_days) || next.min_booking_notice_days < 1) {
+    throw new Error("Minimum booking notice must be at least 1 day.");
+  }
+
+  if (!Number.isInteger(next.max_bookings_per_day) || next.max_bookings_per_day < 1) {
+    throw new Error("Daily booking limit must be at least 1.");
+  }
 }
 
 export async function updateGarageSettings(input: UpdateGarageSettingsInput): Promise<GarageSettings> {
@@ -119,6 +131,12 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
   }
   if (typeof input.garage_phone === "string") {
     updatePayload.garage_phone = normalizePhoneInput(input.garage_phone);
+  }
+  if (typeof input.min_booking_notice_days === "number") {
+    updatePayload.min_booking_notice_days = Math.floor(input.min_booking_notice_days);
+  }
+  if (typeof input.max_bookings_per_day === "number") {
+    updatePayload.max_bookings_per_day = Math.floor(input.max_bookings_per_day);
   }
   updatePayload.garage_name = "Jon's Garage";
   updatePayload.cta_phone_enabled = true;
@@ -241,4 +259,18 @@ export async function deleteBooking(id: string): Promise<void> {
   if (error) {
     throw error;
   }
+}
+
+export async function countBookingsOnDate(date: string): Promise<number> {
+  const supabase = getSupabaseClient();
+  const { count, error } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("date", date);
+
+  if (error) {
+    throw error;
+  }
+
+  return count ?? 0;
 }

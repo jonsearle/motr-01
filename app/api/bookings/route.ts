@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBooking, listBookings } from "@/lib/db";
+import { countBookingsOnDate, createBooking, getOrCreateGarageSettings, listBookings } from "@/lib/db";
 import { sendSms } from "@/lib/sms";
 
 const ALLOWED_TIMES = new Set([
@@ -31,6 +31,15 @@ function validate(input: unknown): string | null {
   return null;
 }
 
+function parseLocalDate(input: string): Date {
+  const [year, month, day] = input.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDays(value: number): string {
+  return `${value} ${value === 1 ? "day" : "days"}`;
+}
+
 export async function GET() {
   try {
     const bookings = await listBookings();
@@ -48,6 +57,28 @@ export async function POST(request: NextRequest) {
 
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 400 });
+    }
+
+    const settings = await getOrCreateGarageSettings();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const earliestAllowed = new Date(today);
+    earliestAllowed.setDate(today.getDate() + settings.min_booking_notice_days);
+    const requestedDate = parseLocalDate(body.date);
+
+    if (requestedDate < earliestAllowed) {
+      return NextResponse.json(
+        { error: `Please book at least ${formatDays(settings.min_booking_notice_days)} in advance.` },
+        { status: 400 }
+      );
+    }
+
+    const bookingCountForDate = await countBookingsOnDate(body.date);
+    if (bookingCountForDate >= settings.max_bookings_per_day) {
+      return NextResponse.json(
+        { error: `This day is fully booked. Maximum ${settings.max_bookings_per_day} online bookings per day.` },
+        { status: 400 }
+      );
     }
 
     const booking = await createBooking({

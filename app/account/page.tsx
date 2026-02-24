@@ -10,6 +10,7 @@ type AccountFormState = Pick<
   | "cta_booking_enabled"
   | "cta_whatsapp_enabled"
   | "whatsapp_number"
+  | "min_booking_notice_days"
 >;
 
 const REQUEST_TIMEOUT_MS = 8000;
@@ -110,6 +111,7 @@ export default function AccountPage() {
           cta_booking_enabled: data.cta_booking_enabled,
           cta_whatsapp_enabled: data.cta_whatsapp_enabled,
           whatsapp_number: data.whatsapp_number,
+          min_booking_notice_days: data.min_booking_notice_days,
         });
       } catch {
         if (!mounted) return;
@@ -165,6 +167,7 @@ export default function AccountPage() {
         cta_booking_enabled: next.cta_booking_enabled,
         cta_whatsapp_enabled: next.cta_whatsapp_enabled,
         whatsapp_number: next.whatsapp_number,
+        min_booking_notice_days: next.min_booking_notice_days,
       });
       setSuccess("Saved.");
     } catch (saveError) {
@@ -204,6 +207,20 @@ export default function AccountPage() {
                     onChange={(next) => setForm({ ...form, cta_booking_enabled: next })}
                     label="Enable online booking"
                   />
+                  {form.cta_booking_enabled && (
+                    <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2.5">
+                      <p className="text-sm text-[#2E3643]">
+                        Customers must book at least {form.min_booking_notice_days}{" "}
+                        {form.min_booking_notice_days === 1 ? "day" : "days"} ahead.
+                      </p>
+                      <Link
+                        href="/account/booking-rules"
+                        className="rounded-md border border-[#D9DEE7] px-2 py-1 text-xs font-semibold text-[#1D2530]"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-[#E8ECF2] pt-5">

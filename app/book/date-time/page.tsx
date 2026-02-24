@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useGarageName } from "@/lib/use-garage-name";
+import type { GarageSettings } from "@/types/db";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -66,9 +67,11 @@ function DateTimeContent() {
   }, []);
 
   const [visibleWeekStart, setVisibleWeekStart] = useState(getStartOfWeek(today));
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(addDays(today, 2));
   const [selectedSlot, setSelectedSlot] = useState<string | null>(TIME_SLOTS[0]);
+  const [minBookingNoticeDays, setMinBookingNoticeDays] = useState(2);
   const garageName = useGarageName();
+  const minBookableDate = useMemo(() => addDays(today, minBookingNoticeDays), [today, minBookingNoticeDays]);
 
   const weekDates = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(visibleWeekStart, i)),
@@ -78,6 +81,36 @@ function DateTimeContent() {
   const canNavigatePrevWeek = addDays(visibleWeekStart, -7) >= getStartOfWeek(today);
 
   const canContinue = !!selectedDate && !!selectedSlot;
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadRules() {
+      try {
+        const response = await fetch("/api/garage-settings", { cache: "no-store" });
+        if (!response.ok) return;
+        const settings = (await response.json()) as GarageSettings;
+        if (!mounted) return;
+        setMinBookingNoticeDays(settings.min_booking_notice_days);
+      } catch {
+        // Keep defaults.
+      }
+    }
+
+    loadRules();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate < minBookableDate) {
+      setSelectedDate(minBookableDate);
+    }
+    if (visibleWeekStart > minBookableDate) {
+      setVisibleWeekStart(getStartOfWeek(today));
+    }
+  }, [minBookableDate, selectedDate, visibleWeekStart, today]);
 
   function handlePrevWeek() {
     if (!canNavigatePrevWeek) return;
@@ -89,7 +122,7 @@ function DateTimeContent() {
   }
 
   function handleDateClick(date: Date) {
-    if (date < today) return;
+    if (date < minBookableDate) return;
     setSelectedDate(date);
     if (!selectedSlot) setSelectedSlot(TIME_SLOTS[0]);
   }
@@ -144,7 +177,11 @@ function DateTimeContent() {
               </svg>
             </button>
             <span className="text-base text-gray-100">{formatWeekRange(visibleWeekStart)}</span>
-            <button onClick={handleNextWeek} className="text-white transition-colors hover:text-gray-300" type="button">
+            <button
+              onClick={handleNextWeek}
+              className="text-white transition-colors hover:text-gray-300"
+              type="button"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -153,22 +190,22 @@ function DateTimeContent() {
 
           <div className="grid grid-cols-7 gap-1.5">
             {weekDates.map((date) => {
-              const isPast = date < today;
+              const isBeforeNotice = date < minBookableDate;
               const selected = isSameDay(date, selectedDate);
               const classes = selected
                 ? "h-14 w-full rounded-xl border border-white bg-white text-gray-900"
-                : isPast
+                : isBeforeNotice
                   ? "h-14 w-full rounded-xl border border-gray-600 bg-gray-700 text-gray-500"
                   : "h-14 w-full rounded-xl border border-white bg-gray-800 text-white hover:bg-gray-700";
 
               return (
                 <div key={date.toISOString()} className="flex flex-col items-center gap-1.5">
-                  <span className={`text-sm leading-none ${isPast ? "text-gray-500" : "text-gray-100"}`}>
+                  <span className={`text-sm leading-none ${isBeforeNotice ? "text-gray-500" : "text-gray-100"}`}>
                     {DAYS_OF_WEEK[date.getDay()]}
                   </span>
                   <button
                     onClick={() => handleDateClick(date)}
-                    disabled={isPast}
+                    disabled={isBeforeNotice}
                     className={`${classes} flex items-center justify-center text-xl leading-none font-semibold transition-colors disabled:cursor-not-allowed`}
                     type="button"
                   >

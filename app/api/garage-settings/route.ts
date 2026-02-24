@@ -29,6 +29,12 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.garage_phone === "string") {
       updateInput.garage_phone = normalizePhoneInput(body.garage_phone);
     }
+    if (typeof body.min_booking_notice_days === "number") {
+      updateInput.min_booking_notice_days = body.min_booking_notice_days;
+    }
+    if (typeof body.max_bookings_per_day === "number") {
+      updateInput.max_bookings_per_day = body.max_bookings_per_day;
+    }
 
     if (Object.keys(updateInput).length === 0) {
       return NextResponse.json({ error: "No valid settings fields provided" }, { status: 400 });
