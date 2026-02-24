@@ -115,6 +115,10 @@ function MobileFormContent() {
             onChange={(event) => setPhone(event.target.value)}
             placeholder="Enter phone number"
             required
+            type="text"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            pattern="[0-9]*"
             className="h-12 w-full rounded-lg border border-white bg-transparent px-4 text-base text-white placeholder:text-gray-400"
           />
 
