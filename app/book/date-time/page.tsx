@@ -8,10 +8,11 @@ import { PoweredByMotr } from "@/components/powered-by-motr";
 import { buildTimeSlotsForDate, findFirstBookableDate, normalizeOpeningHours, type OpeningHours } from "@/lib/booking-hours";
 import { useGarageName } from "@/lib/use-garage-name";
 import { useTrackPageView } from "@/lib/use-track-page-view";
-import type { GarageSettings } from "@/types/db";
+import type { Booking, GarageSettings } from "@/types/db";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const CALL_NUMBER = "07846799625";
 
 const addDays = (date: Date, days: number): Date => {
   const next = new Date(date);
@@ -46,6 +47,25 @@ const toIsoDate = (date: Date): string => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+function findFirstDateWithCapacity(
+  startDate: Date,
+  openingHours: OpeningHours,
+  maxBookingsPerDay: number,
+  bookingsByDate: Record<string, number>
+): Date {
+  const safeMax = Math.max(1, maxBookingsPerDay);
+  for (let offset = 0; offset < 365; offset += 1) {
+    const candidate = addDays(startDate, offset);
+    const hasSlots = buildTimeSlotsForDate(candidate, openingHours).length > 0;
+    const isFull = (bookingsByDate[toIsoDate(candidate)] ?? 0) >= safeMax;
+    if (hasSlots && !isFull) {
+      return candidate;
+    }
+  }
+
+  return findFirstBookableDate(startDate, openingHours);
+}
+
 function DateTimeContent() {
   useTrackPageView("page_view_date_time");
   const searchParams = useSearchParams();
@@ -60,14 +80,16 @@ function DateTimeContent() {
   }, []);
 
   const [minBookingNoticeDays, setMinBookingNoticeDays] = useState(2);
+  const [maxBookingsPerDay, setMaxBookingsPerDay] = useState(3);
   const [bookingHoursEnabled, setBookingHoursEnabled] = useState(true);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(normalizeOpeningHours(null));
+  const [bookingsByDate, setBookingsByDate] = useState<Record<string, number>>({});
   const [rulesLoaded, setRulesLoaded] = useState(false);
 
   const minBookableDate = useMemo(() => addDays(today, minBookingNoticeDays), [today, minBookingNoticeDays]);
   const firstAvailableDate = useMemo(
-    () => findFirstBookableDate(minBookableDate, openingHours),
-    [minBookableDate, openingHours]
+    () => findFirstDateWithCapacity(minBookableDate, openingHours, maxBookingsPerDay, bookingsByDate),
+    [minBookableDate, openingHours, maxBookingsPerDay, bookingsByDate]
   );
   const firstAvailableWeekStart = useMemo(() => getStartOfWeek(firstAvailableDate), [firstAvailableDate]);
 
@@ -82,7 +104,12 @@ function DateTimeContent() {
     [visibleWeekStart]
   );
 
-  const selectedDateSlots = useMemo(() => buildTimeSlotsForDate(selectedDate, openingHours), [selectedDate, openingHours]);
+  const selectedDateSlots = useMemo(() => {
+    const selectedDateIso = toIsoDate(selectedDate);
+    const selectedIsFull = (bookingsByDate[selectedDateIso] ?? 0) >= Math.max(1, maxBookingsPerDay);
+    if (selectedIsFull) return [];
+    return buildTimeSlotsForDate(selectedDate, openingHours);
+  }, [selectedDate, openingHours, bookingsByDate, maxBookingsPerDay]);
 
   const canNavigatePrevWeek = addDays(visibleWeekStart, -7) >= firstAvailableWeekStart;
   const canContinue = bookingHoursEnabled && !!selectedDate && !!selectedSlot;
@@ -92,13 +119,28 @@ function DateTimeContent() {
 
     async function loadRules() {
       try {
-        const response = await fetch(`/api/garage-settings?t=${Date.now()}`, { cache: "no-store" });
-        if (!response.ok) return;
-        const settings = (await response.json()) as GarageSettings;
+        const [settingsResponse, bookingsResponse] = await Promise.all([
+          fetch(`/api/garage-settings?t=${Date.now()}`, { cache: "no-store" }),
+          fetch("/api/bookings?view=future", { cache: "no-store" }),
+        ]);
+        if (!settingsResponse.ok) return;
+        const settings = (await settingsResponse.json()) as GarageSettings;
         if (!mounted) return;
+
+        let nextBookingsByDate: Record<string, number> = {};
+        if (bookingsResponse.ok) {
+          const futureBookings = (await bookingsResponse.json()) as Booking[];
+          nextBookingsByDate = futureBookings.reduce<Record<string, number>>((acc, booking) => {
+            acc[booking.date] = (acc[booking.date] ?? 0) + 1;
+            return acc;
+          }, {});
+        }
+
         setMinBookingNoticeDays(settings.min_booking_notice_days);
+        setMaxBookingsPerDay(settings.max_bookings_per_day);
         setBookingHoursEnabled(settings.booking_hours_enabled);
         setOpeningHours(normalizeOpeningHours(settings.opening_hours));
+        setBookingsByDate(nextBookingsByDate);
       } catch {
         // Keep defaults.
       } finally {
@@ -113,17 +155,28 @@ function DateTimeContent() {
   }, []);
 
   useEffect(() => {
-    const nextFirstAvailableDate = findFirstBookableDate(minBookableDate, openingHours);
+    const nextFirstAvailableDate = findFirstDateWithCapacity(
+      minBookableDate,
+      openingHours,
+      maxBookingsPerDay,
+      bookingsByDate
+    );
     const earliestWeekStart = getStartOfWeek(nextFirstAvailableDate);
+    const selectedDateIso = toIsoDate(selectedDate);
+    const selectedIsFull = (bookingsByDate[selectedDateIso] ?? 0) >= Math.max(1, maxBookingsPerDay);
 
-    if (selectedDate < minBookableDate || buildTimeSlotsForDate(selectedDate, openingHours).length === 0) {
+    if (
+      selectedDate < minBookableDate ||
+      buildTimeSlotsForDate(selectedDate, openingHours).length === 0 ||
+      selectedIsFull
+    ) {
       setSelectedDate(nextFirstAvailableDate);
     }
 
     if (visibleWeekStart < earliestWeekStart) {
       setVisibleWeekStart(earliestWeekStart);
     }
-  }, [minBookableDate, selectedDate, visibleWeekStart, openingHours]);
+  }, [minBookableDate, selectedDate, visibleWeekStart, openingHours, maxBookingsPerDay, bookingsByDate]);
 
   useEffect(() => {
     if (!selectedDateSlots.length) {
@@ -146,7 +199,9 @@ function DateTimeContent() {
   }
 
   function handleDateClick(date: Date) {
-    if (date < minBookableDate || buildTimeSlotsForDate(date, openingHours).length === 0) return;
+    const dateIso = toIsoDate(date);
+    const isFull = (bookingsByDate[dateIso] ?? 0) >= Math.max(1, maxBookingsPerDay);
+    if (date < minBookableDate || buildTimeSlotsForDate(date, openingHours).length === 0 || isFull) return;
     setSelectedDate(date);
   }
 
@@ -194,18 +249,35 @@ function DateTimeContent() {
             </svg>
             <span className="text-base font-bold">{garageName}</span>
           </Link>
-          <CallUsCta />
+          {bookingHoursEnabled ? (
+            <CallUsCta />
+          ) : (
+            <a
+              href={`tel:${CALL_NUMBER}`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M6.62 10.79a15.54 15.54 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.31.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.85 21 3 13.15 3 3a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.26.2 2.45.57 3.57a1 1 0 0 1-.24 1.02l-2.2 2.2Z" />
+              </svg>
+              <span>Call us</span>
+            </a>
+          )}
         </div>
 
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
-
         {!bookingHoursEnabled ? (
-          <div className="mt-4 rounded-xl border border-gray-500 bg-gray-700/50 p-4">
-            <p className="text-base font-semibold">Online booking is currently unavailable.</p>
-            <p className="mt-1 text-sm text-gray-200">Please call us to make a booking.</p>
+          <div className="mt-4">
+            <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online booking is currently unavailable</h1>
+            <p className="mt-3 text-base text-gray-200">Please call us to make a booking.</p>
+            <a
+              href={`tel:${CALL_NUMBER}`}
+              className="mt-6 block w-full rounded-lg border border-white bg-gray-800 px-4 py-4 text-center text-xl font-semibold tracking-[0.01em] text-white transition-colors hover:bg-gray-700"
+            >
+              {CALL_NUMBER}
+            </a>
           </div>
         ) : (
           <>
+            <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
             <p className="mb-6 mt-2 text-base">When would you like to come in?</p>
 
             <div className="mb-6">
@@ -237,8 +309,9 @@ function DateTimeContent() {
                   const isBeforeNotice = date < minBookableDate;
                   const slotsForDay = buildTimeSlotsForDate(date, openingHours);
                   const isClosed = slotsForDay.length === 0;
+                  const isFull = (bookingsByDate[toIsoDate(date)] ?? 0) >= Math.max(1, maxBookingsPerDay);
                   const selected = isSameDay(date, selectedDate);
-                  const isDisabled = isBeforeNotice || isClosed;
+                  const isDisabled = isBeforeNotice || isClosed || isFull;
 
                   const classes = selected
                     ? "h-14 w-full rounded-xl border border-white bg-white text-gray-900"
@@ -289,22 +362,24 @@ function DateTimeContent() {
         )}
       </div>
 
-      <div
-        className="sticky bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-gradient-to-t from-gray-800 via-gray-800 to-transparent pt-4"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
-      >
-        <button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className="w-full rounded-lg bg-orange-500 px-6 py-4 text-base font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-          type="button"
+      {bookingHoursEnabled && (
+        <div
+          className="sticky bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-gradient-to-t from-gray-800 via-gray-800 to-transparent pt-4"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
         >
-          Continue
-        </button>
-        <div className="mt-2 flex justify-end">
-          <PoweredByMotr />
+          <button
+            onClick={handleContinue}
+            disabled={!canContinue}
+            className="w-full rounded-lg bg-orange-500 px-6 py-4 text-base font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+          >
+            Continue
+          </button>
+          <div className="mt-2 flex justify-end">
+            <PoweredByMotr />
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }
