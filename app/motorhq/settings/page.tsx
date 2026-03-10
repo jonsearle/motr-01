@@ -16,6 +16,7 @@ const DAY_LABELS: Record<DayKey, string> = {
 };
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i);
+const DISPLAY_DOMAIN = "https://motr.one";
 
 function formatHourLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
@@ -28,6 +29,8 @@ export default function MotorHqSettingsPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
+  const [shortCode, setShortCode] = useState("4b600c");
+  const [bookingAlertPhone, setBookingAlertPhone] = useState("07968777469");
   const [bookingHoursEnabled, setBookingHoursEnabled] = useState(true);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(normalizeOpeningHours(null));
 
@@ -43,6 +46,8 @@ export default function MotorHqSettingsPage() {
         if (!mounted) return;
 
         setGarageName(settings.garage_name || "N1 Mobile Auto Repairs");
+        setShortCode(settings.short_code || "4b600c");
+        setBookingAlertPhone(settings.booking_alert_phone || "07968777469");
         setBookingHoursEnabled(settings.booking_hours_enabled);
         setOpeningHours(normalizeOpeningHours(settings.opening_hours));
       } catch {
@@ -93,6 +98,7 @@ export default function MotorHqSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           booking_hours_enabled: bookingHoursEnabled,
+          booking_alert_phone: bookingAlertPhone.trim(),
           opening_hours: openingHours,
         }),
       });
@@ -157,6 +163,37 @@ export default function MotorHqSettingsPage() {
         ) : (
           <div className="space-y-6">
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
+              <h2 className="text-sm font-semibold text-[#2A3341]">Google links</h2>
+              <p className="mt-1 text-xs text-[#6D7684]">Use these in Google Business Profile.</p>
+
+              <div className="mt-3 space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-[#5B6472]">Website link</p>
+                  <a
+                    href={`${DISPLAY_DOMAIN}/book?src=website`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 block break-all text-sm text-[#1E4FA8] underline"
+                  >
+                    {DISPLAY_DOMAIN}/book?src=website
+                  </a>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-[#5B6472]">Book online link</p>
+                  <a
+                    href={`${DISPLAY_DOMAIN}/b/${shortCode}?src=gmb_booking`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 block break-all text-sm text-[#1E4FA8] underline"
+                  >
+                    {`${DISPLAY_DOMAIN}/b/${shortCode}?src=gmb_booking`}
+                  </a>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <label className="block text-sm font-semibold text-[#2A3341]">Garage name</label>
               <input
                 value={garageName}
@@ -164,6 +201,17 @@ export default function MotorHqSettingsPage() {
                 className="mt-2 w-full rounded-lg border border-[#D5DCE7] px-3 py-2 text-sm"
                 placeholder="N1 Mobile Auto Repairs"
               />
+            </section>
+
+            <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
+              <label className="block text-sm font-semibold text-[#2A3341]">Booking alert phone</label>
+              <input
+                value={bookingAlertPhone}
+                onChange={(event) => setBookingAlertPhone(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-[#D5DCE7] px-3 py-2 text-sm"
+                placeholder="07968777469"
+              />
+              <p className="mt-2 text-xs text-[#6D7684]">Number that receives new booking alert texts.</p>
             </section>
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">

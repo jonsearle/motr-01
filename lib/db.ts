@@ -10,6 +10,7 @@ import type {
 } from "@/types/db";
 
 const DEFAULT_GARAGE_NAME = "N1 Mobile Auto Repairs";
+const DEFAULT_BOOKING_ALERT_PHONE = "07968777469";
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -50,6 +51,10 @@ function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
     cta_phone_enabled: toBoolean(raw.cta_phone_enabled, true),
     whatsapp_number: typeof raw.whatsapp_number === "string" ? raw.whatsapp_number : "",
     garage_phone: typeof raw.garage_phone === "string" ? raw.garage_phone : "",
+    booking_alert_phone:
+      typeof raw.booking_alert_phone === "string" && raw.booking_alert_phone.trim()
+        ? raw.booking_alert_phone
+        : DEFAULT_BOOKING_ALERT_PHONE,
     min_booking_notice_days:
       typeof raw.min_booking_notice_days === "number" && Number.isInteger(raw.min_booking_notice_days)
         ? Math.max(1, raw.min_booking_notice_days)
@@ -95,6 +100,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
       cta_phone_enabled: true,
       whatsapp_number: "",
       garage_phone: "",
+      booking_alert_phone: DEFAULT_BOOKING_ALERT_PHONE,
       booking_hours_enabled: true,
       opening_hours: DEFAULT_OPENING_HOURS,
     })
@@ -185,6 +191,9 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
   }
   if (typeof input.garage_phone === "string") {
     updatePayload.garage_phone = normalizePhoneInput(input.garage_phone);
+  }
+  if (typeof input.booking_alert_phone === "string") {
+    updatePayload.booking_alert_phone = normalizePhoneInput(input.booking_alert_phone);
   }
   if (typeof input.min_booking_notice_days === "number") {
     updatePayload.min_booking_notice_days = Math.floor(input.min_booking_notice_days);

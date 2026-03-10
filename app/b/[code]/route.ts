@@ -22,8 +22,15 @@ export async function GET(
       console.error("Failed to log booking_click", trackingError);
     }
 
-    const target = `${request.nextUrl.origin.replace(/\/$/, "")}/book`;
-    return NextResponse.redirect(target, { status: 302 });
+    const target = new URL("/book", request.nextUrl.origin);
+    request.nextUrl.searchParams.forEach((value, key) => {
+      target.searchParams.set(key, value);
+    });
+    if (!target.searchParams.get("src")) {
+      target.searchParams.set("src", "gmb_booking");
+    }
+
+    return NextResponse.redirect(target.toString(), { status: 302 });
   } catch (error) {
     console.error("Booking redirect failed", error);
     return NextResponse.json({ error: "Redirect failed" }, { status: 500 });

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOrCreateGarageSettings, logTrackingEvent } from "@/lib/db";
 import type { TrackingEventType } from "@/types/db";
 
-const PAGE_VIEW_EVENTS = new Set<TrackingEventType>([
+const TRACKABLE_EVENTS = new Set<TrackingEventType>([
+  "entry_website",
+  "entry_gmb_booking",
   "page_view_book",
   "page_view_date_time",
   "page_view_mobile",
@@ -16,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as { event_type?: TrackingEventType };
 
-    if (!body.event_type || !PAGE_VIEW_EVENTS.has(body.event_type)) {
+    if (!body.event_type || !TRACKABLE_EVENTS.has(body.event_type)) {
       return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
     }
 

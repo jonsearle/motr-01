@@ -38,6 +38,9 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.garage_phone === "string") {
       updateInput.garage_phone = normalizePhoneInput(body.garage_phone);
     }
+    if (typeof body.booking_alert_phone === "string") {
+      updateInput.booking_alert_phone = normalizePhoneInput(body.booking_alert_phone);
+    }
     if (typeof body.min_booking_notice_days === "number") {
       updateInput.min_booking_notice_days = body.min_booking_notice_days;
     }

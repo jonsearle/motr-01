@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 const METRIC_LABELS: Array<{ key: string; label: string }> = [
+  { key: "entry_website", label: "Entry visits: Website link" },
+  { key: "entry_gmb_booking", label: "Entry visits: Book online button" },
   { key: "booking_click", label: "Booking link clicks" },
   { key: "booking_completed", label: "Bookings completed" },
   { key: "page_view_book", label: "Visits: /book" },

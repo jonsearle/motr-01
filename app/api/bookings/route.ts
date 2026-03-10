@@ -150,7 +150,7 @@ Or call us on:
 ${callNumber}`;
     const ownerAlertMessage = `Hello, you've just got an online booking.
 Check your app for more details.`;
-    const ownerAlertPhone = getOwnerAlertPhone();
+    const ownerAlertPhone = normalizePhoneInput(settings.booking_alert_phone) || getOwnerAlertPhone();
 
     try {
       await sendSms(booking.phone, message);

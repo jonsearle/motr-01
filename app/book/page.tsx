@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CallUsCta } from "@/components/call-us-cta";
+import { useTrackBookingEntry } from "@/lib/use-track-booking-entry";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 import { useGarageName } from "@/lib/use-garage-name";
 const SERVICE_OPTIONS = [
@@ -25,6 +26,7 @@ const SERVICE_OPTIONS = [
 
 export default function BookPage() {
   const garageName = useGarageName();
+  useTrackBookingEntry();
   useTrackPageView("page_view_book");
 
   return (
