@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { useGarageName } from "@/lib/use-garage-name";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
 function NotSureDetailsContent() {
+  useTrackPageView("page_view_not_sure_details");
   const router = useRouter();
   const searchParams = useSearchParams();
   const garageName = useGarageName();

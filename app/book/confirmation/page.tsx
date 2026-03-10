@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useGarageName } from "@/lib/use-garage-name";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
 function ConfirmationContent() {
+  useTrackPageView("page_view_confirmation");
   const searchParams = useSearchParams();
   const garageName = useGarageName();
 

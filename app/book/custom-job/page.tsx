@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { CallUsCta } from "@/components/call-us-cta";
 import { useGarageName } from "@/lib/use-garage-name";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
 export default function CustomJobPage() {
+  useTrackPageView("page_view_custom_job");
   const router = useRouter();
   const garageName = useGarageName();
   const [description, setDescription] = useState("");
@@ -24,18 +27,21 @@ export default function CustomJobPage() {
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
-        <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
-            <path
-              d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="text-base font-bold">{garageName}</span>
-        </Link>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <Link href="/book" className="inline-flex items-center gap-2 opacity-90">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
+              <path
+                d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="text-base font-bold">{garageName}</span>
+          </Link>
+          <CallUsCta />
+        </div>
 
         <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
         <p className="mb-6 mt-2 text-base">Describe the issue.</p>

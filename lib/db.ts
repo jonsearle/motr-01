@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { assertValidOpeningHours, DEFAULT_OPENING_HOURS, normalizeOpeningHours } from "@/lib/booking-hours";
 import { normalizePhoneInput, normalizeWhatsappNumber } from "@/lib/missed-call";
 import type {
   Booking,
@@ -7,6 +8,8 @@ import type {
   TrackingEventType,
   UpdateGarageSettingsInput,
 } from "@/types/db";
+
+const DEFAULT_GARAGE_NAME = "N1 Mobile Auto Repairs";
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,11 +40,14 @@ function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
   return {
     id: String(raw.id ?? ""),
     auto_sms_enabled: toBoolean(raw.auto_sms_enabled, false),
-    garage_name: "Jon's Garage",
+    garage_name:
+      typeof raw.garage_name === "string" && raw.garage_name.trim() && raw.garage_name.trim() !== "Jon's Garage"
+        ? raw.garage_name.trim()
+        : DEFAULT_GARAGE_NAME,
     short_code: typeof raw.short_code === "string" && raw.short_code.trim() ? raw.short_code : generateShortCode(),
     cta_booking_enabled: toBoolean(raw.cta_booking_enabled, true),
     cta_whatsapp_enabled: toBoolean(raw.cta_whatsapp_enabled, true),
-    cta_phone_enabled: true,
+    cta_phone_enabled: toBoolean(raw.cta_phone_enabled, true),
     whatsapp_number: typeof raw.whatsapp_number === "string" ? raw.whatsapp_number : "",
     garage_phone: typeof raw.garage_phone === "string" ? raw.garage_phone : "",
     min_booking_notice_days:
@@ -52,6 +58,8 @@ function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
       typeof raw.max_bookings_per_day === "number" && Number.isInteger(raw.max_bookings_per_day)
         ? Math.max(1, raw.max_bookings_per_day)
         : 3,
+    booking_hours_enabled: toBoolean(raw.booking_hours_enabled, true),
+    opening_hours: normalizeOpeningHours(raw.opening_hours),
   };
 }
 
@@ -80,13 +88,15 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
     .from("garage_settings")
     .insert({
       auto_sms_enabled: false,
-      garage_name: "Jon's Garage",
+      garage_name: DEFAULT_GARAGE_NAME,
       short_code: generateShortCode(),
       cta_booking_enabled: true,
       cta_whatsapp_enabled: true,
       cta_phone_enabled: true,
       whatsapp_number: "",
       garage_phone: "",
+      booking_hours_enabled: true,
+      opening_hours: DEFAULT_OPENING_HOURS,
     })
     .select("*")
     .single();
@@ -126,7 +136,12 @@ function isCtaOrContactUpdate(input: UpdateGarageSettingsInput): boolean {
 }
 
 function isBookingRulesUpdate(input: UpdateGarageSettingsInput): boolean {
-  return typeof input.min_booking_notice_days === "number" || typeof input.max_bookings_per_day === "number";
+  return (
+    typeof input.min_booking_notice_days === "number" ||
+    typeof input.max_bookings_per_day === "number" ||
+    typeof input.booking_hours_enabled === "boolean" ||
+    typeof input.opening_hours === "object"
+  );
 }
 
 function assertValidCtaConfig(next: GarageSettings): void {
@@ -148,6 +163,10 @@ function assertValidBookingRules(next: GarageSettings): void {
   if (!Number.isInteger(next.max_bookings_per_day) || next.max_bookings_per_day < 1) {
     throw new Error("Daily booking limit must be at least 1.");
   }
+
+  if (next.booking_hours_enabled) {
+    assertValidOpeningHours(next.opening_hours);
+  }
 }
 
 export async function updateGarageSettings(input: UpdateGarageSettingsInput): Promise<GarageSettings> {
@@ -156,6 +175,9 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
 
   const updatePayload: Record<string, unknown> = {};
   if (typeof input.auto_sms_enabled === "boolean") updatePayload.auto_sms_enabled = input.auto_sms_enabled;
+  if (typeof input.garage_name === "string" && input.garage_name.trim()) {
+    updatePayload.garage_name = input.garage_name.trim();
+  }
   if (typeof input.cta_booking_enabled === "boolean") updatePayload.cta_booking_enabled = input.cta_booking_enabled;
   if (typeof input.cta_whatsapp_enabled === "boolean") updatePayload.cta_whatsapp_enabled = input.cta_whatsapp_enabled;
   if (typeof input.whatsapp_number === "string") {
@@ -170,7 +192,12 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
   if (typeof input.max_bookings_per_day === "number") {
     updatePayload.max_bookings_per_day = Math.floor(input.max_bookings_per_day);
   }
-  updatePayload.garage_name = "Jon's Garage";
+  if (typeof input.booking_hours_enabled === "boolean") {
+    updatePayload.booking_hours_enabled = input.booking_hours_enabled;
+  }
+  if (typeof input.opening_hours === "object") {
+    updatePayload.opening_hours = normalizeOpeningHours(input.opening_hours);
+  }
   updatePayload.cta_phone_enabled = true;
 
   const nextState: GarageSettings = {
@@ -272,6 +299,35 @@ export async function listBookings(): Promise<Booking[]> {
   return data ?? [];
 }
 
+export async function listBookingsByView(view: "future" | "past" | "all"): Promise<Booking[]> {
+  const supabase = getSupabaseClient();
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const todayIso = `${yyyy}-${mm}-${dd}`;
+
+  let query = supabase
+    .from("bookings")
+    .select("id, name, phone, service_type, description, date, time, created_at")
+    .order("date", { ascending: true })
+    .order("time", { ascending: true });
+
+  if (view === "future") {
+    query = query.gte("date", todayIso);
+  } else if (view === "past") {
+    query = query.lt("date", todayIso);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
 export async function getBookingById(id: string): Promise<Booking | null> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -308,4 +364,32 @@ export async function countBookingsOnDate(date: string): Promise<number> {
   }
 
   return count ?? 0;
+}
+
+export async function countAllBookings(): Promise<number> {
+  const supabase = getSupabaseClient();
+  const { count, error } = await supabase.from("bookings").select("id", { count: "exact", head: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return count ?? 0;
+}
+
+export async function listTrackingEventCounts(): Promise<Record<string, number>> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.from("tracking_events").select("event_type");
+
+  if (error) {
+    throw error;
+  }
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const key = typeof row.event_type === "string" ? row.event_type : "unknown";
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  return counts;
 }

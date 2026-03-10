@@ -95,14 +95,13 @@ export default function BookingRulesPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          auto_sms_enabled: true,
           min_booking_notice_days: minBookingNoticeDays,
           max_bookings_per_day: maxBookingsPerDay,
         }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "save_failed");
-      router.push("/account?saved=rules");
+      router.push("/?saved=rules");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Couldn’t save rules.");
       setSaving(false);
@@ -113,10 +112,9 @@ export default function BookingRulesPage() {
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-40 pt-6">
         <header className="mb-6 flex items-center justify-between">
-          <span className="w-10" />
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Edit booking rules</h1>
           <Link
-            href="/account"
+            href="/"
             aria-label="Close"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#657083] transition-colors hover:text-[#3E4654]"
           >

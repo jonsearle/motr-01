@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useMemo, useState } from "react";
+import { CallUsCta } from "@/components/call-us-cta";
 import { useGarageName } from "@/lib/use-garage-name";
+import { isLikelyValidPhone } from "@/lib/missed-call";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
 function MobileFormContent() {
+  useTrackPageView("page_view_mobile");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -17,17 +21,21 @@ function MobileFormContent() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [website, setWebsite] = useState("");
   const [vehicleReg, setVehicleReg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const garageName = useGarageName();
+  const phoneIsValid = isLikelyValidPhone(phone);
 
   const canSubmit = useMemo(() => {
-    return !!date && !!time && name.trim().length > 0 && phone.trim().length > 0;
-  }, [date, time, name, phone]);
+    return !!date && !!time && name.trim().length > 0 && phoneIsValid;
+  }, [date, time, name, phoneIsValid]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setPhoneTouched(true);
     if (!canSubmit) return;
 
     setSubmitting(true);
@@ -49,6 +57,7 @@ function MobileFormContent() {
           description: mergedDescription || undefined,
           date,
           time,
+          website,
         }),
       });
 
@@ -81,18 +90,21 @@ function MobileFormContent() {
   return (
     <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">
       <div className="mx-auto w-full max-w-md">
-        <Link href="/book" className="mb-6 inline-flex items-center gap-2 opacity-90">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
-            <path
-              d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="text-base font-bold">{garageName}</span>
-        </Link>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <Link href="/book" className="inline-flex items-center gap-2 opacity-90">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
+              <path
+                d="M5 11L6.5 6.5H17.5L19 11M5 11H3V18H5V11ZM19 11H21V18H19V11ZM5 11V18H19V11M7.5 14H9.5M14.5 14H16.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="text-base font-bold">{garageName}</span>
+          </Link>
+          <CallUsCta />
+        </div>
 
         <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Book an appointment</h1>
         <p className="mb-6 mt-2 text-base">Enter your details</p>
@@ -113,13 +125,25 @@ function MobileFormContent() {
           <input
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
+            onBlur={() => setPhoneTouched(true)}
             placeholder="Enter phone number"
             required
-            type="text"
-            inputMode="numeric"
-            autoComplete="tel-national"
-            pattern="[0-9]*"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             className="h-12 w-full rounded-lg border border-white bg-transparent px-4 text-base text-white placeholder:text-gray-400"
+          />
+          {phoneTouched && phone.trim().length > 0 && !phoneIsValid && (
+            <p className="text-xs text-red-300">Enter a valid UK phone number (e.g. 07700 900123).</p>
+          )}
+
+          <input
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="hidden"
           />
 
           <input

@@ -3,10 +3,19 @@ import { getOrCreateGarageSettings, updateGarageSettings } from "@/lib/db";
 import { normalizePhoneInput } from "@/lib/missed-call";
 import type { UpdateGarageSettingsInput } from "@/types/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const settings = await getOrCreateGarageSettings();
-    return NextResponse.json(settings);
+    return NextResponse.json(settings, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
     console.error("Failed to load garage settings", error);
     return NextResponse.json({ error: "Failed to load settings" }, { status: 500 });
@@ -35,6 +44,12 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.max_bookings_per_day === "number") {
       updateInput.max_bookings_per_day = body.max_bookings_per_day;
     }
+    if (typeof body.booking_hours_enabled === "boolean") {
+      updateInput.booking_hours_enabled = body.booking_hours_enabled;
+    }
+    if (body.opening_hours && typeof body.opening_hours === "object") {
+      updateInput.opening_hours = body.opening_hours as UpdateGarageSettingsInput["opening_hours"];
+    }
 
     if (Object.keys(updateInput).length === 0) {
       return NextResponse.json({ error: "No valid settings fields provided" }, { status: 400 });
@@ -44,6 +59,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Failed to update garage settings", error);

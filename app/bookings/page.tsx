@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Booking } from "@/types/db";
 
 type BookingTab = "future" | "past" | "all";
@@ -68,20 +68,22 @@ function parseBookingDetails(description: string | null): BookingDetails {
   };
 }
 
-function SmartReplyIcon() {
+function OnlineBookingIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 12 12" fill="none" aria-hidden>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M1 .5h10c.28 0 .5.22.5.5v7c0 .28-.22.5-.5.5H6l-2.65 2.65a.5.5 0 01-.85-.35V8.5H1C.72 8.5.5 8.28.5 8V1C.5.72.72.5 1 .5z"
-        fill="none"
+        d="M10 14a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 14"
         stroke="currentColor"
-        strokeWidth="1"
+        strokeWidth="1.9"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M7.87 4H6.83l1.03-1.8c.04-.11-.01-.2-.11-.2H5.72c-.1 0-.23.09-.28.2l-.96 2.58c-.05.11 0 .22.11.22h.91L4.48 7.57c-.08.2-.02.37.23.15l3.17-3.45c.17-.16.16-.27-.01-.27z"
-        fill="currentColor"
+        d="M14 10a5 5 0 0 1 0 7L12.5 18.5a5 5 0 1 1-7-7L7 10"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -186,21 +188,7 @@ function NoteIcon() {
   );
 }
 
-function AccountIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function BottomNav({ active }: { active: "smart" | "bookings" }) {
+function BottomNav({ active }: { active: "online" | "bookings" }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}>
       <div className="mx-auto w-full max-w-md bg-[#FBFCFE] p-1">
@@ -208,11 +196,11 @@ function BottomNav({ active }: { active: "smart" | "bookings" }) {
           <Link
             href="/"
             className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
-              active === "smart" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
+              active === "online" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
             }`}
           >
-            <SmartReplyIcon />
-            <span>Smart Reply</span>
+            <OnlineBookingIcon />
+            <span>Website</span>
           </Link>
           <Link
             href="/bookings"
@@ -239,6 +227,7 @@ export default function BookingsPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     let mounted = true;
 
     async function load() {
@@ -246,7 +235,7 @@ export default function BookingsPage() {
       setError(null);
 
       try {
-        const response = await fetch("/api/bookings", { cache: "no-store" });
+        const response = await fetch(`/api/bookings?view=${activeTab}`, { cache: "no-store", signal: controller.signal });
         if (!response.ok) throw new Error("load_failed");
 
         const data: Booking[] = await response.json();
@@ -264,22 +253,9 @@ export default function BookingsPage() {
 
     return () => {
       mounted = false;
+      controller.abort();
     };
-  }, []);
-
-  const filteredBookings = useMemo(() => {
-    const today = todayIso();
-
-    if (activeTab === "future") {
-      return bookings.filter((booking) => booking.date >= today);
-    }
-
-    if (activeTab === "past") {
-      return bookings.filter((booking) => booking.date < today);
-    }
-
-    return bookings;
-  }, [bookings, activeTab]);
+  }, [activeTab]);
   const selectedDetails = selected ? parseBookingDetails(selected.description) : null;
 
   async function onDeleteBooking() {
@@ -306,15 +282,8 @@ export default function BookingsPage() {
     <main className="min-h-screen bg-[#FBFCFE] text-[#1F252E]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <div className="sticky top-0 z-10 -mx-6 bg-[#FBFCFE] px-6 pb-3 pt-1">
-          <header className="mb-4 flex items-center justify-between">
+          <header className="mb-4">
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
-            <Link
-              href="/account?from=bookings"
-              aria-label="Account"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#EEF1F5] bg-[#F8FAFC] text-[#A1A8B3]"
-            >
-              <AccountIcon />
-            </Link>
           </header>
 
           <div className="grid grid-cols-3 gap-2">
@@ -326,7 +295,11 @@ export default function BookingsPage() {
               <button
                 key={key}
                 type="button"
-                onClick={() => setActiveTab(key)}
+                onClick={() => {
+                  setActiveTab(key);
+                  setSelected(null);
+                  setConfirmDelete(false);
+                }}
                 className={`h-10 rounded-xl text-sm font-medium transition-colors ${
                   activeTab === key
                     ? "bg-transparent text-[#1F252E] ring-1 ring-[#DCE1E8]"
@@ -349,11 +322,11 @@ export default function BookingsPage() {
             <div className="h-20 animate-pulse rounded-2xl bg-white" />
             <div className="h-20 animate-pulse rounded-2xl bg-white" />
           </div>
-        ) : filteredBookings.length === 0 ? (
+        ) : bookings.length === 0 ? (
           <p className="py-6 text-sm text-[#737A85]">No bookings in this view.</p>
         ) : (
           <div className="divide-y divide-[#ECEFF4]">
-            {filteredBookings.map((booking) => {
+            {bookings.map((booking) => {
               const details = parseBookingDetails(booking.description);
 
               return (

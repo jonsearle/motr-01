@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useGarageName } from "@/lib/use-garage-name";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
 const PROBLEMS = [
   "Car won't start",
@@ -14,6 +15,7 @@ const PROBLEMS = [
 ];
 
 export default function NotSurePage() {
+  useTrackPageView("page_view_not_sure");
   const garageName = useGarageName();
 
   return (

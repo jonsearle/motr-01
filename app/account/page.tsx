@@ -146,7 +146,6 @@ export default function AccountPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           auto_sms_enabled: true,
-          garage_name: "Jon's Garage",
           cta_booking_enabled: form.cta_booking_enabled,
           cta_whatsapp_enabled: form.cta_whatsapp_enabled,
           cta_phone_enabled: true,

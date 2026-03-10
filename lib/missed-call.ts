@@ -17,6 +17,27 @@ export function normalizeWhatsappNumber(input: string): string {
   return normalizePhoneInput(input).replace(/\D/g, "");
 }
 
+export function isLikelyValidPhone(input: string): boolean {
+  const raw = input.trim();
+  if (!raw) return false;
+
+  // Local format only for now. International prefix (+44 / 0044) is treated as invalid.
+  if (raw.includes("+") || raw.startsWith("00")) return false;
+
+  // Allow common separators while typing.
+  if (!/^[\d\s()-]+$/.test(raw)) return false;
+
+  const digits = normalizePhoneInput(raw).replace(/\D/g, "");
+
+  // UK local numbers are typically 11 digits and start with 0.
+  if (!/^0\d{10}$/.test(digits)) return false;
+
+  // Reject obvious junk like all zeros.
+  if (/^0+$/.test(digits)) return false;
+
+  return true;
+}
+
 export function buildShortLinks(shortCode: string): { booking: string; whatsapp: string } {
   const normalizedCode = shortCode.trim().toLowerCase();
   return {

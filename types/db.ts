@@ -1,3 +1,5 @@
+import type { OpeningHours } from "@/lib/booking-hours";
+
 export interface GarageSettings {
   id: string;
   auto_sms_enabled: boolean;
@@ -10,6 +12,8 @@ export interface GarageSettings {
   garage_phone: string;
   min_booking_notice_days: number;
   max_bookings_per_day: number;
+  booking_hours_enabled: boolean;
+  opening_hours: OpeningHours;
 }
 
 export interface UpdateGarageSettingsInput {
@@ -22,6 +26,8 @@ export interface UpdateGarageSettingsInput {
   garage_phone?: string;
   min_booking_notice_days?: number;
   max_bookings_per_day?: number;
+  booking_hours_enabled?: boolean;
+  opening_hours?: OpeningHours;
 }
 
 export type TrackingEventType =
@@ -29,7 +35,14 @@ export type TrackingEventType =
   | "sms_sent"
   | "booking_click"
   | "booking_completed"
-  | "whatsapp_click";
+  | "whatsapp_click"
+  | "page_view_book"
+  | "page_view_date_time"
+  | "page_view_mobile"
+  | "page_view_confirmation"
+  | "page_view_custom_job"
+  | "page_view_not_sure"
+  | "page_view_not_sure_details";
 
 export interface Booking {
   id: string;

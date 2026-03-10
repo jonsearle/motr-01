@@ -35,20 +35,22 @@ function EditIcon() {
   );
 }
 
-function SmartReplyIcon({ size = 20 }: { size?: number }) {
+function OnlineBookingIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="none" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M1 .5h10c.28 0 .5.22.5.5v7c0 .28-.22.5-.5.5H6l-2.65 2.65a.5.5 0 01-.85-.35V8.5H1C.72 8.5.5 8.28.5 8V1C.5.72.72.5 1 .5z"
-        fill="none"
+        d="M10 14a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 14"
         stroke="currentColor"
-        strokeWidth="1"
+        strokeWidth="1.9"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M7.87 4H6.83l1.03-1.8c.04-.11-.01-.2-.11-.2H5.72c-.1 0-.23.09-.28.2l-.96 2.58c-.05.11 0 .22.11.22h.91L4.48 7.57c-.08.2-.02.37.23.15l3.17-3.45c.17-.16.16-.27-.01-.27z"
-        fill="currentColor"
+        d="M14 10a5 5 0 0 1 0 7L12.5 18.5a5 5 0 1 1-7-7L7 10"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -68,7 +70,7 @@ function CalendarIcon() {
   );
 }
 
-function BottomNav({ active }: { active: "smart" | "bookings" }) {
+function BottomNav({ active }: { active: "online" | "bookings" }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}>
       <div className="mx-auto w-full max-w-md bg-[#FBFCFE] px-1 py-2">
@@ -76,11 +78,11 @@ function BottomNav({ active }: { active: "smart" | "bookings" }) {
           <Link
             href="/"
             className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
-              active === "smart" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
+              active === "online" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
             }`}
           >
-            <SmartReplyIcon />
-            <span>Smart Reply</span>
+            <OnlineBookingIcon />
+            <span>Website</span>
           </Link>
           <Link
             href="/bookings"
@@ -151,7 +153,7 @@ export default function Home() {
     }
   }, []);
 
-  const enabled = !!settings?.auto_sms_enabled;
+  const enabled = !!settings?.booking_hours_enabled;
 
   const heroCircleClasses = useMemo(() => {
     const base = "mx-auto flex aspect-square w-full max-w-[336px] items-center justify-center rounded-full text-center transition-all duration-200";
@@ -174,14 +176,14 @@ export default function Home() {
     setMicroPress(true);
     window.setTimeout(() => setMicroPress(false), 180);
 
-    setSettings({ ...settings, auto_sms_enabled: next });
+    setSettings({ ...settings, booking_hours_enabled: next });
     setSaving(true);
 
     try {
       const response = await fetch("/api/garage-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auto_sms_enabled: next }),
+        body: JSON.stringify({ booking_hours_enabled: next }),
       });
 
       if (!response.ok) throw new Error("save_failed");
@@ -189,7 +191,7 @@ export default function Home() {
       const updated: GarageSettings = await response.json();
       setSettings(updated);
     } catch {
-      setSettings({ ...settings, auto_sms_enabled: !next });
+      setSettings({ ...settings, booking_hours_enabled: !next });
       setToast("Couldn’t update. Try again.");
     } finally {
       setSaving(false);
@@ -199,13 +201,13 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
-        <header className="mb-6 flex items-center justify-end">
+        <header className="mb-6 flex items-center justify-end gap-4">
           <Link
-            href="/account?from=smart"
-            aria-label="Edit Reply"
+            href="/account/booking-rules"
+            aria-label="Edit booking rules"
             className="inline-flex items-center gap-1.5 text-[15px] font-medium text-[#6E7785] transition-colors hover:text-[#404854]"
           >
-            <span>Edit Reply</span>
+            <span>Edit booking rules</span>
             <EditIcon />
           </Link>
         </header>
@@ -225,27 +227,24 @@ export default function Home() {
                 ) : (
                   <>
                     <div className={`mx-auto mb-4 flex items-center justify-center ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                      <SmartReplyIcon size={30} />
+                      <OnlineBookingIcon size={30} />
                     </div>
                     <p className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                      <span className="block">Smart Reply</span>
-                      <span className="block">{enabled ? "Active" : "Paused"}</span>
+                      <span className="block">Online Bookings</span>
+                      <span className="block">{enabled ? "ON" : "OFF"}</span>
                     </p>
                     <p className={`mx-auto mt-2 h-[38px] max-w-[220px] text-[14px] leading-[1.3] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
                       {enabled ? (
                         <>
-                          <span className="block">Customers will receive a smart</span>
-                          <span className="block">reply text automatically.</span>
+                          <span className="block">Customers can book online</span>
+                          <span className="block">right now.</span>
                         </>
                       ) : (
                         <>
-                          <span className="block">Missed callers will not</span>
-                          <span className="block">receive a text.</span>
+                          <span className="block">Online booking is currently</span>
+                          <span className="block">paused.</span>
                         </>
                       )}
-                    </p>
-                    <p className={`mt-4 text-[30px] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                      {saving ? "..." : enabled ? "ON" : "OFF"}
                     </p>
                   </>
                 )}
@@ -255,7 +254,7 @@ export default function Home() {
         </div>
       </div>
 
-      <BottomNav active="smart" />
+      <BottomNav active="online" />
 
       {toast && (
         <div className="fixed left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-[#1E222B] px-4 py-2 text-xs font-medium text-white shadow-lg">
