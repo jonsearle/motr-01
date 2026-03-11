@@ -318,6 +318,27 @@ export default function BookingsPage() {
     return first || "there";
   }
 
+  function getEmptyStateCopy(view: BookingTab): { title: string; description: string } {
+    if (view === "future") {
+      return {
+        title: "No upcoming bookings currently",
+        description: "New online bookings will appear here.",
+      };
+    }
+
+    if (view === "past") {
+      return {
+        title: "No past bookings",
+        description: "Completed bookings will appear here.",
+      };
+    }
+
+    return {
+      title: "You don’t have any bookings yet",
+      description: "Your upcoming and past bookings will appear here.",
+    };
+  }
+
   async function onDeleteBooking() {
     if (!selected) return;
 
@@ -429,7 +450,10 @@ export default function BookingsPage() {
             <div className="h-20 animate-pulse rounded-2xl bg-white" />
           </div>
         ) : bookings.length === 0 ? (
-          <p className="py-6 text-sm text-[#737A85]">No bookings in this view.</p>
+          <div className="rounded-2xl border border-[#E4E8EF] bg-white px-4 py-6 text-center">
+            <p className="text-sm font-semibold text-[#2A3341]">{getEmptyStateCopy(activeTab).title}</p>
+            <p className="mt-1 text-xs text-[#6D7684]">{getEmptyStateCopy(activeTab).description}</p>
+          </div>
         ) : (
           <div className="divide-y divide-[#ECEFF4]">
             {bookings.map((booking) => {
