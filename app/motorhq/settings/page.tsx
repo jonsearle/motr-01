@@ -198,6 +198,18 @@ export default function MotorHqSettingsPage() {
                   <p className="text-xs font-medium text-[#5B6472]">Short review link (for SMS)</p>
                   <p className="mt-1 break-all text-sm text-[#2A3341]">{`${DISPLAY_DOMAIN}/r/${shortCode}`}</p>
                 </div>
+
+                <div>
+                  <p className="text-xs font-medium text-[#5B6472]">Review flow test link</p>
+                  <a
+                    href={`${DISPLAY_DOMAIN}/review/${shortCode}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex rounded-lg border border-[#D5DCE7] bg-white px-3 py-1.5 text-sm font-medium text-[#1F252E] hover:bg-[#F5F7FA]"
+                  >
+                    Test review flow
+                  </a>
+                </div>
               </div>
             </section>
 
