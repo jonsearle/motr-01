@@ -114,7 +114,7 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
                     setRating(value);
                     setError(null);
                   }}
-                  className={`rounded-lg p-2 ${rating === value ? "text-[#F59E0B]" : "text-[#A8AFBB]"}`}
+                  className={`rounded-lg p-2 ${rating !== null && value <= rating ? "text-[#F59E0B]" : "text-[#A8AFBB]"}`}
                   aria-label={`${value} star${value > 1 ? "s" : ""}`}
                 >
                   <Star filled={Boolean(rating && value <= rating)} />
@@ -124,7 +124,9 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
 
             {rating !== null && rating >= 4 && (
               <div className="mt-8 space-y-3">
-                <p className="text-sm text-[#303745]">Great to hear. If you have a moment, please leave a Google review.</p>
+                <p className="text-sm text-[#303745]">
+                  Great to hear. If you have a moment, please leave us a Google review. It really helps other local drivers choose us.
+                </p>
                 <a
                   href={canGoToGoogle ? reviewInfo?.google_review_url : "#"}
                   target="_blank"
@@ -163,14 +165,6 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
                   </>
                 )}
 
-                <a
-                  href={canGoToGoogle ? reviewInfo?.google_review_url : "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-center text-sm font-medium text-[#1E4FA8] underline"
-                >
-                  Leave a Google review instead
-                </a>
               </div>
             )}
 
