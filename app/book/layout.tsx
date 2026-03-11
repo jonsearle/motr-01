@@ -60,6 +60,12 @@ export default function BookLayout({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = garageName;
+    }
+  }, [garageName]);
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-800 px-6 pb-24 pt-8 text-white">

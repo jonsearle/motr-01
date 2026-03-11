@@ -96,6 +96,7 @@ function DateTimeContent() {
   const [visibleWeekStart, setVisibleWeekStart] = useState(getStartOfWeek(firstAvailableDate));
   const [selectedDate, setSelectedDate] = useState<Date>(firstAvailableDate);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [navigating, setNavigating] = useState(false);
 
   const garageName = useGarageName();
 
@@ -112,7 +113,7 @@ function DateTimeContent() {
   }, [selectedDate, openingHours, bookingsByDate, maxBookingsPerDay]);
 
   const canNavigatePrevWeek = addDays(visibleWeekStart, -7) >= firstAvailableWeekStart;
-  const canContinue = bookingHoursEnabled && !!selectedDate && !!selectedSlot;
+  const canContinue = bookingHoursEnabled && !!selectedDate && !!selectedSlot && !navigating;
 
   useEffect(() => {
     let mounted = true;
@@ -206,7 +207,8 @@ function DateTimeContent() {
   }
 
   function handleContinue() {
-    if (!selectedSlot || !bookingHoursEnabled) return;
+    if (!selectedSlot || !bookingHoursEnabled || navigating) return;
+    setNavigating(true);
 
     const params = new URLSearchParams({
       service_type: serviceType,
@@ -373,7 +375,7 @@ function DateTimeContent() {
             className="w-full rounded-lg bg-orange-500 px-6 py-4 text-base font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             type="button"
           >
-            Continue
+            {navigating ? "Loading..." : "Continue"}
           </button>
           <div className="mt-2 flex justify-end">
             <PoweredByMotr />

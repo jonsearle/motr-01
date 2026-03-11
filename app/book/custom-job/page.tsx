@@ -12,11 +12,13 @@ export default function CustomJobPage() {
   const router = useRouter();
   const garageName = useGarageName();
   const [description, setDescription] = useState("");
+  const [navigating, setNavigating] = useState(false);
 
   const canContinue = useMemo(() => description.trim().length > 0, [description]);
 
   function handleContinue() {
-    if (!canContinue) return;
+    if (!canContinue || navigating) return;
+    setNavigating(true);
     const params = new URLSearchParams({
       service_type: "Custom Job",
       description: description.trim(),
@@ -57,10 +59,10 @@ export default function CustomJobPage() {
         <button
           type="button"
           onClick={handleContinue}
-          disabled={!canContinue}
+          disabled={!canContinue || navigating}
           className="mt-6 w-full rounded-lg bg-orange-500 px-6 py-4 text-base font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Continue
+          {navigating ? "Loading..." : "Continue"}
         </button>
       </div>
     </main>
