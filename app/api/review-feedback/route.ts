@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createReviewFeedback, getBookingById, getGarageSettingsByShortCode, getOrCreateGarageSettings, listReviewFeedback } from "@/lib/db";
+import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,12 @@ function parseBookingDetails(description: string | null): ParsedBookingDetails {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
+  if (authCookie !== getMotorHqSessionToken()) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const settings = await getOrCreateGarageSettings();
     const feedback = await listReviewFeedback(settings.id);

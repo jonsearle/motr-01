@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildTimeSlotsForDate, normalizeOpeningHours } from "@/lib/booking-hours";
 import { countBookingsOnDate, createBooking, getOrCreateGarageSettings, listBookingsByView, logTrackingEvent } from "@/lib/db";
+import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
 import { buildShortLinks, isLikelyValidPhone, normalizePhoneInput } from "@/lib/missed-call";
 import { sendSms } from "@/lib/sms";
 
@@ -60,6 +61,11 @@ function getOwnerAlertPhone(): string {
 }
 
 export async function GET(request: NextRequest) {
+  const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
+  if (authCookie !== getMotorHqSessionToken()) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const viewParam = request.nextUrl.searchParams.get("view");
     const view = viewParam === "past" || viewParam === "all" ? viewParam : "future";
