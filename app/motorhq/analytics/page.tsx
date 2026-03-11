@@ -45,19 +45,25 @@ export default function MotorHqAnalyticsPage() {
   }, [bookingsCount, trackingCounts]);
 
   const funnelSteps = useMemo(() => {
-    const steps = [
-      { label: "Booking flow opened", count: trackingCounts.page_view_book ?? 0 },
-      { label: "Date/time step", count: trackingCounts.page_view_date_time ?? 0 },
-      { label: "Customer details step", count: trackingCounts.page_view_mobile ?? 0 },
-      { label: "Confirmation page", count: trackingCounts.page_view_confirmation ?? 0 },
-      { label: "Booking submitted", count: bookingsCount },
+    const rawSteps = [
+      { label: "Booking flow opened", rawCount: trackingCounts.page_view_book ?? 0 },
+      { label: "Date/time step", rawCount: trackingCounts.page_view_date_time ?? 0 },
+      { label: "Customer details step", rawCount: trackingCounts.page_view_mobile ?? 0 },
+      { label: "Confirmation page", rawCount: trackingCounts.page_view_confirmation ?? 0 },
+      { label: "Booking submitted", rawCount: bookingsCount },
     ];
 
-    return steps.map((step, index) => {
+    let runningMax = Number.MAX_SAFE_INTEGER;
+    const normalizedSteps = rawSteps.map((step) => {
+      const count = Math.min(step.rawCount, runningMax);
+      runningMax = count;
+      return { ...step, count };
+    });
+
+    return normalizedSteps.map((step, index) => {
       if (index === 0) return { ...step, conversion: 100 };
-      const previous = steps[index - 1].count;
-      const raw = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
-      const conversion = Math.min(100, raw);
+      const previous = normalizedSteps[index - 1].count;
+      const conversion = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
       return { ...step, conversion };
     });
   }, [trackingCounts, bookingsCount]);
@@ -110,7 +116,7 @@ export default function MotorHqAnalyticsPage() {
 
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
-      <div className="mx-auto w-full max-w-md px-6 pb-12 pt-6">
+      <div className="mx-auto w-full max-w-[1200px] px-6 pb-12 pt-6">
         <header className="mb-4 flex items-center justify-between">
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">MotorHQ</h1>
           <div className="flex items-center gap-3">
@@ -144,7 +150,7 @@ export default function MotorHqAnalyticsPage() {
           <div className="space-y-6">
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Topline</h2>
-              <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
                 {topMetrics.map((metric) => (
                   <div key={metric.label} className="rounded-lg border border-[#E7EBF2] bg-[#FAFCFF] p-3">
                     <p className="text-xs text-[#657083]">{metric.label}</p>
@@ -157,19 +163,17 @@ export default function MotorHqAnalyticsPage() {
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Booking Funnel</h2>
               <p className="mt-1 text-xs text-[#6D7684]">Counts and conversion at each key step (session-deduped).</p>
-              <div className="mt-3 overflow-x-auto">
-                <div className="flex min-w-[760px] items-stretch gap-2">
-                  {funnelSteps.map((step, index) => (
-                    <div key={step.label} className="flex items-center gap-2">
-                      <div className="w-36 rounded-lg border border-[#E9EDF3] bg-white px-3 py-3">
-                        <p className="text-xs text-[#657083]">{step.label}</p>
-                        <p className="mt-1 text-xl font-semibold text-[#1E2531]">{step.count}</p>
-                        <p className="mt-1 text-xs font-medium text-[#5A6473]">{step.conversion}% from previous</p>
-                      </div>
-                      {index < funnelSteps.length - 1 && <span className="text-[#A2AAB7]">→</span>}
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
+                {funnelSteps.map((step) => (
+                  <div key={step.label} className="rounded-lg border border-[#E9EDF3] bg-white px-3 py-3">
+                    <p className="text-xs text-[#657083]">{step.label}</p>
+                    <p className="mt-1 text-xl font-semibold text-[#1E2531]">{step.count}</p>
+                    {step.rawCount !== step.count && (
+                      <p className="mt-1 text-[11px] text-[#8A92A0]">Raw: {step.rawCount}</p>
+                    )}
+                    <p className="mt-1 text-xs font-medium text-[#5A6473]">{step.conversion}% from previous</p>
+                  </div>
+                ))}
               </div>
             </section>
 
