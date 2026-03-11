@@ -60,12 +60,7 @@ export default function MotorHqAnalyticsPage() {
       return { ...step, count };
     });
 
-    return normalizedSteps.map((step, index) => {
-      if (index === 0) return { ...step, conversion: 100 };
-      const previous = normalizedSteps[index - 1].count;
-      const conversion = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
-      return { ...step, conversion };
-    });
+    return normalizedSteps;
   }, [trackingCounts, bookingsCount]);
 
   const serviceBreakdown = useMemo(() => {
@@ -162,16 +157,16 @@ export default function MotorHqAnalyticsPage() {
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Booking Funnel</h2>
-              <p className="mt-1 text-xs text-[#6D7684]">Counts and conversion at each key step (session-deduped).</p>
+              <div className="mt-2 flex items-center gap-2 text-[#A2AAB7]">
+                <span>●</span>
+                <span className="grow">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+                <span>➜</span>
+              </div>
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
                 {funnelSteps.map((step) => (
                   <div key={step.label} className="rounded-lg border border-[#E9EDF3] bg-white px-3 py-3">
                     <p className="text-xs text-[#657083]">{step.label}</p>
                     <p className="mt-1 text-xl font-semibold text-[#1E2531]">{step.count}</p>
-                    {step.rawCount !== step.count && (
-                      <p className="mt-1 text-[11px] text-[#8A92A0]">Raw: {step.rawCount}</p>
-                    )}
-                    <p className="mt-1 text-xs font-medium text-[#5A6473]">{step.conversion}% from previous</p>
                   </div>
                 ))}
               </div>
