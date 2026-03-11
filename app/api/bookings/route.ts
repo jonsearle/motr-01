@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildTimeSlotsForDate, normalizeOpeningHours } from "@/lib/booking-hours";
 import { countBookingsOnDate, createBooking, getOrCreateGarageSettings, listBookingsByView, logTrackingEvent } from "@/lib/db";
 import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
+import { getOwnerSessionToken, OWNER_AUTH_COOKIE } from "@/lib/owner-auth";
 import { buildShortLinks, isLikelyValidPhone, normalizePhoneInput } from "@/lib/missed-call";
 import { sendSms } from "@/lib/sms";
 
@@ -74,8 +75,10 @@ function mapBookingCategoryToEvent(category: string | null): "booking_completed_
 }
 
 export async function GET(request: NextRequest) {
-  const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
-  if (authCookie !== getMotorHqSessionToken()) {
+  const motorHqCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
+  const ownerCookie = request.cookies.get(OWNER_AUTH_COOKIE)?.value;
+  const authorized = motorHqCookie === getMotorHqSessionToken() || ownerCookie === getOwnerSessionToken();
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

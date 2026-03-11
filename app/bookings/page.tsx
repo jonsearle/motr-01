@@ -260,7 +260,7 @@ export default function BookingsPage() {
       try {
         const response = await fetch(`/api/bookings?view=${activeTab}`, { cache: "no-store", signal: controller.signal });
         if (response.status === 401) {
-          window.location.href = `/motorhq/login?next=${encodeURIComponent("/bookings")}`;
+          window.location.href = `/owner/login?next=${encodeURIComponent("/bookings")}`;
           return;
         }
         if (!response.ok) throw new Error("load_failed");

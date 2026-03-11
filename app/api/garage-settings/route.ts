@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOrCreateGarageSettings, updateGarageSettings } from "@/lib/db";
 import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
+import { getOwnerSessionToken, OWNER_AUTH_COOKIE } from "@/lib/owner-auth";
 import { normalizePhoneInput } from "@/lib/missed-call";
 import type { UpdateGarageSettingsInput } from "@/types/db";
 
@@ -24,8 +25,10 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
-  if (authCookie !== getMotorHqSessionToken()) {
+  const motorHqCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
+  const ownerCookie = request.cookies.get(OWNER_AUTH_COOKIE)?.value;
+  const authorized = motorHqCookie === getMotorHqSessionToken() || ownerCookie === getOwnerSessionToken();
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteBooking } from "@/lib/db";
 import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
+import { getOwnerSessionToken, OWNER_AUTH_COOKIE } from "@/lib/owner-auth";
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
-  if (authCookie !== getMotorHqSessionToken()) {
+  const motorHqCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
+  const ownerCookie = request.cookies.get(OWNER_AUTH_COOKIE)?.value;
+  const authorized = motorHqCookie === getMotorHqSessionToken() || ownerCookie === getOwnerSessionToken();
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
