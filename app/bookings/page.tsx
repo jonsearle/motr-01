@@ -178,6 +178,20 @@ function NoteIcon() {
   );
 }
 
+function TrashIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M3 6h18M8 6V4h8v2m-7 4v7m4-7v7m-8 3h10a2 2 0 0 0 2-2V6H7v12a2 2 0 0 0 2 2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function BottomNav({ active }: { active: "online" | "bookings" }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}>
@@ -435,13 +449,15 @@ export default function BookingsPage() {
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="rounded-lg px-2.5 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                aria-label="Delete booking"
+                title="Delete booking"
+                className="rounded-lg p-2 text-[#556070] hover:bg-[#EEF2F7]"
               >
-                Delete
+                <TrashIcon />
               </button>
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-[#E8EBF0] bg-white p-4 text-sm text-[#303745]">
+            <div className="space-y-3 text-sm text-[#303745]">
               <p className="flex items-center gap-2 font-semibold text-[#1F252E]">
                 <span className="text-[#8A92A0]"><ClockIcon /></span>
                 <span>
