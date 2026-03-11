@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 import type { GarageSettings } from "@/types/db";
 
 const REQUEST_TIMEOUT_MS = 8000;
@@ -100,6 +101,7 @@ function BottomNav({ active }: { active: "online" | "bookings" }) {
 }
 
 export default function Home() {
+  useTrackPageView("page_view_owner_home");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);

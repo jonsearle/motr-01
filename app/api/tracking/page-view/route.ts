@@ -5,6 +5,10 @@ import type { TrackingEventType } from "@/types/db";
 const TRACKABLE_EVENTS = new Set<TrackingEventType>([
   "entry_website",
   "entry_gmb_booking",
+  "page_view_owner_home",
+  "page_view_owner_bookings",
+  "page_view_motorhq_analytics",
+  "page_view_motorhq_settings",
   "page_view_book",
   "page_view_date_time",
   "page_view_mobile",

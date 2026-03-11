@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DAY_KEYS, normalizeOpeningHours, type DayKey, type OpeningHours } from "@/lib/booking-hours";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 import type { GarageSettings, ReviewFeedback } from "@/types/db";
 
 const DAY_LABELS: Record<DayKey, string> = {
@@ -37,6 +38,7 @@ function MessageIcon() {
 }
 
 export default function MotorHqSettingsPage() {
+  useTrackPageView("page_view_motorhq_settings");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

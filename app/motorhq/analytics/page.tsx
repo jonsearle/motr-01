@@ -2,19 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 
-const METRIC_LABELS: Array<{ key: string; label: string }> = [
-  { key: "entry_website", label: "Entry visits: Website link" },
-  { key: "entry_gmb_booking", label: "Entry visits: Book online button" },
-  { key: "booking_click", label: "Booking link clicks" },
-  { key: "booking_completed", label: "Bookings completed" },
-  { key: "page_view_book", label: "Visits: /book" },
-  { key: "page_view_date_time", label: "Visits: /book/date-time" },
-  { key: "page_view_mobile", label: "Visits: /book/mobile" },
-  { key: "page_view_confirmation", label: "Visits: /book/confirmation" },
-  { key: "page_view_custom_job", label: "Visits: /book/custom-job" },
-  { key: "page_view_not_sure", label: "Visits: /book/not-sure" },
-  { key: "page_view_not_sure_details", label: "Visits: /book/not-sure/details" },
+const DETAIL_METRIC_LABELS: Array<{ key: string; label: string }> = [
+  { key: "page_view_custom_job", label: "Custom-job route visits" },
+  { key: "page_view_not_sure", label: "Not-sure route visits" },
+  { key: "page_view_not_sure_details", label: "Not-sure details visits" },
   { key: "whatsapp_click", label: "WhatsApp clicks" },
   { key: "missed_call", label: "Missed calls tracked" },
   { key: "sms_sent", label: "Reply SMS sent" },
@@ -26,16 +19,49 @@ interface MotorHqMetrics {
 }
 
 export default function MotorHqAnalyticsPage() {
+  useTrackPageView("page_view_motorhq_analytics");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingsCount, setBookingsCount] = useState(0);
   const [trackingCounts, setTrackingCounts] = useState<Record<string, number>>({});
 
-  const totalTrackedVisits = useMemo(() => {
-    return Object.entries(trackingCounts)
-      .filter(([key]) => key.startsWith("page_view_"))
-      .reduce((sum, [, count]) => sum + count, 0);
-  }, [trackingCounts]);
+  const topMetrics = useMemo(() => {
+    const totalBookings = bookingsCount;
+    const bookingFlowVisits = trackingCounts.page_view_book ?? 0;
+    const visitsFromWebsite = trackingCounts.entry_website ?? 0;
+    const visitsFromGmbBooking = trackingCounts.entry_gmb_booking ?? 0;
+    const garageAppOpens =
+      (trackingCounts.page_view_owner_home ?? 0) +
+      (trackingCounts.page_view_owner_bookings ?? 0) +
+      (trackingCounts.page_view_motorhq_analytics ?? 0) +
+      (trackingCounts.page_view_motorhq_settings ?? 0);
+
+    return [
+      { label: "Total bookings made", value: totalBookings },
+      { label: "Total visits to booking flow", value: bookingFlowVisits },
+      { label: "Visits from website link", value: visitsFromWebsite },
+      { label: "Visits from Google Book link", value: visitsFromGmbBooking },
+      { label: "Garage app opens", value: garageAppOpens },
+    ];
+  }, [bookingsCount, trackingCounts]);
+
+  const funnelSteps = useMemo(() => {
+    const steps = [
+      { label: "Booking flow opened", count: trackingCounts.page_view_book ?? 0 },
+      { label: "Date/time step", count: trackingCounts.page_view_date_time ?? 0 },
+      { label: "Customer details step", count: trackingCounts.page_view_mobile ?? 0 },
+      { label: "Confirmation page", count: trackingCounts.page_view_confirmation ?? 0 },
+      { label: "Booking submitted", count: bookingsCount },
+    ];
+
+    return steps.map((step, index) => {
+      if (index === 0) return { ...step, conversion: 100 };
+      const previous = steps[index - 1].count;
+      const conversion = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
+      return { ...step, conversion };
+    });
+  }, [trackingCounts, bookingsCount]);
 
   useEffect(() => {
     let mounted = true;
@@ -109,21 +135,38 @@ export default function MotorHqAnalyticsPage() {
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Topline</h2>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-[#E7EBF2] bg-[#FAFCFF] p-3">
-                  <p className="text-xs text-[#657083]">Total bookings</p>
-                  <p className="mt-1 text-2xl font-semibold text-[#1E2531]">{bookingsCount}</p>
-                </div>
-                <div className="rounded-lg border border-[#E7EBF2] bg-[#FAFCFF] p-3">
-                  <p className="text-xs text-[#657083]">Tracked page visits</p>
-                  <p className="mt-1 text-2xl font-semibold text-[#1E2531]">{totalTrackedVisits}</p>
+                {topMetrics.map((metric) => (
+                  <div key={metric.label} className="rounded-lg border border-[#E7EBF2] bg-[#FAFCFF] p-3">
+                    <p className="text-xs text-[#657083]">{metric.label}</p>
+                    <p className="mt-1 text-2xl font-semibold text-[#1E2531]">{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
+              <h2 className="text-sm font-semibold text-[#2A3341]">Booking Funnel</h2>
+              <p className="mt-1 text-xs text-[#6D7684]">Counts and conversion at each step.</p>
+              <div className="mt-3 overflow-x-auto">
+                <div className="flex min-w-[760px] items-stretch gap-2">
+                  {funnelSteps.map((step, index) => (
+                    <div key={step.label} className="flex items-center gap-2">
+                      <div className="w-36 rounded-lg border border-[#E9EDF3] bg-white px-3 py-3">
+                        <p className="text-xs text-[#657083]">{step.label}</p>
+                        <p className="mt-1 text-xl font-semibold text-[#1E2531]">{step.count}</p>
+                        <p className="mt-1 text-xs font-medium text-[#5A6473]">{step.conversion}% from previous</p>
+                      </div>
+                      {index < funnelSteps.length - 1 && <span className="text-[#A2AAB7]">→</span>}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
-              <h2 className="text-sm font-semibold text-[#2A3341]">Analytics</h2>
+              <h2 className="text-sm font-semibold text-[#2A3341]">Additional Metrics</h2>
               <div className="mt-3 space-y-2">
-                {METRIC_LABELS.map((metric) => (
+                {DETAIL_METRIC_LABELS.map((metric) => (
                   <div key={metric.key} className="flex items-center justify-between rounded-md border border-[#E9EDF3] px-3 py-2">
                     <span className="text-sm text-[#2A3341]">{metric.label}</span>
                     <span className="text-sm font-semibold text-[#1E2531]">{trackingCounts[metric.key] ?? 0}</span>

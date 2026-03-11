@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTrackPageView } from "@/lib/use-track-page-view";
 import type { Booking, GarageSettings } from "@/types/db";
 
 type BookingTab = "future" | "past" | "all";
@@ -236,6 +237,7 @@ function BottomNav({ active }: { active: "online" | "bookings" }) {
 }
 
 export default function BookingsPage() {
+  useTrackPageView("page_view_owner_bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
