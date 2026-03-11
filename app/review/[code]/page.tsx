@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type ReviewInfo = {
   garage_name: string;
@@ -23,6 +24,7 @@ function Star({ filled }: { filled: boolean }) {
 }
 
 export default function ReviewPage({ params }: { params: { code: string } }) {
+  const searchParams = useSearchParams();
   const [reviewInfo, setReviewInfo] = useState<ReviewInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number | null>(null);
@@ -56,6 +58,7 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
   }, [params.code]);
 
   const canGoToGoogle = useMemo(() => Boolean(reviewInfo?.google_review_url?.trim()), [reviewInfo]);
+  const bookingId = searchParams.get("booking");
 
   async function submitFeedback() {
     if (!rating || rating > 3) return;
@@ -75,6 +78,7 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
           short_code: params.code,
           rating,
           message: feedback.trim(),
+          booking_id: bookingId,
         }),
       });
 

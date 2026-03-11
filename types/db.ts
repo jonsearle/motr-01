@@ -69,3 +69,12 @@ export interface CreateBookingInput {
   date: string;
   time: string;
 }
+
+export interface ReviewFeedback {
+  id: string;
+  rating: number;
+  message: string;
+  customer_name: string | null;
+  vehicle_reg: string | null;
+  created_at: string;
+}

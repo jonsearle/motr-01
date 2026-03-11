@@ -69,9 +69,12 @@ CREATE TABLE tracking_events (
 CREATE TABLE review_feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   garage_id uuid NOT NULL REFERENCES garage_settings(id) ON DELETE CASCADE,
+  booking_id uuid NULL REFERENCES bookings(id) ON DELETE SET NULL,
   rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
   message text NOT NULL,
   customer_phone text NULL,
+  customer_name text NULL,
+  vehicle_reg text NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

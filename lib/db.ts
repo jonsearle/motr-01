@@ -5,6 +5,7 @@ import type {
   Booking,
   CreateBookingInput,
   GarageSettings,
+  ReviewFeedback,
   TrackingEventType,
   UpdateGarageSettingsInput,
 } from "@/types/db";
@@ -306,6 +307,9 @@ export async function createReviewFeedback(input: {
   rating: number;
   message: string;
   customer_phone?: string | null;
+  booking_id?: string | null;
+  customer_name?: string | null;
+  vehicle_reg?: string | null;
 }): Promise<void> {
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("review_feedback").insert({
@@ -313,11 +317,30 @@ export async function createReviewFeedback(input: {
     rating: input.rating,
     message: input.message.trim(),
     customer_phone: input.customer_phone ?? null,
+    booking_id: input.booking_id ?? null,
+    customer_name: input.customer_name ?? null,
+    vehicle_reg: input.vehicle_reg ?? null,
   });
 
   if (error) {
     throw error;
   }
+}
+
+export async function listReviewFeedback(garageId: string): Promise<ReviewFeedback[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("review_feedback")
+    .select("id, rating, message, customer_name, vehicle_reg, created_at")
+    .eq("garage_id", garageId)
+    .lte("rating", 3)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as ReviewFeedback[];
 }
 
 export async function listBookings(): Promise<Booking[]> {
