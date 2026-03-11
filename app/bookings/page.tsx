@@ -192,6 +192,20 @@ function TrashIcon() {
   );
 }
 
+function MessageIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function BottomNav({ active }: { active: "online" | "bookings" }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}>
@@ -231,6 +245,7 @@ export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<BookingTab>("future");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copyMessageInfo, setCopyMessageInfo] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -342,12 +357,38 @@ export default function BookingsPage() {
     window.location.href = `sms:${number}?body=${encodeURIComponent(message)}`;
   }
 
+  async function onCopyGenericReviewMessage() {
+    if (!reviewRequestLink) {
+      window.alert("Add your Google review URL in MotorHQ settings first.");
+      return;
+    }
+
+    const message = `Hi,\n\nThanks for choosing ${garageName}.\n\nIf you have a moment, we’d really appreciate a quick Google review:\n${reviewRequestLink}`;
+
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopyMessageInfo("Review message copied.");
+      window.setTimeout(() => setCopyMessageInfo(null), 2200);
+    } catch {
+      window.alert("Couldn’t copy message. Please try again.");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1F252E]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
         <div className="sticky top-0 z-10 -mx-6 bg-[#FBFCFE] px-6 pb-3 pt-1">
-          <header className="mb-4">
+          <header className="mb-4 flex items-center justify-between">
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online Bookings</h1>
+            <button
+              type="button"
+              onClick={onCopyGenericReviewMessage}
+              aria-label="Copy review message"
+              title="Copy review message"
+              className="rounded-full border border-[#D7DDE6] bg-white p-2 text-[#556070] hover:bg-[#EEF2F7]"
+            >
+              <MessageIcon />
+            </button>
           </header>
 
           <div className="grid grid-cols-3 gap-2">
@@ -378,6 +419,7 @@ export default function BookingsPage() {
 
         <div className="mt-3" />
 
+        {copyMessageInfo && <p className="mb-3 text-sm text-[#2A6A35]">{copyMessageInfo}</p>}
         {error && <p className="mb-3 text-sm text-[#7B4A40]">{error}</p>}
 
         {loading ? (
