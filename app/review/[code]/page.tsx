@@ -93,7 +93,7 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
 
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1F252E]">
-      <div className="mx-auto w-full max-w-md px-6 pb-12 pt-10">
+      <div className="mx-auto w-full max-w-md px-6 pb-14 pt-12">
         {loading ? (
           <p className="text-sm text-[#697383]">Loading...</p>
         ) : error && !reviewInfo ? (
@@ -101,11 +101,11 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
         ) : (
           <div>
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Share Your Feedback</h1>
-            <p className="mt-2 text-sm text-[#606875]">
+            <p className="mt-3 max-w-[30ch] text-[15px] leading-6 text-[#606875]">
               How was your experience with {reviewInfo?.garage_name || "our garage"}?
             </p>
 
-            <div className="mt-6 flex items-center gap-2">
+            <div className="mt-7 flex items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   key={value}
@@ -123,9 +123,9 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
             </div>
 
             {rating !== null && rating >= 4 && (
-              <div className="mt-8 space-y-3">
-                <p className="text-sm text-[#303745]">
-                  Great to hear. If you have a moment, please leave us a Google review. It really helps other local drivers choose us.
+              <div className="mt-10 space-y-4">
+                <p className="max-w-[34ch] text-[15px] leading-6 text-[#303745]">
+                  Great to hear. If you have a moment, we’d really appreciate a quick Google review.
                 </p>
                 <a
                   href={canGoToGoogle ? reviewInfo?.google_review_url : "#"}
@@ -139,8 +139,10 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
             )}
 
             {rating !== null && rating <= 3 && (
-              <div className="mt-8 space-y-3">
-                <p className="text-sm text-[#303745]">Thanks for your honesty. Tell us what went wrong so we can improve.</p>
+              <div className="mt-10 space-y-4">
+                <p className="max-w-[34ch] text-[15px] leading-6 text-[#303745]">
+                  Thanks for your honesty. Tell us what went wrong so we can improve.
+                </p>
                 {submitted ? (
                   <p className="rounded-lg border border-[#D4ECD9] bg-[#F3FFF5] px-3 py-2 text-sm text-[#2A6A35]">
                     Feedback sent privately. Thank you.
