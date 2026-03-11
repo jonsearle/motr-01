@@ -75,6 +75,7 @@ CREATE TABLE review_feedback (
   customer_phone text NULL,
   customer_name text NULL,
   vehicle_reg text NULL,
+  booking_note text NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

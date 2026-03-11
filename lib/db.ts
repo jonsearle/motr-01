@@ -310,6 +310,7 @@ export async function createReviewFeedback(input: {
   booking_id?: string | null;
   customer_name?: string | null;
   vehicle_reg?: string | null;
+  booking_note?: string | null;
 }): Promise<void> {
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("review_feedback").insert({
@@ -320,6 +321,7 @@ export async function createReviewFeedback(input: {
     booking_id: input.booking_id ?? null,
     customer_name: input.customer_name ?? null,
     vehicle_reg: input.vehicle_reg ?? null,
+    booking_note: input.booking_note ?? null,
   });
 
   if (error) {
@@ -331,7 +333,7 @@ export async function listReviewFeedback(garageId: string): Promise<ReviewFeedba
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("review_feedback")
-    .select("id, rating, message, customer_name, vehicle_reg, created_at")
+    .select("id, rating, message, customer_name, vehicle_reg, booking_note, created_at")
     .eq("garage_id", garageId)
     .lte("rating", 3)
     .order("created_at", { ascending: false });

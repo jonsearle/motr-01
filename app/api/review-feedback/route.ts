@@ -5,11 +5,12 @@ export const dynamic = "force-dynamic";
 
 type ParsedBookingDetails = {
   vehicleReg: string | null;
+  note: string | null;
 };
 
 function parseBookingDetails(description: string | null): ParsedBookingDetails {
   if (!description?.trim()) {
-    return { vehicleReg: null };
+    return { vehicleReg: null, note: null };
   }
 
   const parts = description
@@ -17,14 +18,22 @@ function parseBookingDetails(description: string | null): ParsedBookingDetails {
     .map((part) => part.trim())
     .filter(Boolean);
 
+  let vehicleReg: string | null = null;
+  const noteParts: string[] = [];
+
   for (const part of parts) {
     const match = part.match(/^vehicle reg:\s*(.+)$/i);
     if (match && match[1]?.trim()) {
-      return { vehicleReg: match[1].trim() };
+      vehicleReg = match[1].trim();
+      continue;
     }
+    noteParts.push(part);
   }
 
-  return { vehicleReg: null };
+  return {
+    vehicleReg,
+    note: noteParts.length > 0 ? noteParts.join(" | ") : null,
+  };
 }
 
 export async function GET() {
@@ -69,12 +78,15 @@ export async function POST(request: NextRequest) {
 
     let customerName: string | null = null;
     let vehicleReg: string | null = null;
+    let bookingNote: string | null = null;
 
     if (bookingId) {
       const booking = await getBookingById(bookingId);
       if (booking) {
         customerName = booking.name;
-        vehicleReg = parseBookingDetails(booking.description).vehicleReg;
+        const details = parseBookingDetails(booking.description);
+        vehicleReg = details.vehicleReg;
+        bookingNote = details.note;
       }
     }
 
@@ -86,6 +98,7 @@ export async function POST(request: NextRequest) {
       booking_id: bookingId,
       customer_name: customerName,
       vehicle_reg: vehicleReg,
+      booking_note: bookingNote,
     });
 
     return NextResponse.json({ ok: true });

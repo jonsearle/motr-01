@@ -76,5 +76,6 @@ export interface ReviewFeedback {
   message: string;
   customer_name: string | null;
   vehicle_reg: string | null;
+  booking_note: string | null;
   created_at: string;
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DAY_KEYS, normalizeOpeningHours, type DayKey, type OpeningHours } from "@/lib/booking-hours";
-import type { GarageSettings } from "@/types/db";
+import type { GarageSettings, ReviewFeedback } from "@/types/db";
 
 const DAY_LABELS: Record<DayKey, string> = {
   sun: "Sunday",
@@ -22,11 +22,30 @@ function formatHourLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
 }
 
+function MessageIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function MotorHqSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [feedbackItems, setFeedbackItems] = useState<ReviewFeedback[]>([]);
+  const [selectedFeedback, setSelectedFeedback] = useState<ReviewFeedback | null>(null);
 
   const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
   const [shortCode, setShortCode] = useState("4b600c");
@@ -123,11 +142,29 @@ export default function MotorHqSettingsPage() {
     }
   }
 
-  async function onLock() {
+  function formatFeedbackTimestamp(value: string): string {
+    return new Date(value).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  async function loadFeedback() {
+    setFeedbackLoading(true);
+    setFeedbackError(null);
+
     try {
-      await fetch("/api/motorhq/auth", { method: "DELETE" });
+      const response = await fetch("/api/review-feedback", { cache: "no-store" });
+      if (!response.ok) throw new Error("load_failed");
+      const data = (await response.json()) as ReviewFeedback[];
+      setFeedbackItems(data);
+    } catch {
+      setFeedbackError("Could not load feedback.");
     } finally {
-      window.location.href = "/motorhq/login";
+      setFeedbackLoading(false);
     }
   }
 
@@ -136,14 +173,19 @@ export default function MotorHqSettingsPage() {
       <div className="mx-auto w-full max-w-md px-6 pb-28 pt-6">
         <header className="mb-4 flex items-center justify-between">
           <h1 className="text-[28px] font-semibold tracking-[-0.02em]">MotorHQ</h1>
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={onLock} className="text-sm font-medium text-[#5C6573]">
-              Lock
-            </button>
-            <Link href="/" className="text-sm font-medium text-[#5C6573]">
-              Close
-            </Link>
-          </div>
+          <button
+            type="button"
+            aria-label="Open feedback messages"
+            title="Feedback messages"
+            onClick={() => {
+              setShowFeedback(true);
+              setSelectedFeedback(null);
+              void loadFeedback();
+            }}
+            className="rounded-lg border border-[#D7DDE6] bg-white p-2 text-[#556070] hover:bg-[#EEF2F7]"
+          >
+            <MessageIcon />
+          </button>
         </header>
 
         <nav className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-[#E4E8EF] bg-white p-1">
@@ -326,6 +368,118 @@ export default function MotorHqSettingsPage() {
           </div>
         )}
       </div>
+
+      {showFeedback && (
+        <div className="fixed inset-0 z-40 bg-[#FBFCFE]" role="dialog" aria-modal="true">
+          <div className="mx-auto flex h-full w-full max-w-md flex-col px-6 pb-6 pt-6">
+            {!selectedFeedback ? (
+              <>
+                <div className="mb-5 flex items-center justify-between">
+                  <h3 className="text-[28px] font-semibold tracking-[-0.02em]">Feedback Messages</h3>
+                </div>
+
+                {feedbackError && <p className="mb-3 text-sm text-[#8E2E2E]">{feedbackError}</p>}
+
+                {feedbackLoading ? (
+                  <div className="space-y-3">
+                    <div className="h-20 animate-pulse rounded-2xl bg-white" />
+                    <div className="h-20 animate-pulse rounded-2xl bg-white" />
+                  </div>
+                ) : feedbackItems.length === 0 ? (
+                  <p className="py-6 text-sm text-[#737A85]">No low-rating feedback yet.</p>
+                ) : (
+                  <div className="divide-y divide-[#ECEFF4]">
+                    {feedbackItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedFeedback(item)}
+                        className="w-full py-4 text-left transition-colors hover:bg-[#F7F9FC]"
+                      >
+                        <p className="text-sm font-semibold text-[#1F252E]">{item.customer_name || "Customer feedback"}</p>
+                        <p className="mt-1 text-sm text-[#606875]">{item.vehicle_reg || "No reg provided"}</p>
+                        {item.booking_note && <p className="mt-1 text-sm text-[#606875]">{item.booking_note}</p>}
+                        <p className="mt-1 text-sm text-[#303745]">{item.message}</p>
+                        <p className="mt-1 text-xs text-[#8A92A0]">
+                          {item.rating}/5 stars • {formatFeedbackTimestamp(item.created_at)}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-auto pt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFeedback(false);
+                      setSelectedFeedback(null);
+                    }}
+                    className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-5 flex items-center justify-between">
+                  <h3 className="text-[28px] font-semibold tracking-[-0.02em]">Feedback Details</h3>
+                </div>
+
+                <div className="space-y-3 text-sm text-[#303745]">
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-[#1F252E]">Name:</span>
+                    <span>{selectedFeedback.customer_name || "Unknown"}</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-[#1F252E]">Vehicle Reg:</span>
+                    <span>{selectedFeedback.vehicle_reg || "Not provided"}</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-[#1F252E]">Rating:</span>
+                    <span>{selectedFeedback.rating}/5</span>
+                  </p>
+                  {selectedFeedback.booking_note && (
+                    <div className="pt-1">
+                      <p className="font-semibold text-[#1F252E]">Booking Description:</p>
+                      <p className="mt-1 whitespace-pre-wrap text-[#303745]">{selectedFeedback.booking_note}</p>
+                    </div>
+                  )}
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-[#1F252E]">Received:</span>
+                    <span>{formatFeedbackTimestamp(selectedFeedback.created_at)}</span>
+                  </p>
+                  <div className="pt-1">
+                    <p className="font-semibold text-[#1F252E]">Feedback:</p>
+                    <p className="mt-1 whitespace-pre-wrap text-[#303745]">{selectedFeedback.message}</p>
+                  </div>
+                </div>
+
+                <div className="mt-auto space-y-2 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFeedback(null)}
+                    className="w-full rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-sm font-semibold text-[#1F252E]"
+                  >
+                    Back to Messages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFeedback(false);
+                      setSelectedFeedback(null);
+                    }}
+                    className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-[#E7EBF1] bg-[#FBFCFE] px-6 py-3">
         <div className="mx-auto w-full max-w-md">
