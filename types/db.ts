@@ -11,6 +11,7 @@ export interface GarageSettings {
   whatsapp_number: string;
   garage_phone: string;
   booking_alert_phone: string;
+  google_review_url: string;
   min_booking_notice_days: number;
   max_bookings_per_day: number;
   booking_hours_enabled: boolean;
@@ -26,6 +27,7 @@ export interface UpdateGarageSettingsInput {
   whatsapp_number?: string;
   garage_phone?: string;
   booking_alert_phone?: string;
+  google_review_url?: string;
   min_booking_notice_days?: number;
   max_bookings_per_day?: number;
   booking_hours_enabled?: boolean;

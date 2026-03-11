@@ -41,6 +41,9 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.booking_alert_phone === "string") {
       updateInput.booking_alert_phone = normalizePhoneInput(body.booking_alert_phone);
     }
+    if (typeof body.google_review_url === "string") {
+      updateInput.google_review_url = body.google_review_url.trim();
+    }
     if (typeof body.min_booking_notice_days === "number") {
       updateInput.min_booking_notice_days = body.min_booking_notice_days;
     }

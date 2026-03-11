@@ -11,6 +11,7 @@ CREATE TABLE garage_settings (
   whatsapp_number text NOT NULL DEFAULT '',
   garage_phone text NOT NULL DEFAULT '',
   booking_alert_phone text NOT NULL DEFAULT '07968777469',
+  google_review_url text NOT NULL DEFAULT '',
   min_booking_notice_days integer NOT NULL DEFAULT 2,
   max_bookings_per_day integer NOT NULL DEFAULT 3,
   booking_hours_enabled boolean NOT NULL DEFAULT true,

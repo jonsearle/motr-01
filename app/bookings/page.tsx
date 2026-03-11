@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { Booking } from "@/types/db";
+import type { Booking, GarageSettings } from "@/types/db";
 
 type BookingTab = "future" | "past" | "all";
 type BookingDetails = {
@@ -28,16 +28,6 @@ function formatDate(value: string): string {
 
 function formatTime(value: string): string {
   return value.slice(0, 5);
-}
-
-function formatCreatedAt(value: string): string {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function parseBookingDetails(description: string | null): BookingDetails {
@@ -159,11 +149,11 @@ function WrenchIcon() {
   );
 }
 
-function CarIcon() {
+function VehicleRegIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M3 13h18M6 13l1.5-4h9L18 13M6 13v4m12-4v4M8 17a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"
+        d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Zm3 4h2m2 0h2m2 0h2"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -220,6 +210,8 @@ function BottomNav({ active }: { active: "online" | "bookings" }) {
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
+  const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
+  const [reviewShortLink, setReviewShortLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<BookingTab>("future");
@@ -256,7 +248,46 @@ export default function BookingsPage() {
       controller.abort();
     };
   }, [activeTab]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSettings() {
+      try {
+        const response = await fetch("/api/garage-settings", { cache: "no-store" });
+        if (!response.ok) return;
+
+        const settings = (await response.json()) as GarageSettings;
+        if (!mounted) return;
+
+        const nextGarageName = settings.garage_name?.trim();
+        if (nextGarageName) {
+          setGarageName(nextGarageName);
+        }
+
+        if (settings.short_code?.trim() && settings.google_review_url?.trim()) {
+          setReviewShortLink(`${window.location.origin}/r/${settings.short_code}`);
+        } else {
+          setReviewShortLink("");
+        }
+      } catch {
+        // Ignore and use defaults/fallbacks.
+      }
+    }
+
+    loadSettings();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const selectedDetails = selected ? parseBookingDetails(selected.description) : null;
+  const selectedPhoneHref = selected ? `tel:${selected.phone.replace(/\s+/g, "")}` : null;
+
+  function getFirstName(fullName: string): string {
+    const first = fullName.trim().split(/\s+/)[0];
+    return first || "there";
+  }
 
   async function onDeleteBooking() {
     if (!selected) return;
@@ -276,6 +307,24 @@ export default function BookingsPage() {
     } finally {
       setDeleting(false);
     }
+  }
+
+  function onSendReviewRequest() {
+    if (!selected) return;
+
+    if (!reviewShortLink) {
+      window.alert("Add your Google review URL in MotorHQ settings first.");
+      return;
+    }
+
+    const number = selected.phone.replace(/[^\d+]/g, "");
+    if (!number) {
+      window.alert("Customer phone number is missing.");
+      return;
+    }
+
+    const message = `Hi ${getFirstName(selected.name)}, thanks for booking with ${garageName}. Would you mind leaving us a quick Google review? ${reviewShortLink}`;
+    window.location.href = `sms:${number}?body=${encodeURIComponent(message)}`;
   }
 
   return (
@@ -354,16 +403,16 @@ export default function BookingsPage() {
                       <span className="text-[#8A92A0]"><PhoneIcon /></span>
                       <span>{booking.phone}</span>
                     </p>
+                    {details.vehicleReg && (
+                      <p className="flex items-center gap-2 text-sm text-[#606875]">
+                        <span className="text-[#8A92A0]"><VehicleRegIcon /></span>
+                        <span>{details.vehicleReg}</span>
+                      </p>
+                    )}
                     <p className="flex items-center gap-2 text-sm text-[#606875]">
                       <span className="text-[#8A92A0]"><WrenchIcon /></span>
                       <span>{booking.service_type}</span>
                     </p>
-                    {details.vehicleReg && (
-                      <p className="flex items-start gap-2 text-sm text-[#606875]">
-                        <span className="mt-0.5 text-[#8A92A0]"><CarIcon /></span>
-                        <span>{details.vehicleReg}</span>
-                      </p>
-                    )}
                     {details.note && (
                       <p className="flex items-start gap-2 text-sm text-[#606875]">
                         <span className="mt-0.5 text-[#8A92A0]"><NoteIcon /></span>
@@ -379,62 +428,104 @@ export default function BookingsPage() {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-30 bg-black/35 px-4 pb-6 pt-20" role="dialog" aria-modal="true">
-          <div className="mx-auto w-full max-w-md rounded-3xl border border-[#E8EBF0] bg-white p-5">
-            <h3 className="text-lg font-semibold">Booking Details</h3>
-
-            <div className="mt-4 space-y-2 text-sm text-[#303745]">
-              <p><strong>Name:</strong> {selected.name}</p>
-              <p><strong>Phone:</strong> {selected.phone}</p>
-              <p><strong>Date:</strong> {formatDate(selected.date)}</p>
-              <p><strong>Time:</strong> {formatTime(selected.time)}</p>
-              <p><strong>Service Type:</strong> {selected.service_type}</p>
-              {selectedDetails?.vehicleReg && <p><strong>Vehicle Reg:</strong> {selectedDetails.vehicleReg}</p>}
-              {selectedDetails?.note && <p><strong>Note:</strong> {selectedDetails.note}</p>}
-              <p><strong>Created:</strong> {formatCreatedAt(selected.created_at)}</p>
+        <div className="fixed inset-0 z-30 bg-[#FBFCFE]" role="dialog" aria-modal="true">
+          <div className="mx-auto flex h-full w-full max-w-md flex-col px-6 pb-6 pt-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Booking Details</h3>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="rounded-lg px-2.5 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+              >
+                Delete
+              </button>
             </div>
 
-            {!confirmDelete ? (
-              <div className="mt-5 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(true)}
-                  className="w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
-                >
-                  Delete Booking
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelected(null)}
-                  className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4">
-                <p className="text-sm font-medium text-red-700">Delete this booking?</p>
-                <p className="mt-1 text-xs text-red-600">This cannot be undone.</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDelete(false)}
-                    className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-[#1F252E]"
-                    disabled={deleting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onDeleteBooking}
-                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    disabled={deleting}
-                  >
-                    {deleting ? "Deleting..." : "Confirm Delete"}
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="space-y-3 rounded-2xl border border-[#E8EBF0] bg-white p-4 text-sm text-[#303745]">
+              <p className="flex items-center gap-2 font-semibold text-[#1F252E]">
+                <span className="text-[#8A92A0]"><ClockIcon /></span>
+                <span>
+                  {formatDate(selected.date)} {formatTime(selected.time)}
+                </span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-[#8A92A0]"><UserIcon /></span>
+                <span>{selected.name}</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-[#8A92A0]"><PhoneIcon /></span>
+                <span>{selected.phone}</span>
+              </p>
+              {selectedDetails?.vehicleReg && (
+                <p className="flex items-center gap-2">
+                  <span className="text-[#8A92A0]"><VehicleRegIcon /></span>
+                  <span>{selectedDetails.vehicleReg}</span>
+                </p>
+              )}
+              <p className="flex items-center gap-2">
+                <span className="text-[#8A92A0]"><WrenchIcon /></span>
+                <span>{selected.service_type}</span>
+              </p>
+              {selectedDetails?.note && (
+                <p className="flex items-start gap-2">
+                  <span className="mt-0.5 text-[#8A92A0]"><NoteIcon /></span>
+                  <span>{selectedDetails.note}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="mt-auto space-y-2 pt-6">
+              <button
+                type="button"
+                onClick={onSendReviewRequest}
+                className="w-full rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-sm font-semibold text-[#1F252E]"
+              >
+                Send Google Review Request
+              </button>
+              <a
+                href={selectedPhoneHref ?? "#"}
+                className="block w-full rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-center text-sm font-semibold text-[#1F252E] md:hidden"
+              >
+                Call Customer
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelected(null);
+                  setConfirmDelete(false);
+                }}
+                className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selected && confirmDelete && (
+        <div className="fixed inset-0 z-40 bg-black/35 px-6 pt-44" role="dialog" aria-modal="true">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-red-200 bg-white p-4">
+            <p className="text-sm font-semibold text-[#1F252E]">Are you sure you want to delete this booking?</p>
+            <p className="mt-1 text-xs text-[#6B7280]">This cannot be undone.</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="rounded-lg border border-[#D7DDE6] bg-white px-3 py-2 text-sm font-medium text-[#1F252E]"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteBooking}
+                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete Booking"}
+              </button>
+            </div>
           </div>
         </div>
       )}

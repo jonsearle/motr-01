@@ -31,6 +31,7 @@ export default function MotorHqSettingsPage() {
   const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
   const [shortCode, setShortCode] = useState("4b600c");
   const [bookingAlertPhone, setBookingAlertPhone] = useState("07968777469");
+  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [bookingHoursEnabled, setBookingHoursEnabled] = useState(true);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(normalizeOpeningHours(null));
 
@@ -48,6 +49,7 @@ export default function MotorHqSettingsPage() {
         setGarageName(settings.garage_name || "N1 Mobile Auto Repairs");
         setShortCode(settings.short_code || "4b600c");
         setBookingAlertPhone(settings.booking_alert_phone || "07968777469");
+        setGoogleReviewUrl(settings.google_review_url || "");
         setBookingHoursEnabled(settings.booking_hours_enabled);
         setOpeningHours(normalizeOpeningHours(settings.opening_hours));
       } catch {
@@ -85,6 +87,7 @@ export default function MotorHqSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           garage_name: garageName.trim() || "N1 Mobile Auto Repairs",
+          google_review_url: googleReviewUrl.trim(),
         }),
       });
 
@@ -190,6 +193,11 @@ export default function MotorHqSettingsPage() {
                     {`${DISPLAY_DOMAIN}/b/${shortCode}?src=gmb_booking`}
                   </a>
                 </div>
+
+                <div>
+                  <p className="text-xs font-medium text-[#5B6472]">Short review link (for SMS)</p>
+                  <p className="mt-1 break-all text-sm text-[#2A3341]">{`${DISPLAY_DOMAIN}/r/${shortCode}`}</p>
+                </div>
               </div>
             </section>
 
@@ -212,6 +220,19 @@ export default function MotorHqSettingsPage() {
                 placeholder="07968777469"
               />
               <p className="mt-2 text-xs text-[#6D7684]">Number that receives new booking alert texts.</p>
+            </section>
+
+            <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
+              <label className="block text-sm font-semibold text-[#2A3341]">Google review URL</label>
+              <input
+                value={googleReviewUrl}
+                onChange={(event) => setGoogleReviewUrl(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-[#D5DCE7] px-3 py-2 text-sm"
+                placeholder="https://g.page/r/..."
+              />
+              <p className="mt-2 text-xs text-[#6D7684]">
+                Used when sending review requests. Customers receive the short MOTR link which redirects to this URL.
+              </p>
             </section>
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">

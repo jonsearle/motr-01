@@ -38,6 +38,9 @@ function toBoolean(value: unknown, fallback: boolean): boolean {
 }
 
 function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
+  const googleReviewUrl =
+    typeof raw.google_review_url === "string" && raw.google_review_url.trim() ? raw.google_review_url.trim() : "";
+
   return {
     id: String(raw.id ?? ""),
     auto_sms_enabled: toBoolean(raw.auto_sms_enabled, false),
@@ -55,6 +58,7 @@ function normalizeGarageSettings(raw: Record<string, unknown>): GarageSettings {
       typeof raw.booking_alert_phone === "string" && raw.booking_alert_phone.trim()
         ? raw.booking_alert_phone
         : DEFAULT_BOOKING_ALERT_PHONE,
+    google_review_url: googleReviewUrl,
     min_booking_notice_days:
       typeof raw.min_booking_notice_days === "number" && Number.isInteger(raw.min_booking_notice_days)
         ? Math.max(1, raw.min_booking_notice_days)
@@ -101,6 +105,7 @@ export async function getOrCreateGarageSettings(): Promise<GarageSettings> {
       whatsapp_number: "",
       garage_phone: "",
       booking_alert_phone: DEFAULT_BOOKING_ALERT_PHONE,
+      google_review_url: "",
       booking_hours_enabled: true,
       opening_hours: DEFAULT_OPENING_HOURS,
     })
@@ -194,6 +199,9 @@ export async function updateGarageSettings(input: UpdateGarageSettingsInput): Pr
   }
   if (typeof input.booking_alert_phone === "string") {
     updatePayload.booking_alert_phone = normalizePhoneInput(input.booking_alert_phone);
+  }
+  if (typeof input.google_review_url === "string") {
+    updatePayload.google_review_url = input.google_review_url.trim();
   }
   if (typeof input.min_booking_notice_days === "number") {
     updatePayload.min_booking_notice_days = Math.floor(input.min_booking_notice_days);
