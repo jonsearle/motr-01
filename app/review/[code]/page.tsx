@@ -106,7 +106,7 @@ export default function ReviewPage({ params }: { params: { code: string } }) {
           <div>
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Share Your Feedback</h1>
             <p className="mt-3 max-w-[30ch] text-[15px] leading-6 text-[#606875]">
-              How was your experience with {reviewInfo?.garage_name || "our garage"}?
+              How was your experience with <strong className="font-semibold text-[#1F252E]">{reviewInfo?.garage_name || "our garage"}</strong>?
             </p>
 
             <div className="mt-7 flex items-center gap-2">
