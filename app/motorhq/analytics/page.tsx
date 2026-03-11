@@ -5,9 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 
 const DETAIL_METRIC_LABELS: Array<{ key: string; label: string }> = [
-  { key: "page_view_custom_job", label: "Custom-job route visits" },
-  { key: "page_view_not_sure", label: "Not-sure route visits" },
-  { key: "page_view_not_sure_details", label: "Not-sure details visits" },
+  { key: "call_us_click", label: "Call us button clicks" },
   { key: "whatsapp_click", label: "WhatsApp clicks" },
   { key: "missed_call", label: "Missed calls tracked" },
   { key: "sms_sent", label: "Reply SMS sent" },
@@ -58,10 +56,22 @@ export default function MotorHqAnalyticsPage() {
     return steps.map((step, index) => {
       if (index === 0) return { ...step, conversion: 100 };
       const previous = steps[index - 1].count;
-      const conversion = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
+      const raw = previous > 0 ? Math.round((step.count / previous) * 100) : 0;
+      const conversion = Math.min(100, raw);
       return { ...step, conversion };
     });
   }, [trackingCounts, bookingsCount]);
+
+  const serviceBreakdown = useMemo(() => {
+    return [
+      { label: "MOT bookings", value: trackingCounts.booking_completed_mot ?? 0 },
+      { label: "Interim Service bookings", value: trackingCounts.booking_completed_interim_service ?? 0 },
+      { label: "Full Service bookings", value: trackingCounts.booking_completed_full_service ?? 0 },
+      { label: "Diagnostics bookings", value: trackingCounts.booking_completed_diagnostics ?? 0 },
+      { label: "Know exactly what you need", value: trackingCounts.booking_completed_custom_job ?? 0 },
+      { label: "I'm not sure what's wrong", value: trackingCounts.booking_completed_not_sure ?? 0 },
+    ];
+  }, [trackingCounts]);
 
   useEffect(() => {
     let mounted = true;
@@ -146,7 +156,7 @@ export default function MotorHqAnalyticsPage() {
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Booking Funnel</h2>
-              <p className="mt-1 text-xs text-[#6D7684]">Counts and conversion at each step.</p>
+              <p className="mt-1 text-xs text-[#6D7684]">Counts and conversion at each key step (session-deduped).</p>
               <div className="mt-3 overflow-x-auto">
                 <div className="flex min-w-[760px] items-stretch gap-2">
                   {funnelSteps.map((step, index) => (
@@ -160,6 +170,18 @@ export default function MotorHqAnalyticsPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
+              <h2 className="text-sm font-semibold text-[#2A3341]">Bookings by Service Type</h2>
+              <div className="mt-3 space-y-2">
+                {serviceBreakdown.map((metric) => (
+                  <div key={metric.label} className="flex items-center justify-between rounded-md border border-[#E9EDF3] px-3 py-2">
+                    <span className="text-sm text-[#2A3341]">{metric.label}</span>
+                    <span className="text-sm font-semibold text-[#1E2531]">{metric.value}</span>
+                  </div>
+                ))}
               </div>
             </section>
 

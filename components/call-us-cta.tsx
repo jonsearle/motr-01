@@ -34,10 +34,22 @@ export function CallUsCta() {
     };
   }, []);
 
+  function trackCallClick() {
+    void fetch("/api/tracking/page-view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_type: "call_us_click" }),
+      keepalive: true,
+    }).catch(() => {
+      // Best-effort tracking.
+    });
+  }
+
   if (isMobile) {
     return (
       <a
         href={PHONE_TEL}
+        onClick={trackCallClick}
         className="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
       >
         <PhoneIcon />
@@ -50,7 +62,10 @@ export function CallUsCta() {
     <>
       <button
         type="button"
-        onClick={() => setDesktopOpen(true)}
+        onClick={() => {
+          trackCallClick();
+          setDesktopOpen(true);
+        }}
         className="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
       >
         <PhoneIcon />

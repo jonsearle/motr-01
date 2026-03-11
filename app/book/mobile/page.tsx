@@ -50,10 +50,16 @@ function MobileFormContent() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Send the booking journey category for analytics breakdown.
         body: JSON.stringify({
           name,
           phone,
           service_type: finalServiceType,
+          booking_category: problem.trim()
+            ? "not_sure"
+            : serviceType === "Custom Job"
+              ? "custom_job"
+              : serviceType.toLowerCase().replace(/\s+/g, "_"),
           description: mergedDescription || undefined,
           date,
           time,

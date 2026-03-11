@@ -60,6 +60,19 @@ function getOwnerAlertPhone(): string {
   return normalizePhoneInput(fromEnv || DEFAULT_OWNER_ALERT_PHONE);
 }
 
+function mapBookingCategoryToEvent(category: string | null): "booking_completed_mot" | "booking_completed_interim_service" | "booking_completed_full_service" | "booking_completed_diagnostics" | "booking_completed_custom_job" | "booking_completed_not_sure" | null {
+  if (!category) return null;
+
+  const normalized = category.trim().toLowerCase();
+  if (normalized === "mot") return "booking_completed_mot";
+  if (normalized === "interim_service") return "booking_completed_interim_service";
+  if (normalized === "full_service") return "booking_completed_full_service";
+  if (normalized === "diagnostics" || normalized === "diagnostic") return "booking_completed_diagnostics";
+  if (normalized === "custom_job") return "booking_completed_custom_job";
+  if (normalized === "not_sure") return "booking_completed_not_sure";
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const authCookie = request.cookies.get(MOTORHQ_AUTH_COOKIE)?.value;
   if (authCookie !== getMotorHqSessionToken()) {
@@ -132,6 +145,17 @@ export async function POST(request: NextRequest) {
         event_type: "booking_completed",
         phone_number: booking.phone,
       });
+
+      const bookingCategoryEvent = mapBookingCategoryToEvent(
+        typeof body.booking_category === "string" ? body.booking_category : null
+      );
+      if (bookingCategoryEvent) {
+        await logTrackingEvent({
+          garage_id: settings.id,
+          event_type: bookingCategoryEvent,
+          phone_number: booking.phone,
+        });
+      }
     } catch (trackingError) {
       console.error("Failed to log booking_completed", trackingError);
     }

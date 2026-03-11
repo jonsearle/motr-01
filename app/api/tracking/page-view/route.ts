@@ -5,6 +5,7 @@ import type { TrackingEventType } from "@/types/db";
 const TRACKABLE_EVENTS = new Set<TrackingEventType>([
   "entry_website",
   "entry_gmb_booking",
+  "call_us_click",
   "page_view_owner_home",
   "page_view_owner_bookings",
   "page_view_motorhq_analytics",
