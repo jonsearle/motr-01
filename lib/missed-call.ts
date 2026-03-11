@@ -1,6 +1,6 @@
 import type { GarageSettings } from "@/types/db";
 
-const DISPLAY_DOMAIN = "motr.one";
+const DEFAULT_APP_BASE_URL = "https://motr.one";
 const WHATSAPP_TEXT = "Hi there, I'm looking for some help.";
 
 export function normalizePhoneInput(input: string): string {
@@ -39,10 +39,11 @@ export function isLikelyValidPhone(input: string): boolean {
 }
 
 export function buildShortLinks(shortCode: string): { booking: string; whatsapp: string } {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_BASE_URL || process.env.BASE_APP_URL || DEFAULT_APP_BASE_URL).replace(/\/$/, "");
   const normalizedCode = shortCode.trim().toLowerCase();
   return {
-    booking: `https://${DISPLAY_DOMAIN}/b/${normalizedCode}`,
-    whatsapp: `https://${DISPLAY_DOMAIN}/w/${normalizedCode}`,
+    booking: `${baseUrl}/b/${normalizedCode}`,
+    whatsapp: `${baseUrl}/w/${normalizedCode}`,
   };
 }
 

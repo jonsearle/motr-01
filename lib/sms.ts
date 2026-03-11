@@ -66,9 +66,12 @@ export async function sendSms(to: string, text: string): Promise<void> {
 }
 
 export function bookingLink(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_APP_URL;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.BASE_APP_URL;
   if (!baseUrl) {
-    throw new Error("Missing NEXT_PUBLIC_APP_URL or BASE_APP_URL");
+    throw new Error("Missing NEXT_PUBLIC_APP_BASE_URL, NEXT_PUBLIC_APP_URL, or BASE_APP_URL");
   }
 
   return `${baseUrl.replace(/\/$/, "")}/book`;

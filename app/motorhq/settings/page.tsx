@@ -16,7 +16,7 @@ const DAY_LABELS: Record<DayKey, string> = {
 };
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i);
-const DISPLAY_DOMAIN = "https://motr.one";
+const DISPLAY_DOMAIN = (process.env.NEXT_PUBLIC_APP_BASE_URL || "https://motr.one").replace(/\/$/, "");
 
 function formatHourLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
