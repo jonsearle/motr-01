@@ -225,7 +225,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [garageName, setGarageName] = useState("N1 Mobile Auto Repairs");
-  const [reviewShortLink, setReviewShortLink] = useState("");
+  const [reviewRequestLink, setReviewRequestLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<BookingTab>("future");
@@ -280,9 +280,9 @@ export default function BookingsPage() {
         }
 
         if (settings.short_code?.trim() && settings.google_review_url?.trim()) {
-          setReviewShortLink(`${window.location.origin}/r/${settings.short_code}`);
+          setReviewRequestLink(`${window.location.origin}/review/${settings.short_code}`);
         } else {
-          setReviewShortLink("");
+          setReviewRequestLink("");
         }
       } catch {
         // Ignore and use defaults/fallbacks.
@@ -326,7 +326,7 @@ export default function BookingsPage() {
   function onSendReviewRequest() {
     if (!selected) return;
 
-    if (!reviewShortLink) {
+    if (!reviewRequestLink) {
       window.alert("Add your Google review URL in MotorHQ settings first.");
       return;
     }
@@ -337,7 +337,7 @@ export default function BookingsPage() {
       return;
     }
 
-    const message = `Hi ${getFirstName(selected.name)}, thanks for booking with ${garageName}. Would you mind leaving us a quick Google review? ${reviewShortLink}`;
+    const message = `Hi ${getFirstName(selected.name)},\n\nThanks for booking with ${garageName}.\n\nWould you mind leaving us a quick Google review?\n${reviewRequestLink}`;
     window.location.href = `sms:${number}?body=${encodeURIComponent(message)}`;
   }
 

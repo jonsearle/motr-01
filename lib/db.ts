@@ -301,6 +301,25 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
   return data;
 }
 
+export async function createReviewFeedback(input: {
+  garage_id: string;
+  rating: number;
+  message: string;
+  customer_phone?: string | null;
+}): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.from("review_feedback").insert({
+    garage_id: input.garage_id,
+    rating: input.rating,
+    message: input.message.trim(),
+    customer_phone: input.customer_phone ?? null,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function listBookings(): Promise<Booking[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
