@@ -4,13 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 
-const DETAIL_METRIC_LABELS: Array<{ key: string; label: string }> = [
-  { key: "call_us_click", label: "Call us button clicks" },
-  { key: "whatsapp_click", label: "WhatsApp clicks" },
-  { key: "missed_call", label: "Missed calls tracked" },
-  { key: "sms_sent", label: "Reply SMS sent" },
-];
-
 interface MotorHqMetrics {
   bookings_count: number;
   tracking_counts: Record<string, number>;
@@ -186,13 +179,9 @@ export default function MotorHqAnalyticsPage() {
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
               <h2 className="text-sm font-semibold text-[#2A3341]">Additional Metrics</h2>
-              <div className="mt-3 space-y-2">
-                {DETAIL_METRIC_LABELS.map((metric) => (
-                  <div key={metric.key} className="flex items-center justify-between rounded-md border border-[#E9EDF3] px-3 py-2">
-                    <span className="text-sm text-[#2A3341]">{metric.label}</span>
-                    <span className="text-sm font-semibold text-[#1E2531]">{trackingCounts[metric.key] ?? 0}</span>
-                  </div>
-                ))}
+              <div className="mt-3 flex items-center justify-between rounded-md border border-[#E9EDF3] px-3 py-2">
+                <span className="text-sm text-[#2A3341]">Call us button clicks</span>
+                <span className="text-sm font-semibold text-[#1E2531]">{trackingCounts.call_us_click ?? 0}</span>
               </div>
             </section>
 
