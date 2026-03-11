@@ -252,6 +252,18 @@ export default function MotorHqSettingsPage() {
                     Test review flow
                   </a>
                 </div>
+
+                <div>
+                  <p className="text-xs font-medium text-[#5B6472]">Booking flow test link</p>
+                  <a
+                    href={`${DISPLAY_DOMAIN}/book?src=website`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex rounded-lg border border-[#D5DCE7] bg-white px-3 py-1.5 text-sm font-medium text-[#1F252E] hover:bg-[#F5F7FA]"
+                  >
+                    Test booking flow
+                  </a>
+                </div>
               </div>
             </section>
 
