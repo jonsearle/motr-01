@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Smart Reply garage app",
     start_url: "/",
     display: "standalone",
-    background_color: "#FBFCFE",
+    background_color: "#EEF1F5",
     theme_color: "#FF6B35",
     icons: [
       {

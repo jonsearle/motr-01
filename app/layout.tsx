@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BootLoader } from "@/components/boot-loader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,7 +33,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body style={{ backgroundColor: "#FBFCFE", color: "#1C2330" }}>{children}</body>
+      <body style={{ backgroundColor: "#EEF1F5", color: "#1C2330" }}>
+        <BootLoader />
+        {children}
+      </body>
     </html>
   );
 }
