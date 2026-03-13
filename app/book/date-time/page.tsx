@@ -128,6 +128,12 @@ function DateTimeContent() {
   }, []);
 
   useEffect(() => {
+    if (!rulesLoaded) return;
+    setSelectedDate(firstAvailableDate);
+    setVisibleWeekStart(getStartOfWeek(firstAvailableDate));
+  }, [rulesLoaded, firstAvailableDate]);
+
+  useEffect(() => {
     const nextFirstAvailableDate =
       calculateEarliestBookingDate({
         today,
