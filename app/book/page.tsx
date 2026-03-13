@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { CallUsCta } from "@/components/call-us-cta";
 import { useTrackBookingEntry } from "@/lib/use-track-booking-entry";
@@ -24,7 +25,7 @@ const SERVICE_OPTIONS = [
   },
 ];
 
-export default function BookPage() {
+function BookPageContent() {
   const garageName = useGarageName();
   useTrackBookingEntry();
   useTrackPageView("page_view_book");
@@ -81,5 +82,13 @@ export default function BookPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-gray-800 p-6 text-white">Loading...</main>}>
+      <BookPageContent />
+    </Suspense>
   );
 }
