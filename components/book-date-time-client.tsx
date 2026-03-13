@@ -8,11 +8,12 @@ import { PoweredByMotr } from "@/components/powered-by-motr";
 import { useBookingSettings } from "@/components/booking-settings-provider";
 import { calculateEarliestBookingDate, addDays, isDateAvailable, toIsoDate, type BookingsByDate } from "@/lib/booking-availability";
 import { buildTimeSlotsForDate, normalizeOpeningHours } from "@/lib/booking-hours";
+import { resolveGarageContactNumber } from "@/lib/missed-call";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const CALL_NUMBER = "07846799625";
+const DEFAULT_CALL_NUMBER = "07968777469";
 
 const getStartOfWeek = (date: Date): Date => {
   const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -54,6 +55,7 @@ export function BookDateTimeClient({ initialBookingsByDate }: { initialBookingsB
   const bookingHoursEnabled = settings.booking_hours_enabled;
   const openingHours = useMemo(() => normalizeOpeningHours(settings.opening_hours), [settings.opening_hours]);
   const garageName = settings.garage_name?.trim() || "N1 Mobile Auto Repairs";
+  const callNumber = resolveGarageContactNumber(settings) || DEFAULT_CALL_NUMBER;
 
   const [bookingsByDate] = useState<BookingsByDate>(initialBookingsByDate);
   const [navigating, setNavigating] = useState(false);
@@ -189,7 +191,7 @@ export function BookDateTimeClient({ initialBookingsByDate }: { initialBookingsB
             <CallUsCta />
           ) : (
             <a
-              href={`tel:${CALL_NUMBER}`}
+              href={`tel:${callNumber.replace(/[^\d+]/g, "")}`}
               className="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -205,10 +207,10 @@ export function BookDateTimeClient({ initialBookingsByDate }: { initialBookingsB
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Online booking is currently unavailable</h1>
             <p className="mt-3 text-base text-gray-200">Please call us to make a booking.</p>
             <a
-              href={`tel:${CALL_NUMBER}`}
+              href={`tel:${callNumber.replace(/[^\d+]/g, "")}`}
               className="mt-6 block w-full rounded-lg border border-white bg-gray-800 px-4 py-4 text-center text-xl font-semibold tracking-[0.01em] text-white transition-colors hover:bg-gray-700"
             >
-              {CALL_NUMBER}
+              {callNumber}
             </a>
           </div>
         ) : (

@@ -52,9 +52,15 @@ export function buildWhatsappDestination(number: string): string {
 }
 
 function resolveCallbackNumber(settings: GarageSettings, fallbackPhone?: string | null): string {
-  const primary = normalizePhoneInput(settings.garage_phone);
+  const primary = normalizePhoneInput(settings.booking_alert_phone);
   if (primary) return primary;
+  const legacyGaragePhone = normalizePhoneInput(settings.garage_phone);
+  if (legacyGaragePhone) return legacyGaragePhone;
   return normalizePhoneInput(fallbackPhone ?? "");
+}
+
+export function resolveGarageContactNumber(settings: GarageSettings, fallbackPhone?: string | null): string {
+  return resolveCallbackNumber(settings, fallbackPhone);
 }
 
 export function validateMissedCallCtas(settings: GarageSettings, fallbackPhone?: string | null): string | null {

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useOptionalBookingSettings } from "@/components/booking-settings-provider";
 import { useGarageName } from "@/lib/use-garage-name";
+import { resolveGarageContactNumber } from "@/lib/missed-call";
 
-const PHONE_DISPLAY = "07846799625";
-const PHONE_TEL = "tel:07846799625";
+const DEFAULT_PHONE_DISPLAY = "07968777469";
 
 function PhoneIcon() {
   return (
@@ -21,6 +22,9 @@ export function CallUsCta() {
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const garageName = useGarageName();
+  const bookingSettings = useOptionalBookingSettings();
+  const phoneDisplay = bookingSettings ? resolveGarageContactNumber(bookingSettings) || DEFAULT_PHONE_DISPLAY : DEFAULT_PHONE_DISPLAY;
+  const phoneTel = `tel:${phoneDisplay.replace(/[^\d+]/g, "")}`;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px), (pointer: coarse)");
@@ -48,7 +52,7 @@ export function CallUsCta() {
   if (isMobile) {
     return (
       <a
-        href={PHONE_TEL}
+        href={phoneTel}
         onClick={trackCallClick}
         className="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
       >
@@ -91,7 +95,7 @@ export function CallUsCta() {
             </div>
 
             <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Call us</h1>
-            <p className="mt-6 text-[36px] font-semibold tracking-[-0.02em]">{PHONE_DISPLAY}</p>
+            <p className="mt-6 text-[36px] font-semibold tracking-[-0.02em]">{phoneDisplay}</p>
             <button
               type="button"
               onClick={() => setDesktopOpen(false)}

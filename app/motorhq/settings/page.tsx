@@ -280,14 +280,16 @@ export default function MotorHqSettingsPage() {
             </section>
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">
-              <label className="block text-sm font-semibold text-[#2A3341]">Booking alert phone</label>
+              <label className="block text-sm font-semibold text-[#2A3341]">Garage contact number</label>
               <input
                 value={bookingAlertPhone}
                 onChange={(event) => setBookingAlertPhone(event.target.value)}
                 className="mt-2 w-full rounded-lg border border-[#D5DCE7] px-3 py-2 text-sm"
                 placeholder="07968777469"
               />
-              <p className="mt-2 text-xs text-[#6D7684]">Number that receives new booking alert texts.</p>
+              <p className="mt-2 text-xs text-[#6D7684]">
+                Sets the number for booking alert texts, the Call us button, and the number shown when online booking is turned off.
+              </p>
             </section>
 
             <section className="rounded-xl border border-[#E4E8EF] bg-white p-4">

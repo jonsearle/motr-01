@@ -4,7 +4,7 @@ import { buildTimeSlotsForDate, normalizeOpeningHours } from "@/lib/booking-hour
 import { countBookingsOnDate, createBooking, getOrCreateGarageSettings, listBookingsByView, logTrackingEvent } from "@/lib/db";
 import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
 import { getOwnerSessionToken, OWNER_AUTH_COOKIE } from "@/lib/owner-auth";
-import { buildShortLinks, isLikelyValidPhone, normalizePhoneInput } from "@/lib/missed-call";
+import { buildShortLinks, isLikelyValidPhone, normalizePhoneInput, resolveGarageContactNumber } from "@/lib/missed-call";
 import { sendSms } from "@/lib/sms";
 
 const DEFAULT_OWNER_ALERT_PHONE = "07968 777469";
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     }
 
     const links = buildShortLinks(settings.short_code);
-    const callNumber = normalizePhoneInput(settings.garage_phone) || "07846799625";
+    const callNumber = resolveGarageContactNumber(settings) || "07968777469";
     const friendlyDate = formatFriendlyDate(booking.date);
     const friendlyTime = formatFriendlyTime(booking.time);
     const garageName = settings.garage_name?.trim() || "N1 Mobile Auto Repairs";
