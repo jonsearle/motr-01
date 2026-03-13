@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { OwnerBottomNav } from "@/components/owner-bottom-nav";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 import type { GarageSettings } from "@/types/db";
 
@@ -37,49 +38,6 @@ function OnlineBookingIcon({ size = 20 }: { size?: number }) {
         strokeLinejoin="round"
       />
     </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M7 3v4M17 3v4M4 9h16M6 6h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function BottomNav({ active }: { active: "online" | "bookings" }) {
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}>
-      <div className="mx-auto w-full max-w-md bg-[#FBFCFE] px-1 py-2">
-        <div className="grid grid-cols-2 gap-2">
-          <Link
-            href="/"
-            className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
-              active === "online" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
-            }`}
-          >
-            <OnlineBookingIcon />
-            <span>Website</span>
-          </Link>
-          <Link
-            href="/bookings"
-            className={`flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
-              active === "bookings" ? "bg-[#FFEDE5] text-[#1F252E]" : "text-[#8A8F98]"
-            }`}
-          >
-            <CalendarIcon />
-            <span>Bookings</span>
-          </Link>
-        </div>
-      </div>
-    </nav>
   );
 }
 
@@ -204,7 +162,7 @@ export function OwnerHomeClient({ initialSettings }: { initialSettings: GarageSe
         </div>
       </div>
 
-      <BottomNav active="online" />
+      <OwnerBottomNav active="online" />
 
       {toast && (
         <div className="fixed left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-[#1E222B] px-4 py-2 text-xs font-medium text-white shadow-lg">
