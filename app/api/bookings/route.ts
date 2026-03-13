@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { calculateEarliestBookingDate, countBookingsByDate, parseIsoDate, toIsoDate } from "@/lib/booking-availability";
 import { buildTimeSlotsForDate, normalizeOpeningHours } from "@/lib/booking-hours";
 import { countBookingsOnDate, createBooking, getOrCreateGarageSettings, listBookingsByView, logTrackingEvent } from "@/lib/db";
 import { getMotorHqSessionToken, MOTORHQ_AUTH_COOKIE } from "@/lib/motorhq-auth";
@@ -24,11 +25,6 @@ function validate(input: unknown): string | null {
   if (typeof data.website === "string" && data.website.trim().length > 0) return "Invalid payload";
 
   return null;
-}
-
-function parseLocalDate(input: string): Date {
-  const [year, month, day] = input.split("-").map(Number);
-  return new Date(year, month - 1, day);
 }
 
 function formatDays(value: number): string {
@@ -108,9 +104,21 @@ export async function POST(request: NextRequest) {
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const earliestAllowed = new Date(today);
-    earliestAllowed.setDate(today.getDate() + settings.min_booking_notice_days);
-    const requestedDate = parseLocalDate(body.date);
+    const requestedDate = parseIsoDate(body.date);
+    const openingHours = normalizeOpeningHours(settings.opening_hours);
+    const futureBookings = await listBookingsByView("future");
+    const bookingsByDate = countBookingsByDate(futureBookings);
+    const earliestAllowed = calculateEarliestBookingDate({
+      today,
+      minBookingNoticeDays: settings.min_booking_notice_days,
+      openingHours,
+      maxBookingsPerDay: settings.max_bookings_per_day,
+      bookingsByDate,
+    });
+
+    if (!earliestAllowed) {
+      return NextResponse.json({ error: "Online booking is currently unavailable." }, { status: 400 });
+    }
 
     if (requestedDate < earliestAllowed) {
       return NextResponse.json(
@@ -119,13 +127,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const openingHours = normalizeOpeningHours(settings.opening_hours);
     const allowedSlotsForDate = buildTimeSlotsForDate(requestedDate, openingHours);
     if (!allowedSlotsForDate.includes(body.time)) {
       return NextResponse.json({ error: "Selected time is not available for that day." }, { status: 400 });
     }
 
-    const bookingCountForDate = await countBookingsOnDate(body.date);
+    const bookingCountForDate = bookingsByDate[toIsoDate(requestedDate)] ?? (await countBookingsOnDate(body.date));
     if (bookingCountForDate >= settings.max_bookings_per_day) {
       return NextResponse.json(
         { error: `This day is fully booked. Maximum ${settings.max_bookings_per_day} online bookings per day.` },

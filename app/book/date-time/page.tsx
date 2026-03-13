@@ -5,20 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { CallUsCta } from "@/components/call-us-cta";
 import { PoweredByMotr } from "@/components/powered-by-motr";
-import { buildTimeSlotsForDate, findFirstBookableDate, normalizeOpeningHours, type OpeningHours } from "@/lib/booking-hours";
+import { calculateEarliestBookingDate, addDays, isDateAvailable, toIsoDate, type BookingsByDate } from "@/lib/booking-availability";
+import { buildTimeSlotsForDate, normalizeOpeningHours, type OpeningHours } from "@/lib/booking-hours";
 import { useGarageName } from "@/lib/use-garage-name";
 import { useTrackPageView } from "@/lib/use-track-page-view";
-import type { Booking, GarageSettings } from "@/types/db";
+import type { GarageSettings } from "@/types/db";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CALL_NUMBER = "07846799625";
-
-const addDays = (date: Date, days: number): Date => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
 
 const getStartOfWeek = (date: Date): Date => {
   const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -40,32 +35,6 @@ const formatWeekRange = (weekStart: Date): string => {
   return `${startDay} ${startMonth} to ${endDay} ${endMonth}`;
 };
 
-const toIsoDate = (date: Date): string => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-function findFirstDateWithCapacity(
-  startDate: Date,
-  openingHours: OpeningHours,
-  maxBookingsPerDay: number,
-  bookingsByDate: Record<string, number>
-): Date {
-  const safeMax = Math.max(1, maxBookingsPerDay);
-  for (let offset = 0; offset < 365; offset += 1) {
-    const candidate = addDays(startDate, offset);
-    const hasSlots = buildTimeSlotsForDate(candidate, openingHours).length > 0;
-    const isFull = (bookingsByDate[toIsoDate(candidate)] ?? 0) >= safeMax;
-    if (hasSlots && !isFull) {
-      return candidate;
-    }
-  }
-
-  return findFirstBookableDate(startDate, openingHours);
-}
-
 function DateTimeContent() {
   useTrackPageView("page_view_date_time");
   const searchParams = useSearchParams();
@@ -83,14 +52,20 @@ function DateTimeContent() {
   const [maxBookingsPerDay, setMaxBookingsPerDay] = useState(3);
   const [bookingHoursEnabled, setBookingHoursEnabled] = useState(true);
   const [openingHours, setOpeningHours] = useState<OpeningHours>(normalizeOpeningHours(null));
-  const [bookingsByDate, setBookingsByDate] = useState<Record<string, number>>({});
+  const [bookingsByDate, setBookingsByDate] = useState<BookingsByDate>({});
   const [rulesLoaded, setRulesLoaded] = useState(false);
 
-  const minBookableDate = useMemo(() => addDays(today, minBookingNoticeDays), [today, minBookingNoticeDays]);
-  const firstAvailableDate = useMemo(
-    () => findFirstDateWithCapacity(minBookableDate, openingHours, maxBookingsPerDay, bookingsByDate),
-    [minBookableDate, openingHours, maxBookingsPerDay, bookingsByDate]
-  );
+  const firstAvailableDate = useMemo(() => {
+    return (
+      calculateEarliestBookingDate({
+        today,
+        minBookingNoticeDays,
+        openingHours,
+        maxBookingsPerDay,
+        bookingsByDate,
+      }) ?? today
+    );
+  }, [today, minBookingNoticeDays, openingHours, maxBookingsPerDay, bookingsByDate]);
   const firstAvailableWeekStart = useMemo(() => getStartOfWeek(firstAvailableDate), [firstAvailableDate]);
 
   const [visibleWeekStart, setVisibleWeekStart] = useState(getStartOfWeek(firstAvailableDate));
@@ -122,19 +97,16 @@ function DateTimeContent() {
       try {
         const [settingsResponse, bookingsResponse] = await Promise.all([
           fetch(`/api/garage-settings?t=${Date.now()}`, { cache: "no-store" }),
-          fetch("/api/bookings?view=future", { cache: "no-store" }),
+          fetch("/api/booking-availability", { cache: "no-store" }),
         ]);
         if (!settingsResponse.ok) return;
         const settings = (await settingsResponse.json()) as GarageSettings;
         if (!mounted) return;
 
-        let nextBookingsByDate: Record<string, number> = {};
+        let nextBookingsByDate: BookingsByDate = {};
         if (bookingsResponse.ok) {
-          const futureBookings = (await bookingsResponse.json()) as Booking[];
-          nextBookingsByDate = futureBookings.reduce<Record<string, number>>((acc, booking) => {
-            acc[booking.date] = (acc[booking.date] ?? 0) + 1;
-            return acc;
-          }, {});
+          const availability = (await bookingsResponse.json()) as { bookingsByDate?: BookingsByDate };
+          nextBookingsByDate = availability.bookingsByDate ?? {};
         }
 
         setMinBookingNoticeDays(settings.min_booking_notice_days);
@@ -156,28 +128,35 @@ function DateTimeContent() {
   }, []);
 
   useEffect(() => {
-    const nextFirstAvailableDate = findFirstDateWithCapacity(
-      minBookableDate,
-      openingHours,
-      maxBookingsPerDay,
-      bookingsByDate
-    );
+    const nextFirstAvailableDate =
+      calculateEarliestBookingDate({
+        today,
+        minBookingNoticeDays,
+        openingHours,
+        maxBookingsPerDay,
+        bookingsByDate,
+      }) ?? firstAvailableDate;
     const earliestWeekStart = getStartOfWeek(nextFirstAvailableDate);
     const selectedDateIso = toIsoDate(selectedDate);
-    const selectedIsFull = (bookingsByDate[selectedDateIso] ?? 0) >= Math.max(1, maxBookingsPerDay);
+    const selectedIsAvailable = isDateAvailable(selectedDate, openingHours, maxBookingsPerDay, bookingsByDate);
 
-    if (
-      selectedDate < minBookableDate ||
-      buildTimeSlotsForDate(selectedDate, openingHours).length === 0 ||
-      selectedIsFull
-    ) {
+    if (selectedDate < nextFirstAvailableDate || !selectedIsAvailable) {
       setSelectedDate(nextFirstAvailableDate);
     }
 
     if (visibleWeekStart < earliestWeekStart) {
       setVisibleWeekStart(earliestWeekStart);
     }
-  }, [minBookableDate, selectedDate, visibleWeekStart, openingHours, maxBookingsPerDay, bookingsByDate]);
+  }, [
+    today,
+    minBookingNoticeDays,
+    firstAvailableDate,
+    selectedDate,
+    visibleWeekStart,
+    openingHours,
+    maxBookingsPerDay,
+    bookingsByDate,
+  ]);
 
   useEffect(() => {
     if (!selectedDateSlots.length) {
@@ -200,9 +179,7 @@ function DateTimeContent() {
   }
 
   function handleDateClick(date: Date) {
-    const dateIso = toIsoDate(date);
-    const isFull = (bookingsByDate[dateIso] ?? 0) >= Math.max(1, maxBookingsPerDay);
-    if (date < minBookableDate || buildTimeSlotsForDate(date, openingHours).length === 0 || isFull) return;
+    if (date < firstAvailableDate || !isDateAvailable(date, openingHours, maxBookingsPerDay, bookingsByDate)) return;
     setSelectedDate(date);
   }
 
@@ -308,10 +285,10 @@ function DateTimeContent() {
 
               <div className="grid grid-cols-7 gap-1.5">
                 {weekDates.map((date) => {
-                  const isBeforeNotice = date < minBookableDate;
+                  const isBeforeNotice = date < firstAvailableDate;
                   const slotsForDay = buildTimeSlotsForDate(date, openingHours);
                   const isClosed = slotsForDay.length === 0;
-                  const isFull = (bookingsByDate[toIsoDate(date)] ?? 0) >= Math.max(1, maxBookingsPerDay);
+                  const isFull = !isClosed && !isDateAvailable(date, openingHours, maxBookingsPerDay, bookingsByDate);
                   const selected = isSameDay(date, selectedDate);
                   const isDisabled = isBeforeNotice || isClosed || isFull;
 
