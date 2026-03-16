@@ -220,17 +220,17 @@ export function BookingsClient({
   }, [initialSettings.google_review_url, initialSettings.short_code]);
 
   useEffect(() => {
-    if (activeTab === "future") {
-      setBookings(initialBookings);
-      setLoading(false);
-      return;
-    }
-
     const controller = new AbortController();
     let mounted = true;
 
-    async function load() {
-      setLoading(true);
+    if (activeTab === "future") {
+      setBookings(initialBookings);
+    }
+
+    async function load(showLoading: boolean) {
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -244,6 +244,14 @@ export function BookingsClient({
         const data: Booking[] = await response.json();
         if (!mounted) return;
         setBookings(data);
+        setSelected((current) => {
+          if (!current) return null;
+          const nextSelected = data.find((booking) => booking.id === current.id) ?? null;
+          if (!nextSelected) {
+            setConfirmDelete(false);
+          }
+          return nextSelected;
+        });
       } catch {
         if (!mounted) return;
         setError("Couldn’t load bookings.");
@@ -252,11 +260,25 @@ export function BookingsClient({
       }
     }
 
-    void load();
+    void load(activeTab !== "future" || initialBookings.length === 0);
+
+    const refreshBookings = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      void load(false);
+    };
+
+    const intervalId = window.setInterval(refreshBookings, 15000);
+    window.addEventListener("focus", refreshBookings);
+    document.addEventListener("visibilitychange", refreshBookings);
 
     return () => {
       mounted = false;
       controller.abort();
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshBookings);
+      document.removeEventListener("visibilitychange", refreshBookings);
     };
   }, [activeTab, initialBookings]);
 
