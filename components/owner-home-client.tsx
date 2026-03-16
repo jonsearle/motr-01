@@ -6,6 +6,8 @@ import { OwnerBottomNav } from "@/components/owner-bottom-nav";
 import { useTrackPageView } from "@/lib/use-track-page-view";
 import type { GarageSettings } from "@/types/db";
 
+const DISPLAY_DOMAIN = (process.env.NEXT_PUBLIC_APP_BASE_URL || "https://motr.one").replace(/\/$/, "");
+
 function EditIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -34,6 +36,21 @@ function OnlineBookingIcon({ size = 20 }: { size?: number }) {
         d="M14 10a5 5 0 0 1 0 7L12.5 18.5a5 5 0 1 1-7-7L7 10"
         stroke="currentColor"
         strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"
+        stroke="currentColor"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -71,6 +88,9 @@ export function OwnerHomeClient({ initialSettings }: { initialSettings: GarageSe
   }, []);
 
   const enabled = !!settings.booking_hours_enabled;
+  const bookingLink = settings.short_code?.trim()
+    ? `${DISPLAY_DOMAIN}/b/${settings.short_code.trim()}`
+    : `${DISPLAY_DOMAIN}/book`;
 
   const heroCircleClasses = useMemo(() => {
     const base = "mx-auto flex aspect-square w-full max-w-[336px] items-center justify-center rounded-full text-center transition-all duration-200";
@@ -112,6 +132,23 @@ export function OwnerHomeClient({ initialSettings }: { initialSettings: GarageSe
     }
   }
 
+  async function onCopyBookingLink() {
+    const garageName = settings.garage_name?.trim() || "our garage";
+    const message = `Hello there,
+
+You can book online with ${garageName} here:
+${bookingLink}
+
+If you need any help, just reply to this message.`;
+
+    try {
+      await navigator.clipboard.writeText(message);
+      setToast("Booking link copied.");
+    } catch {
+      window.alert("Couldn’t copy booking link. Please try again.");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#FBFCFE] text-[#1C2330]">
       <div className="mx-auto w-full max-w-md px-6 pb-36 pt-6">
@@ -127,38 +164,51 @@ export function OwnerHomeClient({ initialSettings }: { initialSettings: GarageSe
         </header>
 
         <div className="flex min-h-[calc(100vh-240px)] items-center">
-          <button
-            type="button"
-            onClick={onToggleCircle}
-            disabled={saving || !settings.id}
-            className={`w-full transition-transform duration-300 ${microPress ? "scale-[1.045]" : "scale-100"}`}
-            aria-pressed={enabled}
-          >
-            <div className={heroCircleClasses}>
-              <div className="w-[78%]">
-                <div className={`mx-auto mb-4 flex items-center justify-center ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                  <OnlineBookingIcon size={30} />
+          <div className="w-full">
+            <button
+              type="button"
+              onClick={onToggleCircle}
+              disabled={saving || !settings.id}
+              className={`w-full transition-transform duration-300 ${microPress ? "scale-[1.045]" : "scale-100"}`}
+              aria-pressed={enabled}
+            >
+              <div className={heroCircleClasses}>
+                <div className="w-[78%]">
+                  <div className={`mx-auto mb-4 flex items-center justify-center ${enabled ? "text-white" : "text-[#4A515D]"}`}>
+                    <OnlineBookingIcon size={30} />
+                  </div>
+                  <p
+                    className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}
+                  >
+                    <span className="block">Online Bookings</span>
+                    <span className="block">{enabled ? "ON" : "OFF"}</span>
+                  </p>
+                  <p className={`mx-auto mt-2 h-[38px] max-w-[220px] text-[14px] leading-[1.3] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
+                    {enabled ? (
+                      <>
+                        <span className="block">Customers can book online</span>
+                        <span className="block">right now.</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block">Online booking is currently</span>
+                        <span className="block">paused.</span>
+                      </>
+                    )}
+                  </p>
                 </div>
-                <p className={`h-[74px] text-[30px] leading-[1.02] font-semibold tracking-[-0.02em] ${enabled ? "text-white" : "text-[#4A515D]"}`}>
-                  <span className="block">Online Bookings</span>
-                  <span className="block">{enabled ? "ON" : "OFF"}</span>
-                </p>
-                <p className={`mx-auto mt-2 h-[38px] max-w-[220px] text-[14px] leading-[1.3] ${enabled ? "text-[#FFE5DB]" : "text-[#6B727D]"}`}>
-                  {enabled ? (
-                    <>
-                      <span className="block">Customers can book online</span>
-                      <span className="block">right now.</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="block">Online booking is currently</span>
-                      <span className="block">paused.</span>
-                    </>
-                  )}
-                </p>
               </div>
-            </div>
-          </button>
+            </button>
+
+            <button
+              type="button"
+              onClick={onCopyBookingLink}
+              className="mx-auto mt-5 inline-flex items-center gap-2 text-[15px] font-medium text-[#5E6775] underline underline-offset-4 transition-colors hover:text-[#2F3640]"
+            >
+              <CopyIcon />
+              Copy booking link
+            </button>
+          </div>
         </div>
       </div>
 
