@@ -203,10 +203,10 @@ If you need any help, just reply to this message.`;
             <button
               type="button"
               onClick={onCopyBookingLink}
-              className="mx-auto mt-8 inline-flex items-center justify-center gap-2 text-center text-[15px] font-medium text-[#7B8491] transition-colors hover:text-[#59616D]"
+              className="mx-auto mt-8 flex w-full items-center justify-center gap-2 text-center text-[15px] font-medium text-[#7B8491] transition-colors hover:text-[#59616D]"
             >
               <CopyIcon />
-              Copy booking link
+              <span>Booking link</span>
             </button>
           </div>
         </div>
