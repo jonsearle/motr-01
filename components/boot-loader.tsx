@@ -30,11 +30,7 @@ export function BootLoader() {
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <div className="flex flex-col items-center gap-4 text-[#5F6773]">
-        <div className="relative h-11 w-11">
-          <div className="absolute inset-0 rounded-full border-[3px] border-[#CBD2DB]" />
-          <div className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-t-[#6B727D] border-r-[#6B727D]" />
-        </div>
+      <div className="text-sm font-medium text-[#5F6773]">
         <p className="text-sm font-medium">Loading...</p>
       </div>
     </div>
