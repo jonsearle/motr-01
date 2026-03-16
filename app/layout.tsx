@@ -34,6 +34,26 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ backgroundColor: "#EEF1F5", color: "#1C2330" }}>
+        <div
+          id="instant-loading"
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#EEF1F5",
+            color: "#6B727D",
+            fontSize: "16px",
+            fontWeight: 500,
+            letterSpacing: "0.01em",
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        >
+          Loading...
+        </div>
         <BootLoader />
         {children}
       </body>

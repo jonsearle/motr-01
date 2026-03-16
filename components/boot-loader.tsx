@@ -7,6 +7,11 @@ export function BootLoader() {
   const [rendered, setRendered] = useState(true);
 
   useEffect(() => {
+    const instantLoading = document.getElementById("instant-loading");
+    if (instantLoading) {
+      instantLoading.style.display = "none";
+    }
+
     const hideTimer = window.setTimeout(() => setVisible(false), 180);
     const removeTimer = window.setTimeout(() => setRendered(false), 500);
 
