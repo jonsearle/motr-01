@@ -141,9 +141,9 @@ function TrashIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M3 6h18M8 6V4h8v2m-7 4v7m4-7v7m-8 3h10a2 2 0 0 0 2-2V6H7v12a2 2 0 0 0 2 2Z"
+        d="M9 3.75h6a.75.75 0 0 1 .75.75V6h3a.75.75 0 0 1 0 1.5h-.69l-.63 10.13a2.25 2.25 0 0 1-2.24 2.12H8.81a2.25 2.25 0 0 1-2.24-2.12L5.94 7.5H5.25a.75.75 0 0 1 0-1.5h3V4.5A.75.75 0 0 1 9 3.75Zm.75 2.25h4.5v-.75h-4.5V6Zm-1.68 1.5.6 9.95a.75.75 0 0 0 .75.7h5.86a.75.75 0 0 0 .75-.7l.6-9.95H8.07Zm2.68 2.25a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5a.75.75 0 0 1 .75-.75Zm3.5 0a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5a.75.75 0 0 1 .75-.75Z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.35"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
