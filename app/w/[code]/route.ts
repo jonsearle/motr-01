@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGarageSettingsByShortCode, logTrackingEvent } from "@/lib/db";
-import { buildWhatsappDestination, normalizeWhatsappNumber } from "@/lib/missed-call";
+import { buildWhatsappDestination, resolveWhatsappNumber } from "@/lib/missed-call";
 
 export async function GET(
   _request: NextRequest,
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unknown WhatsApp link" }, { status: 404 });
     }
 
-    const number = normalizeWhatsappNumber(settings.whatsapp_number);
+    const number = resolveWhatsappNumber(settings);
     if (!number) {
       return NextResponse.json({ error: "WhatsApp number missing" }, { status: 400 });
     }

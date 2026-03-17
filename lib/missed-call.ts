@@ -63,12 +63,16 @@ export function resolveGarageContactNumber(settings: GarageSettings, fallbackPho
   return resolveCallbackNumber(settings, fallbackPhone);
 }
 
+export function resolveWhatsappNumber(settings: GarageSettings, fallbackPhone?: string | null): string {
+  return normalizeWhatsappNumber(resolveCallbackNumber(settings, fallbackPhone));
+}
+
 export function validateMissedCallCtas(settings: GarageSettings, fallbackPhone?: string | null): string | null {
   const enabledCount = Number(settings.cta_booking_enabled) + Number(settings.cta_whatsapp_enabled) + 1;
 
   if (enabledCount < 1) return "At least one CTA must be enabled.";
-  if (settings.cta_whatsapp_enabled && !normalizeWhatsappNumber(settings.whatsapp_number)) {
-    return "WhatsApp CTA is enabled but WhatsApp number is missing.";
+  if (settings.cta_whatsapp_enabled && !resolveWhatsappNumber(settings, fallbackPhone)) {
+    return "WhatsApp CTA is enabled but garage contact number is missing.";
   }
   if (!resolveCallbackNumber(settings, fallbackPhone)) {
     return "Phone CTA is enabled but callback number is missing.";

@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { normalizeWhatsappNumber } from "@/lib/missed-call";
 import type { GarageSettings } from "@/types/db";
 
 type AccountFormState = Pick<
   GarageSettings,
   | "cta_booking_enabled"
   | "cta_whatsapp_enabled"
-  | "whatsapp_number"
   | "min_booking_notice_days"
 >;
 
@@ -59,30 +57,6 @@ function Toggle({
   );
 }
 
-function NumberField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <label className="mt-3 block">
-      <span className="mb-1.5 block text-sm font-medium text-[#2E3643]">{label}</span>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-[#E3E8EF] bg-[#FCFDFE] px-3 py-2 text-sm outline-none focus:border-[#B4C0D1]"
-        placeholder={placeholder}
-      />
-    </label>
-  );
-}
-
 export default function AccountPage() {
   const router = useRouter();
   const [backHref, setBackHref] = useState("/");
@@ -106,7 +80,6 @@ export default function AccountPage() {
         setForm({
           cta_booking_enabled: data.cta_booking_enabled,
           cta_whatsapp_enabled: data.cta_whatsapp_enabled,
-          whatsapp_number: data.whatsapp_number,
           min_booking_notice_days: data.min_booking_notice_days,
         });
       } catch {
@@ -128,9 +101,6 @@ export default function AccountPage() {
     const enabledCount = Number(form.cta_booking_enabled) + Number(form.cta_whatsapp_enabled);
 
     if (enabledCount < 1) return "Enable at least one message option.";
-    if (form.cta_whatsapp_enabled && !normalizeWhatsappNumber(form.whatsapp_number)) {
-      return "WhatsApp number is required when WhatsApp is enabled.";
-    }
     return null;
   }, [form]);
 
@@ -149,7 +119,6 @@ export default function AccountPage() {
           cta_booking_enabled: form.cta_booking_enabled,
           cta_whatsapp_enabled: form.cta_whatsapp_enabled,
           cta_phone_enabled: true,
-          whatsapp_number: form.whatsapp_number,
         }),
       });
 
@@ -217,12 +186,9 @@ export default function AccountPage() {
                     label="Include WhatsApp link"
                   />
                   {form.cta_whatsapp_enabled && (
-                    <NumberField
-                      label="WhatsApp number"
-                      value={form.whatsapp_number}
-                      onChange={(next) => setForm({ ...form, whatsapp_number: next })}
-                      placeholder="+44 7700 900123"
-                    />
+                    <p className="mt-3 text-sm text-[#2E3643]">
+                      WhatsApp uses your garage contact number from MotorHQ settings.
+                    </p>
                   )}
                 </div>
               </div>

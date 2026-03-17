@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { assertValidOpeningHours, DEFAULT_OPENING_HOURS, normalizeOpeningHours } from "@/lib/booking-hours";
-import { normalizePhoneInput, normalizeWhatsappNumber } from "@/lib/missed-call";
+import { normalizePhoneInput, resolveWhatsappNumber } from "@/lib/missed-call";
 import type {
   Booking,
   CreateBookingInput,
@@ -162,8 +162,8 @@ function assertValidCtaConfig(next: GarageSettings): void {
     throw new Error("At least one CTA must be enabled.");
   }
 
-  if (next.cta_whatsapp_enabled && !normalizeWhatsappNumber(next.whatsapp_number)) {
-    throw new Error("WhatsApp number is required when WhatsApp CTA is enabled.");
+  if (next.cta_whatsapp_enabled && !resolveWhatsappNumber(next)) {
+    throw new Error("Garage contact number is required when WhatsApp CTA is enabled.");
   }
 }
 
