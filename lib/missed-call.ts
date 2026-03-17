@@ -1,6 +1,6 @@
 import type { GarageSettings } from "@/types/db";
 
-const DEFAULT_APP_BASE_URL = "https://motr.one";
+const DEFAULT_APP_BASE_URL = "https://app.motr.one";
 const WHATSAPP_TEXT = "Hi there, I'm looking for some help.";
 
 export function normalizePhoneInput(input: string): string {
