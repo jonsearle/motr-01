@@ -14,7 +14,14 @@ export function normalizePhoneInput(input: string): string {
 }
 
 export function normalizeWhatsappNumber(input: string): string {
-  return normalizePhoneInput(input).replace(/\D/g, "");
+  const normalized = normalizePhoneInput(input);
+  const digits = normalized.replace(/\D/g, "");
+
+  if (/^0\d{10}$/.test(digits)) {
+    return `44${digits.slice(1)}`;
+  }
+
+  return digits;
 }
 
 export function isLikelyValidPhone(input: string): boolean {
