@@ -139,7 +139,7 @@ function NoteIcon() {
 
 function TrashIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M3 6h18M8 6V4h8v2m-7 4v7m4-7v7m-8 3h10a2 2 0 0 0 2-2V6H7v12a2 2 0 0 0 2 2Z"
         stroke="currentColor"
@@ -464,7 +464,7 @@ export function BookingsClient({
                 onClick={() => setConfirmDelete(true)}
                 aria-label="Delete booking"
                 title="Delete booking"
-                className="rounded-lg p-2 text-[#556070] hover:bg-[#EEF2F7]"
+                className="rounded-xl p-3 text-[#556070] hover:bg-[#EEF2F7]"
               >
                 <TrashIcon />
               </button>
@@ -507,13 +507,13 @@ export function BookingsClient({
               <button
                 type="button"
                 onClick={onSendReviewRequest}
-                className="w-full rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-sm font-semibold text-[#1F252E]"
+                className="min-h-[56px] w-full rounded-2xl border border-[#D7DDE6] bg-white px-5 py-4 text-base font-semibold text-[#1F252E]"
               >
                 Send Google Review Request
               </button>
               <a
                 href={selectedPhoneHref ?? "#"}
-                className="block w-full rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-center text-sm font-semibold text-[#1F252E] md:hidden"
+                className="block min-h-[56px] w-full rounded-2xl border border-[#D7DDE6] bg-white px-5 py-4 text-center text-base font-semibold text-[#1F252E] md:hidden"
               >
                 Call Customer
               </a>
@@ -523,7 +523,7 @@ export function BookingsClient({
                   setSelected(null);
                   setConfirmDelete(false);
                 }}
-                className="w-full rounded-xl bg-[#1F252E] px-4 py-3 text-sm font-semibold text-white"
+                className="min-h-[60px] w-full rounded-2xl bg-[#1F252E] px-5 py-4 text-base font-semibold text-white"
               >
                 Close
               </button>
@@ -541,7 +541,7 @@ export function BookingsClient({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-lg border border-[#D7DDE6] bg-white px-3 py-2 text-sm font-medium text-[#1F252E]"
+                className="min-h-[56px] rounded-xl border border-[#D7DDE6] bg-white px-4 py-3 text-base font-medium text-[#1F252E]"
                 disabled={deleting}
               >
                 Cancel
@@ -549,7 +549,7 @@ export function BookingsClient({
               <button
                 type="button"
                 onClick={onDeleteBooking}
-                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="min-h-[56px] rounded-xl bg-red-600 px-4 py-3 text-base font-semibold text-white disabled:opacity-60"
                 disabled={deleting}
               >
                 {deleting ? "Deleting..." : "Delete Booking"}
